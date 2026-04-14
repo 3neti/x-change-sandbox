@@ -11,7 +11,14 @@
     "repositories": [
         {
             "type": "path",
-            "url": "/Users/rli/PhpstormProjects/packages/instruction",
+            "url": "packages/x-change",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "/Users/rli/PhpstormProjects/packages/emi-netbank",
             "options": {
                 "symlink": true
             }
@@ -22,18 +29,11 @@
             "options": {
                 "symlink": true
             }
-        },
-        {
-            "type": "path",
-            "url": "packages/x-change",
-            "options": {
-                "symlink": true
-            }
         }
     ],
     "require": {
         "php": "^8.3",
-        "3neti/emi-netbank": "^2.0.3",
+        "3neti/emi-netbank": "dev-main",
         "3neti/x-change": "dev-main",
         "inertiajs/inertia-laravel": "^3.0",
         "laravel/fortify": "^1.34",
