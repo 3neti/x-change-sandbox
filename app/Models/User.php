@@ -3,7 +3,6 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Bavix\Wallet\Interfaces\Confirmable;
 use Bavix\Wallet\Interfaces\Customer;
 use Bavix\Wallet\Interfaces\Wallet;
 use Bavix\Wallet\Traits\CanPay;
@@ -15,19 +14,21 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-use Bavix\Wallet\Traits\HasWallet;
+use LBHurtado\ModelChannel\Contracts\HasMobileChannel;
+use LBHurtado\ModelChannel\Traits\HasChannels;
 use LBHurtado\Wallet\Traits\HasPlatformWallets;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements Wallet, Customer
+class User extends Authenticatable implements Customer, HasMobileChannel
 {
+    use CanPay;
+
+    use HasChannels;
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
-//    use HasWallet;
-    use HasWalletFloat;
     use HasPlatformWallets;
-    use CanPay;
+    use HasWalletFloat;
 
     /**
      * Get the attributes that should be cast.
