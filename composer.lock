@@ -303,19 +303,21 @@
         },
         {
             "name": "3neti/instruction",
-            "version": "v0.2.1",
+            "version": "v0.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/instruction.git",
-                "reference": "a8d1729f29b452ddf2d034930ed524a93e070c2d"
+                "reference": "8c899d5bf5aaa669d8f1d08c89433dca6fc55301"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/instruction/zipball/a8d1729f29b452ddf2d034930ed524a93e070c2d",
-                "reference": "a8d1729f29b452ddf2d034930ed524a93e070c2d",
+                "url": "https://api.github.com/repos/3neti/instruction/zipball/8c899d5bf5aaa669d8f1d08c89433dca6fc55301",
+                "reference": "8c899d5bf5aaa669d8f1d08c89433dca6fc55301",
                 "shasum": ""
             },
             "require": {
+                "bavix/laravel-wallet": "^11.5",
+                "brick/money": "^0.10|^0.11|^0.12|^0.13",
                 "illuminate/contracts": "^11.0|^12.0|^13.0",
                 "illuminate/database": "^11.0|^12.0|^13.0",
                 "illuminate/support": "^11.0|^12.0|^13.0",
@@ -349,9 +351,9 @@
             "description": "Instruction pricing and charge evaluation package.",
             "support": {
                 "issues": "https://github.com/3neti/instruction/issues",
-                "source": "https://github.com/3neti/instruction/tree/v0.2.1"
+                "source": "https://github.com/3neti/instruction/tree/v0.2.2"
             },
-            "time": "2026-04-13T07:27:21+00:00"
+            "time": "2026-04-16T04:21:45+00:00"
         },
         {
             "name": "3neti/laravel-model-channel",
@@ -856,7 +858,7 @@
             "dist": {
                 "type": "path",
                 "url": "packages/x-change",
-                "reference": "4e9f1e8bc9473c1e0a8a8bdaed726277edda97ea"
+                "reference": "33908496ed08858424f0b8fbae42876d58d2dac6"
             },
             "require": {
                 "3neti/contact": "^1.1",
@@ -864,6 +866,7 @@
                 "3neti/laravel-model-channel": "^1.1",
                 "3neti/money-issuer": "^1.0",
                 "3neti/voucher": "dev-main",
+                "brick/money": "^0.10.3",
                 "illuminate/contracts": "^13.0",
                 "illuminate/events": "^13.0",
                 "illuminate/http": "^13.0",
@@ -8813,7 +8816,7 @@
         },
         {
             "name": "symfony/polyfill-ctype",
-            "version": "v1.35.0",
+            "version": "v1.36.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-ctype.git",
@@ -8872,7 +8875,7 @@
                 "portable"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.35.0"
+                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.36.0"
             },
             "funding": [
                 {
@@ -8896,7 +8899,7 @@
         },
         {
             "name": "symfony/polyfill-intl-grapheme",
-            "version": "v1.35.0",
+            "version": "v1.36.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-intl-grapheme.git",
@@ -8954,7 +8957,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-intl-grapheme/tree/v1.35.0"
+                "source": "https://github.com/symfony/polyfill-intl-grapheme/tree/v1.36.0"
             },
             "funding": [
                 {
@@ -8978,7 +8981,7 @@
         },
         {
             "name": "symfony/polyfill-intl-idn",
-            "version": "v1.35.0",
+            "version": "v1.36.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-intl-idn.git",
@@ -9041,7 +9044,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-intl-idn/tree/v1.35.0"
+                "source": "https://github.com/symfony/polyfill-intl-idn/tree/v1.36.0"
             },
             "funding": [
                 {
@@ -9065,7 +9068,7 @@
         },
         {
             "name": "symfony/polyfill-intl-normalizer",
-            "version": "v1.35.0",
+            "version": "v1.36.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-intl-normalizer.git",
@@ -9126,7 +9129,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-intl-normalizer/tree/v1.35.0"
+                "source": "https://github.com/symfony/polyfill-intl-normalizer/tree/v1.36.0"
             },
             "funding": [
                 {
@@ -9150,7 +9153,7 @@
         },
         {
             "name": "symfony/polyfill-mbstring",
-            "version": "v1.35.0",
+            "version": "v1.36.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
@@ -9211,7 +9214,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.35.0"
+                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.36.0"
             },
             "funding": [
                 {
@@ -9235,7 +9238,7 @@
         },
         {
             "name": "symfony/polyfill-php80",
-            "version": "v1.35.0",
+            "version": "v1.36.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-php80.git",
@@ -9295,7 +9298,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-php80/tree/v1.35.0"
+                "source": "https://github.com/symfony/polyfill-php80/tree/v1.36.0"
             },
             "funding": [
                 {
@@ -9319,7 +9322,7 @@
         },
         {
             "name": "symfony/polyfill-php84",
-            "version": "v1.35.0",
+            "version": "v1.36.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-php84.git",
@@ -9375,7 +9378,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-php84/tree/v1.35.0"
+                "source": "https://github.com/symfony/polyfill-php84/tree/v1.36.0"
             },
             "funding": [
                 {
@@ -9399,7 +9402,7 @@
         },
         {
             "name": "symfony/polyfill-php85",
-            "version": "v1.35.0",
+            "version": "v1.36.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-php85.git",
@@ -9455,7 +9458,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-php85/tree/v1.35.0"
+                "source": "https://github.com/symfony/polyfill-php85/tree/v1.36.0"
             },
             "funding": [
                 {
@@ -9479,7 +9482,7 @@
         },
         {
             "name": "symfony/polyfill-uuid",
-            "version": "v1.35.0",
+            "version": "v1.36.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-uuid.git",
@@ -9538,7 +9541,7 @@
                 "uuid"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-uuid/tree/v1.35.0"
+                "source": "https://github.com/symfony/polyfill-uuid/tree/v1.36.0"
             },
             "funding": [
                 {
