@@ -60,6 +60,12 @@ return [
             'report' => false,
         ],
 
+        'report-drivers' => [
+            'driver' => 'local',
+            'root' => resource_path('report-drivers'),
+            'throw' => false,
+        ],
+
     ],
 
     /*
@@ -76,5 +82,4 @@ return [
     'links' => [
         public_path('storage') => storage_path('app/public'),
     ],
-
 ];
