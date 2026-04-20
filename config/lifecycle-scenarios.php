@@ -668,5 +668,63 @@ return [
                 'tariffs' => ['cash'],
             ],
         ],
+
+        'kyc_required_unapproved' => [
+            'label' => 'KYC Required Unapproved',
+            'amount' => 25,
+            'currency' => 'PHP',
+            'cash' => [],
+            'inputs' => [
+                'fields' => ['kyc'],
+            ],
+            'feedback' => [],
+            'meta' => [
+                'family' => 'contract',
+                'tags' => ['kyc', 'presence', 'contact'],
+            ],
+            'claim' => [
+                'inputs' => [
+                    'kyc' => [
+                        'transaction_id' => 'MOCK-KYC-123',
+                        'status' => 'approved',
+                        'name' => 'Juan Dela Cruz',
+                        'id_number' => 'ABC123456',
+                        'id_type' => 'National ID',
+                    ],
+                ],
+            ],
+            'expect' => [
+                'status' => 'failed',
+            ],
+        ],
+
+        'kyc_required_approved' => [
+            'label' => 'KYC Required Approved',
+            'amount' => 25,
+            'currency' => 'PHP',
+            'cash' => [],
+            'inputs' => [
+                'fields' => ['kyc'],
+            ],
+            'feedback' => [],
+            'meta' => [
+                'family' => 'contract',
+                'tags' => ['kyc', 'presence', 'contact'],
+            ],
+            'claim' => [
+                'inputs' => [
+                    'kyc' => [
+                        'transaction_id' => 'MOCK-KYC-123',
+                        'status' => 'approved',
+                        'name' => 'Juan Dela Cruz',
+                        'id_number' => 'ABC123456',
+                        'id_type' => 'National ID',
+                    ],
+                ],
+            ],
+            'expect' => [
+                'status' => 'succeeded',
+            ],
+        ],
     ],
 ];
