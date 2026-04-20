@@ -202,4 +202,7 @@ return [
             'identifier_column' => env('XCHANGE_REVENUE_DESTINATION_IDENTIFIER_COLUMN', 'email'),
         ],
     ],
+    'lifecycle' => [
+        ...require __DIR__.'/lifecycle-scenarios.php',
+    ],
 ];
