@@ -3,9 +3,12 @@
 namespace App\Providers;
 
 use Carbon\CarbonImmutable;
+use Dedoc\Scramble\Scramble;
+use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,6 +26,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Scramble::configure()
+            ->routes(function (Route $route): bool {
+                $action = $route->getActionName();
+
+                if (! is_string($action)) {
+                    return false;
+                }
+
+                return Str::startsWith($route->uri(), 'api/x/v1')
+                    && Str::startsWith($action, 'LBHurtado\\XChange\\Lifecycle\\Http\\Controllers\\');
+            });
         $this->configureDefaults();
     }
 

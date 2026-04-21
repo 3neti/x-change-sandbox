@@ -1,0 +1,2528 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Laravel",
+        "version": "0.0.1"
+    },
+    "servers": [
+        {
+            "url": "http://x-change-sandbox.test/api/x/v1"
+        }
+    ],
+    "paths": {
+        "/issuers": {
+            "post": {
+                "operationId": "x.v1.issuers.store",
+                "tags": [
+                    "CreateIssuer"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateIssuerRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/issuers/{issuer}/wallets": {
+            "post": {
+                "operationId": "x.v1.issuers.wallets.store",
+                "tags": [
+                    "CreateIssuerWallet"
+                ],
+                "parameters": [
+                    {
+                        "name": "issuer",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateIssuerWalletRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/vouchers": {
+            "post": {
+                "operationId": "x.v1.vouchers.store",
+                "tags": [
+                    "CreateVoucher"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateVoucherRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/pay-codes/estimate": {
+            "post": {
+                "operationId": "x-change.api.pay-codes.estimate",
+                "tags": [
+                    "EstimatePayCode"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EstimatePayCodeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "prefixItems": [
+                                        {
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "anyOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/PricingEstimateData"
+                                                },
+                                                {
+                                                    "type": "string"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "minItems": 0,
+                                            "maxItems": 0,
+                                            "additionalItems": false
+                                        }
+                                    ],
+                                    "minItems": 3,
+                                    "maxItems": 3,
+                                    "additionalItems": false
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/vouchers/estimate": {
+            "post": {
+                "operationId": "x.v1.vouchers.estimate",
+                "tags": [
+                    "EstimateVoucher"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EstimateVoucherRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/pay-codes": {
+            "post": {
+                "operationId": "x-change.api.pay-codes.generate",
+                "tags": [
+                    "GeneratePayCode"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GeneratePayCodeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "prefixItems": [
+                                        {
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "anyOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/GeneratePayCodeResultData"
+                                                },
+                                                {
+                                                    "type": "string"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "idempotency": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "key": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "replayed": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "key",
+                                                        "replayed"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "idempotency"
+                                            ]
+                                        }
+                                    ],
+                                    "minItems": 3,
+                                    "maxItems": 3,
+                                    "additionalItems": false
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "prefixItems": [
+                                        {
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "anyOf": [
+                                                {
+                                                    "type": "object",
+                                                    "additionalProperties": {}
+                                                },
+                                                {
+                                                    "type": "null"
+                                                },
+                                                {
+                                                    "type": "string"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "idempotency": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "key": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "replayed": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "key",
+                                                        "replayed"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "idempotency"
+                                            ]
+                                        }
+                                    ],
+                                    "minItems": 3,
+                                    "maxItems": 3,
+                                    "additionalItems": false
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/pay-codes/{code}/claim/complete": {
+            "post": {
+                "operationId": "xchange.api.pay-codes.claim.complete",
+                "tags": [
+                    "LoadPayCodeRedemptionCompletionContext"
+                ],
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoadRedemptionCompletionContextRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "prefixItems": [
+                                        {
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "anyOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/LoadRedemptionCompletionContextResultData"
+                                                },
+                                                {
+                                                    "type": "string"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "minItems": 0,
+                                            "maxItems": 0,
+                                            "additionalItems": false
+                                        }
+                                    ],
+                                    "minItems": 3,
+                                    "maxItems": 3,
+                                    "additionalItems": false
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "prefixItems": [
+                                        {
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "type": "string",
+                                            "const": "Invalid voucher code."
+                                        },
+                                        {
+                                            "type": "string",
+                                            "const": "PAY_CODE_INVALID"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "code": {
+                                                    "type": "array",
+                                                    "prefixItems": [
+                                                        {
+                                                            "type": "string",
+                                                            "const": "Invalid voucher code."
+                                                        }
+                                                    ],
+                                                    "minItems": 1,
+                                                    "maxItems": 1,
+                                                    "additionalItems": false
+                                                }
+                                            },
+                                            "required": [
+                                                "code"
+                                            ]
+                                        }
+                                    ],
+                                    "minItems": 4,
+                                    "maxItems": 4,
+                                    "additionalItems": false
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/onboarding/issuers": {
+            "post": {
+                "operationId": "x-change.api.onboarding.issuers",
+                "tags": [
+                    "OnboardIssuer"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OnboardIssuerRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "prefixItems": [
+                                        {
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "anyOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/OnboardIssuerResultData"
+                                                },
+                                                {
+                                                    "type": "string"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "minItems": 0,
+                                            "maxItems": 0,
+                                            "additionalItems": false
+                                        }
+                                    ],
+                                    "minItems": 3,
+                                    "maxItems": 3,
+                                    "additionalItems": false
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/onboarding/wallets": {
+            "post": {
+                "operationId": "x-change.api.onboarding.wallets",
+                "tags": [
+                    "OpenIssuerWallet"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OpenIssuerWalletRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "prefixItems": [
+                                        {
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "anyOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/OpenIssuerWalletResultData"
+                                                },
+                                                {
+                                                    "type": "string"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "minItems": 0,
+                                            "maxItems": 0,
+                                            "additionalItems": false
+                                        }
+                                    ],
+                                    "minItems": 3,
+                                    "maxItems": 3,
+                                    "additionalItems": false
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/pay-codes/{code}/claim/start": {
+            "post": {
+                "operationId": "xchange.api.pay-codes.claim.start",
+                "tags": [
+                    "PreparePayCodeRedemptionFlow"
+                ],
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "prefixItems": [
+                                        {
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "anyOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/PrepareRedemptionResultData"
+                                                },
+                                                {
+                                                    "type": "string"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "minItems": 0,
+                                            "maxItems": 0,
+                                            "additionalItems": false
+                                        }
+                                    ],
+                                    "minItems": 3,
+                                    "maxItems": 3,
+                                    "additionalItems": false
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "prefixItems": [
+                                        {
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "type": "string",
+                                            "const": "Invalid voucher code."
+                                        },
+                                        {
+                                            "type": "string",
+                                            "const": "PAY_CODE_INVALID"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "code": {
+                                                    "type": "array",
+                                                    "prefixItems": [
+                                                        {
+                                                            "type": "string",
+                                                            "const": "Invalid voucher code."
+                                                        }
+                                                    ],
+                                                    "minItems": 1,
+                                                    "maxItems": 1,
+                                                    "additionalItems": false
+                                                }
+                                            },
+                                            "required": [
+                                                "code"
+                                            ]
+                                        }
+                                    ],
+                                    "minItems": 4,
+                                    "maxItems": 4,
+                                    "additionalItems": false
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/pay-codes/{code}/redeem": {
+            "post": {
+                "operationId": "xchange.api.pay-codes.redeem",
+                "tags": [
+                    "RedeemPayCode"
+                ],
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RedeemPayCodeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "array",
+                                            "prefixItems": [
+                                                {
+                                                    "type": "boolean"
+                                                },
+                                                {
+                                                    "anyOf": [
+                                                        {
+                                                            "$ref": "#/components/schemas/RedeemPayCodeResultData"
+                                                        },
+                                                        {
+                                                            "type": "string"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "idempotency": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "key": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "replayed": {
+                                                                    "type": "boolean"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "key",
+                                                                "replayed"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "idempotency"
+                                                    ]
+                                                }
+                                            ],
+                                            "minItems": 3,
+                                            "maxItems": 3,
+                                            "additionalItems": false
+                                        },
+                                        {
+                                            "type": "array",
+                                            "prefixItems": [
+                                                {
+                                                    "type": "boolean"
+                                                },
+                                                {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "object",
+                                                            "additionalProperties": {}
+                                                        },
+                                                        {
+                                                            "type": "null"
+                                                        },
+                                                        {
+                                                            "type": "string"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "idempotency": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "key": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "replayed": {
+                                                                    "type": "boolean"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "key",
+                                                                "replayed"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "idempotency"
+                                                    ]
+                                                }
+                                            ],
+                                            "minItems": 3,
+                                            "maxItems": 3,
+                                            "additionalItems": false
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "prefixItems": [
+                                        {
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "type": "string",
+                                            "const": "Invalid voucher code."
+                                        },
+                                        {
+                                            "type": "string",
+                                            "const": "PAY_CODE_INVALID"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "code": {
+                                                    "type": "array",
+                                                    "prefixItems": [
+                                                        {
+                                                            "type": "string",
+                                                            "const": "Invalid voucher code."
+                                                        }
+                                                    ],
+                                                    "minItems": 1,
+                                                    "maxItems": 1,
+                                                    "additionalItems": false
+                                                }
+                                            },
+                                            "required": [
+                                                "code"
+                                            ]
+                                        }
+                                    ],
+                                    "minItems": 4,
+                                    "maxItems": 4,
+                                    "additionalItems": false
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/pricelist": {
+            "get": {
+                "operationId": "x.v1.pricelist.show",
+                "tags": [
+                    "ShowPricelist"
+                ],
+                "responses": {
+                    "501": {
+                        "description": "TODO: Delegate to pricing/tariff service and serialize with PricelistResource.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "minItems": 0,
+                                            "maxItems": 0,
+                                            "additionalItems": false
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "ShowPricelistController scaffolded."
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reconciliations/{reconciliation}": {
+            "get": {
+                "operationId": "x.v1.reconciliations.show",
+                "tags": [
+                    "ShowReconciliation"
+                ],
+                "parameters": [
+                    {
+                        "name": "reconciliation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "501": {
+                        "description": "TODO: Serialize existing reconciliation model/data with ReconciliationResource.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "minItems": 0,
+                                            "maxItems": 0,
+                                            "additionalItems": false
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "ShowReconciliationController scaffolded."
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/wallets/{wallet}/balance": {
+            "get": {
+                "operationId": "x.v1.wallets.balance.show",
+                "tags": [
+                    "ShowWalletBalance"
+                ],
+                "parameters": [
+                    {
+                        "name": "wallet",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "501": {
+                        "description": "TODO: Delegate to LBHurtado\\XChange\\Actions\\Wallet\\GetWalletBalance\nand serialize with WalletBalanceResource.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "minItems": 0,
+                                            "maxItems": 0,
+                                            "additionalItems": false
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "ShowWalletBalanceController scaffolded."
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/vouchers/code/{code}/claim/start": {
+            "post": {
+                "operationId": "x.v1.vouchers.claim.start",
+                "tags": [
+                    "StartVoucherClaim"
+                ],
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/pay-codes/{code}/claim/submit": {
+            "post": {
+                "operationId": "xchange.api.pay-codes.claim.submit",
+                "tags": [
+                    "SubmitPayCodeClaim"
+                ],
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubmitPayCodeClaimRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "array",
+                                            "prefixItems": [
+                                                {
+                                                    "type": "boolean"
+                                                },
+                                                {
+                                                    "anyOf": [
+                                                        {
+                                                            "$ref": "#/components/schemas/SubmitPayCodeClaimResultData"
+                                                        },
+                                                        {
+                                                            "type": "string"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "idempotency": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "key": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "replayed": {
+                                                                    "type": "boolean"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "key",
+                                                                "replayed"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "idempotency"
+                                                    ]
+                                                }
+                                            ],
+                                            "minItems": 3,
+                                            "maxItems": 3,
+                                            "additionalItems": false
+                                        },
+                                        {
+                                            "type": "array",
+                                            "prefixItems": [
+                                                {
+                                                    "type": "boolean"
+                                                },
+                                                {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "object",
+                                                            "additionalProperties": {}
+                                                        },
+                                                        {
+                                                            "type": "null"
+                                                        },
+                                                        {
+                                                            "type": "string"
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "idempotency": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "key": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "replayed": {
+                                                                    "type": "boolean"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "key",
+                                                                "replayed"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "idempotency"
+                                                    ]
+                                                }
+                                            ],
+                                            "minItems": 3,
+                                            "maxItems": 3,
+                                            "additionalItems": false
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "prefixItems": [
+                                        {
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "type": "string",
+                                            "const": "Invalid voucher code."
+                                        },
+                                        {
+                                            "type": "string",
+                                            "const": "PAY_CODE_INVALID"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "code": {
+                                                    "type": "array",
+                                                    "prefixItems": [
+                                                        {
+                                                            "type": "string",
+                                                            "const": "Invalid voucher code."
+                                                        }
+                                                    ],
+                                                    "minItems": 1,
+                                                    "maxItems": 1,
+                                                    "additionalItems": false
+                                                }
+                                            },
+                                            "required": [
+                                                "code"
+                                            ]
+                                        }
+                                    ],
+                                    "minItems": 4,
+                                    "maxItems": 4,
+                                    "additionalItems": false
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/vouchers/code/{code}/claim/submit": {
+            "post": {
+                "operationId": "x.v1.vouchers.claim.submit",
+                "tags": [
+                    "SubmitVoucherClaim"
+                ],
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SubmitVoucherClaimRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "CreateIssuerRequest": {
+                "type": "object",
+                "description": "Lifecycle alias/wrapper for the existing onboarding request.\n\nExtending the legacy request preserves current validation behavior.",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "email": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "email",
+                        "maxLength": 255
+                    },
+                    "mobile": {
+                        "type": "string",
+                        "maxLength": 50
+                    },
+                    "country": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 10
+                    },
+                    "identity": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "metadata": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "name",
+                    "mobile"
+                ],
+                "title": "CreateIssuerRequest"
+            },
+            "CreateIssuerWalletRequest": {
+                "type": "object",
+                "description": "Lifecycle alias/wrapper for the existing wallet opening request.\n\nExtending the legacy request preserves current validation behavior.",
+                "properties": {
+                    "issuer_id": {
+                        "type": "integer"
+                    },
+                    "metadata": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "wallet": {
+                        "type": "object",
+                        "properties": {
+                            "slug": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "slug",
+                            "name"
+                        ]
+                    }
+                },
+                "required": [
+                    "issuer_id",
+                    "wallet"
+                ],
+                "title": "CreateIssuerWalletRequest"
+            },
+            "CreateVoucherRequest": {
+                "type": "object",
+                "properties": {
+                    "count": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1
+                    },
+                    "prefix": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "mask": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "ttl": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "metadata": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "issuer_id": {
+                        "type": "integer"
+                    },
+                    "cash": {
+                        "type": "object",
+                        "properties": {
+                            "amount": {
+                                "type": "number",
+                                "minimum": 0.01
+                            },
+                            "currency": {
+                                "type": "string",
+                                "maxLength": 10
+                            },
+                            "settlement_rail": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 50
+                            },
+                            "validation": {
+                                "type": [
+                                    "object",
+                                    "null"
+                                ],
+                                "properties": {
+                                    "secret": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "mobile": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "payable": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "country": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 10
+                                    },
+                                    "location": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "radius": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "required": [
+                            "amount",
+                            "currency"
+                        ]
+                    },
+                    "inputs": {
+                        "type": "object",
+                        "properties": {
+                            "fields": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "required": [
+                            "fields"
+                        ]
+                    },
+                    "feedback": {
+                        "type": "object",
+                        "properties": {
+                            "email": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "email"
+                            },
+                            "mobile": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "webhook": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "uri"
+                            }
+                        }
+                    },
+                    "rider": {
+                        "type": "object",
+                        "properties": {
+                            "message": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "url": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "uri"
+                            },
+                            "redirect_timeout": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "splash": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "splash_timeout": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "og_source": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "cash",
+                    "inputs",
+                    "feedback",
+                    "rider"
+                ],
+                "title": "CreateVoucherRequest"
+            },
+            "EstimatePayCodeRequest": {
+                "type": "object",
+                "properties": {
+                    "count": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1
+                    },
+                    "prefix": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "mask": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "ttl": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "metadata": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "cash": {
+                        "type": "object",
+                        "properties": {
+                            "amount": {
+                                "type": "number",
+                                "minimum": 0.01
+                            },
+                            "currency": {
+                                "type": "string",
+                                "maxLength": 10
+                            },
+                            "settlement_rail": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 50
+                            },
+                            "validation": {
+                                "type": [
+                                    "object",
+                                    "null"
+                                ],
+                                "properties": {
+                                    "secret": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "mobile": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "payable": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "country": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 10
+                                    },
+                                    "location": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "radius": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "required": [
+                            "amount",
+                            "currency"
+                        ]
+                    },
+                    "inputs": {
+                        "type": "object",
+                        "properties": {
+                            "fields": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "required": [
+                            "fields"
+                        ]
+                    },
+                    "feedback": {
+                        "type": "object",
+                        "properties": {
+                            "email": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "email"
+                            },
+                            "mobile": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "webhook": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "uri"
+                            }
+                        }
+                    },
+                    "rider": {
+                        "type": "object",
+                        "properties": {
+                            "message": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "url": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "uri"
+                            },
+                            "redirect_timeout": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "splash": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "splash_timeout": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "og_source": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "cash",
+                    "inputs",
+                    "feedback",
+                    "rider"
+                ],
+                "title": "EstimatePayCodeRequest"
+            },
+            "EstimateVoucherRequest": {
+                "type": "object",
+                "properties": {
+                    "count": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1
+                    },
+                    "prefix": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "mask": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "ttl": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "metadata": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "cash": {
+                        "type": "object",
+                        "properties": {
+                            "amount": {
+                                "type": "number",
+                                "minimum": 0.01
+                            },
+                            "currency": {
+                                "type": "string",
+                                "maxLength": 10
+                            },
+                            "settlement_rail": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 50
+                            },
+                            "validation": {
+                                "type": [
+                                    "object",
+                                    "null"
+                                ],
+                                "properties": {
+                                    "secret": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "mobile": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "payable": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "country": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 10
+                                    },
+                                    "location": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "radius": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "required": [
+                            "amount",
+                            "currency"
+                        ]
+                    },
+                    "inputs": {
+                        "type": "object",
+                        "properties": {
+                            "fields": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "required": [
+                            "fields"
+                        ]
+                    },
+                    "feedback": {
+                        "type": "object",
+                        "properties": {
+                            "email": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "email"
+                            },
+                            "mobile": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "webhook": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "uri"
+                            }
+                        }
+                    },
+                    "rider": {
+                        "type": "object",
+                        "properties": {
+                            "message": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "url": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "uri"
+                            },
+                            "redirect_timeout": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "splash": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "splash_timeout": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "og_source": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "cash",
+                    "inputs",
+                    "feedback",
+                    "rider"
+                ],
+                "title": "EstimateVoucherRequest"
+            },
+            "GeneratePayCodeRequest": {
+                "type": "object",
+                "properties": {
+                    "count": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1
+                    },
+                    "prefix": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "mask": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "ttl": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "metadata": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "issuer_id": {
+                        "type": "integer"
+                    },
+                    "cash": {
+                        "type": "object",
+                        "properties": {
+                            "amount": {
+                                "type": "number",
+                                "minimum": 0.01
+                            },
+                            "currency": {
+                                "type": "string",
+                                "maxLength": 10
+                            },
+                            "settlement_rail": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 50
+                            },
+                            "validation": {
+                                "type": [
+                                    "object",
+                                    "null"
+                                ],
+                                "properties": {
+                                    "secret": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "mobile": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "payable": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "country": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 10
+                                    },
+                                    "location": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "radius": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "required": [
+                            "amount",
+                            "currency"
+                        ]
+                    },
+                    "inputs": {
+                        "type": "object",
+                        "properties": {
+                            "fields": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "required": [
+                            "fields"
+                        ]
+                    },
+                    "feedback": {
+                        "type": "object",
+                        "properties": {
+                            "email": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "email"
+                            },
+                            "mobile": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "webhook": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "uri"
+                            }
+                        }
+                    },
+                    "rider": {
+                        "type": "object",
+                        "properties": {
+                            "message": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "url": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "uri"
+                            },
+                            "redirect_timeout": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "splash": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "splash_timeout": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "og_source": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "cash",
+                    "inputs",
+                    "feedback",
+                    "rider"
+                ],
+                "title": "GeneratePayCodeRequest"
+            },
+            "GeneratePayCodeResultData": {
+                "type": "object",
+                "additionalProperties": {},
+                "title": "GeneratePayCodeResultData"
+            },
+            "LoadRedemptionCompletionContextRequest": {
+                "type": "object",
+                "properties": {
+                    "reference_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "flow_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "title": "LoadRedemptionCompletionContextRequest"
+            },
+            "LoadRedemptionCompletionContextResultData": {
+                "type": "object",
+                "additionalProperties": {},
+                "title": "LoadRedemptionCompletionContextResultData"
+            },
+            "OnboardIssuerRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "email": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "email",
+                        "maxLength": 255
+                    },
+                    "mobile": {
+                        "type": "string",
+                        "maxLength": 50
+                    },
+                    "country": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 10
+                    },
+                    "identity": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "metadata": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "name",
+                    "mobile"
+                ],
+                "title": "OnboardIssuerRequest"
+            },
+            "OnboardIssuerResultData": {
+                "type": "object",
+                "additionalProperties": {},
+                "title": "OnboardIssuerResultData"
+            },
+            "OpenIssuerWalletRequest": {
+                "type": "object",
+                "properties": {
+                    "issuer_id": {
+                        "type": "integer"
+                    },
+                    "metadata": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "wallet": {
+                        "type": "object",
+                        "properties": {
+                            "slug": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "slug",
+                            "name"
+                        ]
+                    }
+                },
+                "required": [
+                    "issuer_id",
+                    "wallet"
+                ],
+                "title": "OpenIssuerWalletRequest"
+            },
+            "OpenIssuerWalletResultData": {
+                "type": "object",
+                "additionalProperties": {},
+                "title": "OpenIssuerWalletResultData"
+            },
+            "PrepareRedemptionResultData": {
+                "type": "object",
+                "additionalProperties": {},
+                "title": "PrepareRedemptionResultData"
+            },
+            "PricingEstimateData": {
+                "type": "object",
+                "additionalProperties": {},
+                "title": "PricingEstimateData"
+            },
+            "RedeemPayCodeRequest": {
+                "type": "object",
+                "properties": {
+                    "mobile": {
+                        "type": "string"
+                    },
+                    "recipient_country": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 10
+                    },
+                    "secret": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "inputs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "bank_account": {
+                        "type": "object",
+                        "properties": {
+                            "bank_code": {
+                                "type": "string"
+                            },
+                            "account_number": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "bank_code",
+                            "account_number"
+                        ]
+                    }
+                },
+                "required": [
+                    "mobile",
+                    "inputs",
+                    "bank_account"
+                ],
+                "title": "RedeemPayCodeRequest"
+            },
+            "RedeemPayCodeResultData": {
+                "type": "object",
+                "additionalProperties": {},
+                "title": "RedeemPayCodeResultData"
+            },
+            "SubmitPayCodeClaimRequest": {
+                "type": "object",
+                "properties": {
+                    "mobile": {
+                        "type": "string"
+                    },
+                    "recipient_country": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 10
+                    },
+                    "secret": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "amount": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": 0.01
+                    },
+                    "inputs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "bank_account": {
+                        "type": "object",
+                        "properties": {
+                            "bank_code": {
+                                "type": "string"
+                            },
+                            "account_number": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "bank_code",
+                            "account_number"
+                        ]
+                    }
+                },
+                "required": [
+                    "mobile",
+                    "inputs",
+                    "bank_account"
+                ],
+                "title": "SubmitPayCodeClaimRequest"
+            },
+            "SubmitPayCodeClaimResultData": {
+                "type": "object",
+                "additionalProperties": {},
+                "title": "SubmitPayCodeClaimResultData"
+            },
+            "SubmitVoucherClaimRequest": {
+                "type": "object",
+                "properties": {
+                    "mobile": {
+                        "type": "string"
+                    },
+                    "recipient_country": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 10
+                    },
+                    "secret": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "amount": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": 0.01
+                    },
+                    "inputs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "bank_account": {
+                        "type": "object",
+                        "properties": {
+                            "bank_code": {
+                                "type": "string"
+                            },
+                            "account_number": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "bank_code",
+                            "account_number"
+                        ]
+                    }
+                },
+                "required": [
+                    "mobile",
+                    "inputs",
+                    "bank_account"
+                ],
+                "title": "SubmitVoucherClaimRequest"
+            }
+        },
+        "responses": {
+            "ValidationException": {
+                "description": "Validation error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Errors overview."
+                                },
+                                "errors": {
+                                    "type": "object",
+                                    "description": "A detailed description of each field that failed validation.",
+                                    "additionalProperties": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            },
+                            "required": [
+                                "message",
+                                "errors"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
