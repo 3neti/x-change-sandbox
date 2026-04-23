@@ -8,7 +8,7 @@
     "packages": [
         {
             "name": "3neti/cash",
-            "version": "v1.1.0",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/cash.git",
@@ -33,6 +33,7 @@
                 "orchestra/testbench": "^10.3",
                 "pestphp/pest": "^3.8"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -60,7 +61,7 @@
             "description": "A package to enable assigning cash to Eloquent Models",
             "support": {
                 "issues": "https://github.com/3neti/cash/issues",
-                "source": "https://github.com/3neti/cash/tree/v1.1.0"
+                "source": "https://github.com/3neti/cash/tree/main"
             },
             "time": "2026-04-09T15:09:55+00:00"
         },
@@ -769,10 +770,10 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/rli/PhpstormProjects/packages/voucher",
-                "reference": "298a3f89972857d5fd8635f62dd04586139b64d8"
+                "reference": "61fc9d04879e6576fbaa09a33460debacdc5d290"
             },
             "require": {
-                "3neti/cash": "^1.0",
+                "3neti/cash": "dev-main",
                 "3neti/contact": "^1.0",
                 "3neti/emi-core": "^1.0",
                 "3neti/laravel-model-input": "^1.0",
@@ -914,7 +915,7 @@
             "dist": {
                 "type": "path",
                 "url": "packages/x-change",
-                "reference": "50a64a398988b6695d3a777b93a748b8f70c2628"
+                "reference": "994e389c6d17fdab3559caac476be9622f2d4914"
             },
             "require": {
                 "3neti/contact": "^1.1",
