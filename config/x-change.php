@@ -205,4 +205,8 @@ return [
     'lifecycle' => [
         ...require __DIR__.'/lifecycle-scenarios.php',
     ],
+
+    'withdrawal' => [
+        'open_slice_min_interval_seconds' => 10,
+    ],
 ];
