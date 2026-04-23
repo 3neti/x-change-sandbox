@@ -1,28 +1,37 @@
 {
-    "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/vue-starter-kit",
-    "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "name": "3neti/x-change",
+    "description": "Programmable Disbursement Infrastructure (PDI) platform for banks and EMIs. API-first engine for KYC-gated, wallet-backed Pay Code issuance, claim, redemption, and disbursement workflows.",
+    "type": "library",
+    "license": "proprietary",
     "keywords": [
-        "laravel",
-        "framework"
+        "programmable disbursement",
+        "pay code",
+        "voucher",
+        "fintech",
+        "banking",
+        "wallet",
+        "kyc",
+        "emi",
+        "payments",
+        "disbursement",
+        "claim",
+        "redemption",
+        "financial infrastructure",
+        "api-first"
     ],
-    "license": "MIT",
+    "homepage": "https://3neti.com/x-change",
+    "support": {
+        "email": "licensing@3neti.com"
+    },
+    "authors": [
+        {
+            "name": "Lester B. Hurtado",
+            "role": "Creator"
+        }
+    ],
+    "type": "library",
+
     "repositories": [
-        {
-            "type": "path",
-            "url": "packages/x-change",
-            "options": {
-                "symlink": true
-            }
-        },
-        {
-            "type": "path",
-            "url": "/Users/rli/PhpstormProjects/packages/emi-netbank",
-            "options": {
-                "symlink": true
-            }
-        },
         {
             "type": "path",
             "url": "/Users/rli/PhpstormProjects/packages/voucher",
@@ -31,106 +40,65 @@
             }
         }
     ],
+
     "require": {
-        "php": "^8.3",
-        "3neti/emi-netbank": "dev-main",
-        "3neti/x-change": "dev-main",
-        "inertiajs/inertia-laravel": "^3.0",
-        "laravel/fortify": "^1.34",
-        "laravel/framework": "^13.0",
-        "laravel/sanctum": "^4.0",
-        "laravel/tinker": "^3.0",
-        "laravel/wayfinder": "^0.1.14"
+        "php": "^8.2",
+        "3neti/contact": "^1.1",
+        "3neti/instruction": "^0.2",
+        "3neti/laravel-model-channel": "^1.1",
+        "3neti/money-issuer": "^1.0",
+        "3neti/report-registry": "^1.1",
+        "3neti/voucher": "dev-main",
+        "brick/money": "^0.10.3",
+        "illuminate/contracts": "^13.0",
+        "illuminate/events": "^13.0",
+        "illuminate/http": "^13.0",
+        "illuminate/queue": "^13.0",
+        "illuminate/routing": "^13.0",
+        "illuminate/support": "^13.0",
+        "spatie/laravel-data": "^4.21"
     },
+
     "require-dev": {
         "dedoc/scramble": "^0.13.20",
-        "fakerphp/faker": "^1.24",
-        "laravel/boost": "^2.0",
-        "laravel/pail": "^1.2.5",
-        "laravel/pint": "^1.27",
-        "laravel/sail": "^1.53",
-        "mockery/mockery": "^1.6",
-        "nunomaduro/collision": "^8.9",
+        "orchestra/testbench": "^11.0",
         "pestphp/pest": "^4.4",
         "pestphp/pest-plugin-laravel": "^4.1"
     },
+
     "autoload": {
         "psr-4": {
-            "App\\": "app/",
-            "Database\\Factories\\": "database/factories/",
-            "Database\\Seeders\\": "database/seeders/"
+            "LBHurtado\\XChange\\": "src/"
         }
     },
+
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/"
+            "LBHurtado\\XChange\\Tests\\": "tests/"
         }
     },
-    "scripts": {
-        "setup": [
-            "composer install",
-            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
-            "@php artisan key:generate",
-            "@php artisan migrate --force",
-            "npm install",
-            "npm run build"
-        ],
-        "dev": [
-            "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
-        ],
-        "lint": [
-            "pint --parallel"
-        ],
-        "lint:check": [
-            "pint --parallel --test"
-        ],
-        "ci:check": [
-            "Composer\\Config::disableProcessTimeout",
-            "npm run lint:check",
-            "npm run format:check",
-            "npm run types:check",
-            "@test"
-        ],
-        "test": [
-            "@php artisan config:clear --ansi",
-            "@lint:check",
-            "@php artisan test"
-        ],
-        "post-autoload-dump": [
-            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi"
-        ],
-        "post-update-cmd": [
-            "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
-            "@php artisan boost:update --ansi"
-        ],
-        "post-root-package-install": [
-            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
-        ],
-        "post-create-project-cmd": [
-            "@php artisan key:generate --ansi",
-            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
-            "@php artisan migrate --graceful --ansi"
-        ],
-        "pre-package-uninstall": [
-            "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
-        ]
-    },
+
     "extra": {
         "laravel": {
-            "dont-discover": []
+            "providers": [
+                "LBHurtado\\XChange\\Providers\\XChangeServiceProvider"
+            ]
         }
     },
+
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+
     "config": {
-        "optimize-autoloader": true,
-        "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
-            "pestphp/pest-plugin": true,
-            "php-http/discovery": true
+            "pestphp/pest-plugin": true
         }
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true
+
+    "scripts": {
+        "test": "pest",
+        "test:unit": "pest",
+        "test:coverage": "pest --coverage"
+    }
 }
