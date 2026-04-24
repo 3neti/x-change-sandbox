@@ -4,21 +4,15 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d1eb5d6a793465b4cfc877106b116676",
+    "content-hash": "68b154de9bb2567d2c300173aa704a98",
     "packages": [
         {
             "name": "3neti/cash",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/3neti/cash.git",
-                "reference": "c11231c2894d04ddf066b03b21efee486a76ead6"
-            },
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/3neti/cash/zipball/c11231c2894d04ddf066b03b21efee486a76ead6",
-                "reference": "c11231c2894d04ddf066b03b21efee486a76ead6",
-                "shasum": ""
+                "type": "path",
+                "url": "/Users/rli/PhpstormProjects/packages/cash",
+                "reference": "a2df81eaa5e340b3eee90a9d1aa037e583c6818a"
             },
             "require": {
                 "3neti/wallet": "^v1.0",
@@ -33,7 +27,6 @@
                 "orchestra/testbench": "^10.3",
                 "pestphp/pest": "^3.8"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -48,7 +41,16 @@
                     "LBHurtado\\Cash\\Database\\Factories\\": "database/factories/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "LBHurtado\\Cash\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "vendor/bin/pest"
+                ]
+            },
             "license": [
                 "proprietary"
             ],
@@ -59,11 +61,10 @@
                 }
             ],
             "description": "A package to enable assigning cash to Eloquent Models",
-            "support": {
-                "issues": "https://github.com/3neti/cash/issues",
-                "source": "https://github.com/3neti/cash/tree/main"
-            },
-            "time": "2026-04-09T15:09:55+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": false
+            }
         },
         {
             "name": "3neti/contact",
@@ -915,9 +916,10 @@
             "dist": {
                 "type": "path",
                 "url": "packages/x-change",
-                "reference": "994e389c6d17fdab3559caac476be9622f2d4914"
+                "reference": "215ca005dba2f16a0dfd4ab41bd9908ec87a8a10"
             },
             "require": {
+                "3neti/cash": "dev-main",
                 "3neti/contact": "^1.1",
                 "3neti/instruction": "^0.2",
                 "3neti/laravel-model-channel": "^1.1",
