@@ -17,6 +17,18 @@ use LBHurtado\XChange\Services\SessionCompletionStore;
 use LBHurtado\XChange\Services\TerminologyService;
 use LBHurtado\XChange\Services\VoucherAccessService;
 use LBHurtado\XChange\Services\VoucherEntryRouteService;
+use LBHurtado\XChange\Services\WithdrawalPipelineSteps\AssertWithdrawalEligibilityStep;
+use LBHurtado\XChange\Services\WithdrawalPipelineSteps\AuthorizeWithdrawalClaimantStep;
+use LBHurtado\XChange\Services\WithdrawalPipelineSteps\AuthorizeWithdrawalOtpStep;
+use LBHurtado\XChange\Services\WithdrawalPipelineSteps\AuthorizeWithdrawalPolicyStep;
+use LBHurtado\XChange\Services\WithdrawalPipelineSteps\BuildWithdrawalPayoutRequestStep;
+use LBHurtado\XChange\Services\WithdrawalPipelineSteps\BuildWithdrawalResultStep;
+use LBHurtado\XChange\Services\WithdrawalPipelineSteps\ExecuteWithdrawalDisbursementStep;
+use LBHurtado\XChange\Services\WithdrawalPipelineSteps\GuardWithdrawalRailStep;
+use LBHurtado\XChange\Services\WithdrawalPipelineSteps\ResolveWithdrawalAmountStep;
+use LBHurtado\XChange\Services\WithdrawalPipelineSteps\ResolveWithdrawalBankAccountStep;
+use LBHurtado\XChange\Services\WithdrawalPipelineSteps\ResolveWithdrawalClaimantStep;
+use LBHurtado\XChange\Services\WithdrawalPipelineSteps\WithdrawalWalletSettlementStep;
 use LBHurtado\XChange\Support\Logging\NullAuditLogger;
 use LBHurtado\XChange\Support\Resolvers\NullSystemWalletResolver;
 //use LBHurtado\XChange\Support\Resolvers\NullUserResolver;
@@ -208,5 +220,51 @@ return [
 
     'withdrawal' => [
         'open_slice_min_interval_seconds' => 10,
+
+        'pipeline' => [
+            'steps' => [
+                ResolveWithdrawalClaimantStep::class,
+                AssertWithdrawalEligibilityStep::class,
+                AuthorizeWithdrawalClaimantStep::class,
+                ResolveWithdrawalAmountStep::class,
+
+                AuthorizeWithdrawalOtpStep::class,
+                AuthorizeWithdrawalPolicyStep::class,
+
+                ResolveWithdrawalBankAccountStep::class,
+                BuildWithdrawalPayoutRequestStep::class,
+                GuardWithdrawalRailStep::class,
+                ExecuteWithdrawalDisbursementStep::class,
+                WithdrawalWalletSettlementStep::class,
+                BuildWithdrawalResultStep::class,
+            ],
+        ],
+
+        'otp' => [
+            'driver' => env('XCHANGE_WITHDRAWAL_OTP_DRIVER', 'null'),
+            'required' => env('XCHANGE_WITHDRAWAL_OTP_REQUIRED', false),
+            'label' => env('OTP_LABEL', config('app.name', 'x-change')),
+
+            'txtcmdr' => [
+                'base_url' => env('TXTCMDR_API_URL', 'http://txtcmdr.test'),
+                'api_token' => env('TXTCMDR_API_TOKEN'),
+                'sender_id' => env('TXTCMDR_DEFAULT_SENDER_ID', 'cashless'),
+                'timeout' => env('TXTCMDR_TIMEOUT', 30),
+                'verify_ssl' => env('TXTCMDR_VERIFY_SSL', true),
+                'test_mobile' => env('TXTCMDR_TEST_MOBILE'),
+            ],
+        ],
+    ],
+
+    'vendors' => [
+        'registry' => env('XCHANGE_VENDOR_REGISTRY', 'config'),
+        'aliases' => [],
+    ],
+
+    'approval_workflow' => [
+        'handlers' => [
+            'approval' => \LBHurtado\XChange\Services\ApprovalHandlers\ManualApprovalRequirementHandler::class,
+            'otp' => \LBHurtado\XChange\Services\ApprovalHandlers\OtpApprovalRequirementHandler::class,
+        ],
     ],
 ];
