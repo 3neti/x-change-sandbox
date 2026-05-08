@@ -7,6 +7,6 @@ return [
 
     'payout_providers' => [
         'netbank' => \LBHurtado\PaymentGateway\Adapters\NetbankPayoutProvider::class,
-//        'paynamics' => \LBHurtado\EmiPaynamicsConstellation\Adapters\ConstellationPayoutProvider::class
+        'paynamics' => \LBHurtado\EmiPaynamicsConstellation\Adapters\ConstellationPayoutProvider::class,
     ],
 ];

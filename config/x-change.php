@@ -189,7 +189,7 @@ return [
         ],
     ],
     'payout' => [
-        'provider' => \LBHurtado\PaymentGateway\Adapters\NetbankPayoutProvider::class,
+        'provider' => env('XCHANGE_PAYOUT_PROVIDER', \LBHurtado\PaymentGateway\Adapters\NetbankPayoutProvider::class),
         'wallet_proxy' => \LBHurtado\XChange\Services\SystemWalletProxy::class,
         'system_user_id' => env('XCHANGE_SYSTEM_USER_ID'),
         'system_user_column' => env('XCHANGE_SYSTEM_USER_COLUMN', 'id'),

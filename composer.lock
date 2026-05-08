@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "68b154de9bb2567d2c300173aa704a98",
+    "content-hash": "d3f465c298152475821628c14a5c1426",
     "packages": [
         {
             "name": "3neti/cash",
@@ -12,7 +12,7 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/rli/PhpstormProjects/packages/cash",
-                "reference": "a2df81eaa5e340b3eee90a9d1aa037e583c6818a"
+                "reference": "c903538a3034736374e1bded1ced63d475095674"
             },
             "require": {
                 "3neti/wallet": "^v1.0",
@@ -240,6 +240,65 @@
                 }
             ],
             "description": "NetBank EMI provider adapter for emi-core",
+            "transport-options": {
+                "symlink": true,
+                "relative": false
+            }
+        },
+        {
+            "name": "3neti/emi-paynamics",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "/Users/rli/PhpstormProjects/packages/emi-paynamics",
+                "reference": "bef0170dbc7a42cdfce597484d79a99d3bf09d37"
+            },
+            "require": {
+                "3neti/emi-core": "^v1.0.1",
+                "illuminate/http": "^12.0 || ^13.0",
+                "illuminate/support": "^12.0 || ^13.0",
+                "lorisleiva/laravel-actions": "^2.9",
+                "php": "^8.3",
+                "spatie/laravel-data": "^4.0"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^10.0 || ^11.0",
+                "pestphp/pest": "^4.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "LBHurtado\\EmiPaynamicsConstellation\\ConstellationServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "LBHurtado\\EmiPaynamicsConstellation\\": "src/",
+                    "LBHurtado\\EmiPaynamicsConstellation\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "LBHurtado\\EmiPaynamicsConstellation\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "vendor/bin/pest"
+                ]
+            },
+            "license": [
+                "proprietary"
+            ],
+            "authors": [
+                {
+                    "name": "Lester Hurtado",
+                    "email": "lester@hurtado.ph"
+                }
+            ],
+            "description": "Paynamics Constellation adapter for EMI core",
             "transport-options": {
                 "symlink": true,
                 "relative": false
@@ -771,7 +830,7 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/rli/PhpstormProjects/packages/voucher",
-                "reference": "61fc9d04879e6576fbaa09a33460debacdc5d290"
+                "reference": "df61a3f109c281dee067d422c495fcee447afc57"
             },
             "require": {
                 "3neti/cash": "dev-main",
@@ -916,7 +975,7 @@
             "dist": {
                 "type": "path",
                 "url": "packages/x-change",
-                "reference": "215ca005dba2f16a0dfd4ab41bd9908ec87a8a10"
+                "reference": "715e13c54ba3f35a85a0370252fb1cc03f392879"
             },
             "require": {
                 "3neti/cash": "dev-main",
@@ -927,6 +986,7 @@
                 "3neti/report-registry": "^1.1",
                 "3neti/voucher": "dev-main",
                 "brick/money": "^0.10.3",
+                "endroid/qr-code": "^6.1",
                 "illuminate/contracts": "^13.0",
                 "illuminate/events": "^13.0",
                 "illuminate/http": "^13.0",
@@ -938,6 +998,7 @@
             },
             "require-dev": {
                 "dedoc/scramble": "^0.13.20",
+                "khanamiryan/qrcode-detector-decoder": "^2.0",
                 "orchestra/testbench": "^11.0",
                 "pestphp/pest": "^4.4",
                 "pestphp/pest-plugin-laravel": "^4.1"
@@ -13976,6 +14037,7 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "3neti/emi-netbank": 20,
+        "3neti/emi-paynamics": 20,
         "3neti/x-change": 20
     },
     "prefer-stable": true,
