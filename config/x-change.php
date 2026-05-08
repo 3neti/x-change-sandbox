@@ -216,6 +216,9 @@ return [
     ],
     'lifecycle' => [
         ...require __DIR__.'/lifecycle-scenarios.php',
+        'withdrawals' => [
+            'service' => \LBHurtado\XChange\Services\WithdrawalLifecycleService::class,
+        ],
     ],
 
     'withdrawal' => [
