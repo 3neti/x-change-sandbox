@@ -10,12 +10,15 @@
 /resources/js/routes
 /resources/js/wayfinder
 
-# Published x-change package assets (re-publish with: vendor:publish --tag=x-change-pages --tag=x-change-assets)
+# Published x-change package assets (re-publish with: vendor:publish --tag=x-change-ui --tag=x-change-assets)
 /resources/js/pages/x-change
 /resources/js/components/x-change
+/resources/js/layouts/x-change
 /resources/js/composables/useXChangeDashboardApi.ts
 /resources/js/composables/usePayCodeApi.ts
 /resources/js/composables/usePayCodeForm.ts
+/resources/js/composables/useXChangeRoutes.ts
+/public/vendor/x-change
 /public/images/logo*.png
 /public/favicon.png
 /vendor
