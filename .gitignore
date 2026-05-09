@@ -14,6 +14,8 @@
 /resources/js/pages/x-change
 /resources/js/components/x-change
 /resources/js/composables/useXChangeDashboardApi.ts
+/resources/js/composables/usePayCodeApi.ts
+/resources/js/composables/usePayCodeForm.ts
 /public/images/logo*.png
 /public/favicon.png
 /vendor
