@@ -10,7 +10,7 @@
 /resources/js/routes
 /resources/js/wayfinder
 
-# Published x-change package assets (re-publish with: vendor:publish --tag=x-change-ui --tag=x-change-assets)
+# Published x-change package assets (re-publish with: php artisan x-change:install)
 /resources/js/pages/x-change
 /resources/js/components/x-change
 /resources/js/layouts/x-change
@@ -21,6 +21,30 @@
 /public/vendor/x-change
 /public/images/logo*.png
 /public/favicon.png
+
+# Published form-flow package assets (re-publish with: php artisan x-change:install)
+/config/form-flow.php
+/config/form-flow-drivers/
+/config/kyc-handler.php
+/config/location-handler.php
+/config/otp-handler.php
+/config/selfie-handler.php
+/config/signature-handler.php
+/resources/js/pages/form-flow
+/resources/js/components/financial
+/resources/js/components/NumberInputWithKeypad.vue
+/resources/js/components/NumericKeypad.vue
+/resources/js/components/ui/alert-dialog
+/resources/js/components/ui/phone-input
+/resources/js/components/ui/textarea
+/resources/js/composables/useFormFlowSummary.ts
+/resources/js/composables/useTheme.ts
+/resources/js/layouts/PublicLayout.vue
+/resources/js/config
+/resources/js/data
+/resources/documents
+/public/form-flow-demo.html
+/public/form-flow-complete.html
 /vendor
 .DS_Store
 .env

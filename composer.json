@@ -43,12 +43,60 @@
             "options": {
                 "symlink": true
             }
+        },
+        {
+            "type": "path",
+            "url": "/Users/rli/PhpstormProjects/packages/form-flow-manager",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "/Users/rli/PhpstormProjects/packages/form-handler-kyc",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "/Users/rli/PhpstormProjects/packages/form-handler-location",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "/Users/rli/PhpstormProjects/packages/form-handler-otp",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "/Users/rli/PhpstormProjects/packages/form-handler-selfie",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "/Users/rli/PhpstormProjects/packages/form-handler-signature",
+            "options": {
+                "symlink": true
+            }
         }
     ],
     "require": {
         "php": "^8.3",
         "3neti/emi-netbank": "dev-main",
         "3neti/emi-paynamics": "dev-main",
+        "3neti/form-flow": "dev-main",
+        "3neti/form-handler-kyc": "dev-main",
+        "3neti/form-handler-location": "dev-main",
+        "3neti/form-handler-otp": "dev-main",
+        "3neti/form-handler-selfie": "dev-main",
+        "3neti/form-handler-signature": "dev-main",
         "3neti/x-change": "dev-main",
         "inertiajs/inertia-laravel": "^3.0",
         "laravel/fortify": "^1.34",
