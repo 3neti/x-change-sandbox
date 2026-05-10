@@ -39,6 +39,7 @@
 /resources/js/components/NumericKeypad.vue
 /resources/js/components/ui/alert-dialog
 /resources/js/components/ui/phone-input
+/resources/js/components/ui/tabs
 /resources/js/components/ui/textarea
 /resources/js/composables/useFormFlowSummary.ts
 /resources/js/composables/useTheme.ts
