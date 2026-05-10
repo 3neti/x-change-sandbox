@@ -18,6 +18,8 @@
 /resources/js/composables/usePayCodeApi.ts
 /resources/js/composables/usePayCodeForm.ts
 /resources/js/composables/useXChangeRoutes.ts
+/resources/js/composables/useVoucherPreview.ts
+/resources/js/types/voucher.d.ts
 /public/vendor/x-change
 /public/images/logo*.png
 /public/favicon.png
