@@ -310,7 +310,7 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/rli/PhpstormProjects/packages/form-flow-manager",
-                "reference": "c2f1011cd860dafac46b651ade217eab33be92fd"
+                "reference": "7e614027c1ced9348094edd1956deb4c7b25d88c"
             },
             "require": {
                 "illuminate/support": "^11.0 || ^12.0 || ^13.0",
@@ -383,7 +383,7 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/rli/PhpstormProjects/packages/form-handler-kyc",
-                "reference": "5e4d217a534652d4a291dc5840268af8a9de8464"
+                "reference": "df5a58cb3f18f308bf2009aac7b869af6e6d36d6"
             },
             "require": {
                 "3neti/form-flow": "^1.0",
@@ -513,7 +513,7 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/rli/PhpstormProjects/packages/form-handler-otp",
-                "reference": "feaf7f26a13ab2f562985f1f4a296c8581968af4"
+                "reference": "67c6d9eb44555a0d9f3c1ae8c3d01d99c10f06b2"
             },
             "require": {
                 "3neti/form-flow": "^1.0",
@@ -577,7 +577,7 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/rli/PhpstormProjects/packages/form-handler-selfie",
-                "reference": "3f16ca3bd8c0ee25db4b08f11071520dd3f96728"
+                "reference": "625a4921f31667a0e42fc35e42849505dab1da99"
             },
             "require": {
                 "3neti/form-flow": "^1.0",
@@ -641,7 +641,7 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/rli/PhpstormProjects/packages/form-handler-signature",
-                "reference": "dc99c486f13b338811591065b6dce7feba8e7462"
+                "reference": "bc86aaee0dc9c490f609e0bba62c100c1f334d8d"
             },
             "require": {
                 "3neti/form-flow": "^1.0",
