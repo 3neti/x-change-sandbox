@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6f8b41b810cbcf3252a9ad6b090a259d",
+    "content-hash": "7ace1fa72af00acb823a672b242a3799",
     "packages": [
         {
             "name": "3neti/cash",
@@ -310,7 +310,7 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/rli/PhpstormProjects/packages/form-flow-manager",
-                "reference": "7e614027c1ced9348094edd1956deb4c7b25d88c"
+                "reference": "d9be9f1a53dc21b3cc6d5d67cc31344eb2319e4f"
             },
             "require": {
                 "illuminate/support": "^11.0 || ^12.0 || ^13.0",
@@ -321,7 +321,8 @@
             "require-dev": {
                 "inertiajs/inertia-laravel": "^2.0",
                 "orchestra/testbench": "^10.3",
-                "pestphp/pest": "^3.8"
+                "pestphp/pest": "^3.8",
+                "pestphp/pest-plugin-laravel": "^3.2 || ^4.0"
             },
             "type": "library",
             "extra": {
@@ -1370,7 +1371,7 @@
             "dist": {
                 "type": "path",
                 "url": "packages/x-change",
-                "reference": "715e13c54ba3f35a85a0370252fb1cc03f392879"
+                "reference": "69d2f1cfbef10027cab2930aaf3272cf860e6e65"
             },
             "require": {
                 "3neti/cash": "dev-main",
@@ -1380,6 +1381,7 @@
                 "3neti/money-issuer": "^1.0",
                 "3neti/report-registry": "^1.1",
                 "3neti/voucher": "dev-main",
+                "3neti/x-rider": "dev-main",
                 "brick/money": "^0.10.3",
                 "endroid/qr-code": "^6.1",
                 "illuminate/contracts": "^13.0",
@@ -1439,6 +1441,68 @@
             "transport-options": {
                 "symlink": true,
                 "relative": true
+            }
+        },
+        {
+            "name": "3neti/x-rider",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "/Users/rli/PhpstormProjects/packages/x-rider",
+                "reference": "08f4151b20e6d60fb30247e8b68832722f008f66"
+            },
+            "require": {
+                "illuminate/http": "^12.0 || ^13.0",
+                "illuminate/routing": "^12.0 || ^13.0",
+                "illuminate/support": "^12.0 || ^13.0",
+                "php": ">=8.3",
+                "spatie/laravel-data": "^4.17",
+                "symfony/yaml": "^7.0 || ^8.0"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^10.3 || ^11.0",
+                "pestphp/pest": "^3.8 || ^4.0",
+                "pestphp/pest-plugin-laravel": "^3.2 || ^4.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "LBHurtado\\XRider\\XRiderServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "LBHurtado\\XRider\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "LBHurtado\\XRider\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "vendor/bin/pest"
+                ],
+                "test:coverage": [
+                    "vendor/bin/pest --coverage"
+                ]
+            },
+            "license": [
+                "proprietary"
+            ],
+            "authors": [
+                {
+                    "name": "Lester Hurtado",
+                    "email": "lester@hurtado.ph"
+                }
+            ],
+            "description": "Programmable claimant experience layer for post-claim rider messages, redirects, splash, analytics seams, and future campaign runtimes.",
+            "transport-options": {
+                "symlink": true,
+                "relative": false
             }
         },
         {
