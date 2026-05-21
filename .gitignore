@@ -66,3 +66,12 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+.claude/
+.junie/
+boost.json
+
+# Published x-rider package assets (re-publish with: php artisan x-change:install)
+/config/x-rider.php
+/config/x-rider-drivers/
+/resources/js/pages/x-rider
+/resources/js/components/x-rider
