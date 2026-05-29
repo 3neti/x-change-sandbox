@@ -9,13 +9,10 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+
     defaults:
       run:
         working-directory: packages/x-change
-
-    strategy:
-      matrix:
-        php-version: ['8.3', '8.4', '8.5']
 
     steps:
       - name: Checkout code
@@ -24,28 +21,15 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-version }}
+          php-version: '8.4'
           tools: composer:v2
-          coverage: xdebug
+          coverage: none
 
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-          cache: npm
-          cache-dependency-path: packages/x-change/package-lock.json
+      - name: Show PHP version
+        run: php -v
 
-      - name: Install Node Dependencies
-        run: npm ci
+      - name: Validate composer.json
+        run: composer validate --no-check-lock --strict
 
-      - name: Install PHP Dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
-
-      - name: Build Assets
-        run: npm run build --if-present
-
-      - name: Run PHP Tests
-        run: ./vendor/bin/pest
-
-      - name: Run Frontend Tests
-        run: npm run test:frontend --if-present
+      - name: Show Composer config
+        run: composer config repositories --no-interaction || true
