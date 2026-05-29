@@ -75,3 +75,4 @@ boost.json
 /config/x-rider-drivers/
 /resources/js/pages/x-rider
 /resources/js/components/x-rider
+/tests/Fixtures
