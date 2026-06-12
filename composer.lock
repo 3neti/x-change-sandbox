@@ -251,7 +251,7 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/rli/PhpstormProjects/packages/emi-paynamics",
-                "reference": "3b0e53f611d054cdc1e8eab7fb6892779a432ad9"
+                "reference": "9afbcd0dc437d06b3fdf6ca86677c5d7afc92e35"
             },
             "require": {
                 "3neti/emi-core": "^v1.0.1",
@@ -1455,7 +1455,7 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/rli/PhpstormProjects/packages/x-rider",
-                "reference": "e3716394b461f17a9f0b6127faf7ac0525096ac3"
+                "reference": "4bc3d6b79a297c69eb12ecfd8609eb6382676d22"
             },
             "require": {
                 "illuminate/http": "^12.0 || ^13.0",
