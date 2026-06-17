@@ -39,6 +39,13 @@
         },
         {
             "type": "path",
+            "url": "/Users/rli/PhpstormProjects/packages/onboarding",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
             "url": "/Users/rli/PhpstormProjects/packages/emi-paynamics",
             "options": {
                 "symlink": true
@@ -98,6 +105,7 @@
         "php": "^8.3",
         "3neti/emi-netbank": "dev-main",
         "3neti/emi-paynamics": "dev-main",
+        "3neti/onboarding": "dev-main",
         "3neti/x-change": "dev-main",
         "inertiajs/inertia-laravel": "^3.0",
         "laravel/fortify": "^1.34",
