@@ -61,7 +61,9 @@ use LBHurtado\XChange\Services\NullRedemptionCompletionStore;
 use LBHurtado\XChange\Services\PayCodeIssuanceService;
 use LBHurtado\XChange\Services\PricingService;
 use LBHurtado\XChange\Services\ProviderCustomerWalletTopology;
+use LBHurtado\XChange\Services\Provisioning\DelegatingProviderProvisioningGateway;
 use LBHurtado\XChange\Services\Provisioning\FakeProviderProvisioningGateway;
+use LBHurtado\XChange\Services\Provisioning\NetbankProviderProvisioningGateway;
 use LBHurtado\XChange\Services\SessionCompletionStore;
 use LBHurtado\XChange\Services\SystemWalletProxy;
 use LBHurtado\XChange\Services\TerminologyService;
@@ -171,7 +173,7 @@ return [
         'provider_topology_resolver' => ConfigProviderTopologyResolver::class,
         'provider_runtime_settings' => ConfigProviderRuntimeSettingsResolver::class,
         'provider_account_links' => EloquentProviderAccountLinkRepository::class,
-        'provider_provisioning_gateway' => FakeProviderProvisioningGateway::class,
+        'provider_provisioning_gateway' => DelegatingProviderProvisioningGateway::class,
         'provider_provisioning_manager' => DefaultProviderProvisioningManager::class,
         'provider_readiness_guard' => DefaultProviderReadinessGuard::class,
         'wallet_provisioning' => DefaultWalletProvisioningService::class,
@@ -271,16 +273,24 @@ return [
 
     'provider_runtime' => [
         'default_provider' => env('XCHANGE_PROVIDER', env('XCHANGE_PROVIDER_TOPOLOGY', 'manual')),
+        'default_provisioning_gateway' => FakeProviderProvisioningGateway::class,
 
         'providers' => [
             'manual' => [
                 'enabled' => env('XCHANGE_PROVIDER_MANUAL_ENABLED', true),
+                'provisioning_gateway' => FakeProviderProvisioningGateway::class,
             ],
             'netbank' => [
                 'enabled' => env('XCHANGE_PROVIDER_NETBANK_ENABLED', true),
+                'provisioning_gateway' => NetbankProviderProvisioningGateway::class,
+                'source_account_readiness' => [
+                    'enabled' => env('XCHANGE_PROVIDER_NETBANK_SOURCE_ACCOUNT_READINESS_ENABLED', false),
+                    'account_number' => env('XCHANGE_PROVIDER_NETBANK_SOURCE_ACCOUNT_NUMBER'),
+                ],
             ],
             'paynamics' => [
                 'enabled' => env('XCHANGE_PROVIDER_PAYNAMICS_ENABLED', true),
+                'provisioning_gateway' => FakeProviderProvisioningGateway::class,
             ],
         ],
 
