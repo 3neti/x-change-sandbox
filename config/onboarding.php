@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use LBHurtado\Onboarding\Enums\AuthAssuranceLevel;
 use LBHurtado\Onboarding\Enums\AuthFactor;
 use LBHurtado\Onboarding\Enums\IdentityLevel;
@@ -14,9 +13,15 @@ return [
         'middleware' => ['api'],
     ],
 
+    'web' => [
+        'enabled' => true,
+        'prefix' => 'onboarding',
+        'middleware' => ['web'],
+    ],
+
     'models' => [
         'session' => OnboardingSession::class,
-        'user' => class_exists('App\\Models\\User') ? User::class : null,
+        'user' => class_exists('App\\Models\\User') ? App\Models\User::class : null,
     ],
 
     'user' => [
