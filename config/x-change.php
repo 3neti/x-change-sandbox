@@ -286,7 +286,8 @@ return [
                 'enabled' => env('XCHANGE_PROVIDER_NETBANK_ENABLED', true),
                 'provisioning_gateway' => NetbankProviderProvisioningGateway::class,
                 'source_account_readiness' => [
-                    'enabled' => env('XCHANGE_PROVIDER_NETBANK_SOURCE_ACCOUNT_READINESS_ENABLED', false),
+                    'enabled' => env('XCHANGE_PROVIDER_NETBANK_SOURCE_ACCOUNT_READINESS_ENABLED', true),
+                    'allow_unavailable' => env('XCHANGE_PROVIDER_NETBANK_SOURCE_ACCOUNT_ALLOW_UNAVAILABLE', false),
                     'account_number' => env('XCHANGE_PROVIDER_NETBANK_SOURCE_ACCOUNT_NUMBER', env('NETBANK_SOURCE_ACCOUNT_NUMBER')),
                 ],
             ],
