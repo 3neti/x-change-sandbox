@@ -99,6 +99,13 @@
             "options": {
                 "symlink": true
             }
+        },
+        {
+            "type": "path",
+            "url": "/Users/rli/PhpstormProjects/packages/x-ray",
+            "options": {
+                "symlink": true
+            }
         }
     ],
     "require": {

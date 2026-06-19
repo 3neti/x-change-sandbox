@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e9fe78698cf88afee7810f4e1ff8681c",
+    "content-hash": "787b19c465bad7d71dc48409c7ca6322",
     "packages": [
         {
             "name": "3neti/cash",
@@ -251,7 +251,7 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/rli/PhpstormProjects/packages/emi-paynamics",
-                "reference": "2a6a5d8034f80526eb1d1958a25e0b20d3b19baf"
+                "reference": "3dd83a1c737f737773742b70351133b4fafb3149"
             },
             "require": {
                 "3neti/emi-core": "^v1.0.1",
@@ -1113,7 +1113,7 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/rli/PhpstormProjects/packages/onboarding",
-                "reference": "e17f200d11783c5f46963e75b61277a889dbca7a"
+                "reference": "c38c22a8d6d9516d69d089574c318b8281f341f5"
             },
             "require": {
                 "illuminate/database": "^12.0 || ^13.0",
@@ -1434,7 +1434,7 @@
             "dist": {
                 "type": "path",
                 "url": "packages/x-change",
-                "reference": "017d2bf8b2a8f28ae7d445e5fe4be23ea507af43"
+                "reference": "4fd8269239b1251a9770276670a2c2d73bd061b4"
             },
             "require": {
                 "3neti/cash": "dev-main",
@@ -1452,6 +1452,7 @@
                 "3neti/onboarding": "dev-main",
                 "3neti/report-registry": "^1.1",
                 "3neti/voucher": "dev-main",
+                "3neti/x-ray": "dev-main",
                 "3neti/x-rider": "dev-main",
                 "brick/money": "^0.10.3",
                 "endroid/qr-code": "^6.1",
@@ -1513,6 +1514,67 @@
             "transport-options": {
                 "symlink": true,
                 "relative": true
+            }
+        },
+        {
+            "name": "3neti/x-ray",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "/Users/rli/PhpstormProjects/packages/x-ray",
+                "reference": "c8a71411b61d0735c625124eba91580ca03b2c82"
+            },
+            "require": {
+                "illuminate/http": "^12.0 || ^13.0",
+                "illuminate/routing": "^12.0 || ^13.0",
+                "illuminate/support": "^12.0 || ^13.0",
+                "php": ">=8.3",
+                "spatie/laravel-data": "^4.17"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^10.3 || ^11.0",
+                "pestphp/pest": "^3.8 || ^4.0",
+                "pestphp/pest-plugin-laravel": "^3.2 || ^4.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "LBHurtado\\XRay\\XRayServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "LBHurtado\\XRay\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "LBHurtado\\XRay\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "vendor/bin/pest"
+                ],
+                "test:coverage": [
+                    "vendor/bin/pest --coverage"
+                ]
+            },
+            "license": [
+                "proprietary"
+            ],
+            "authors": [
+                {
+                    "name": "Lester Hurtado",
+                    "email": "lester@hurtado.ph"
+                }
+            ],
+            "description": "Permissioned pre-claim inspection and disclosure runtime for Pay Codes.",
+            "transport-options": {
+                "symlink": true,
+                "relative": false
             }
         },
         {
