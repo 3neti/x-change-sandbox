@@ -8,6 +8,7 @@
 /storage/pail
 /resources/js/actions
 /resources/js/routes
+/resources/js/vendor
 /resources/js/wayfinder
 
 # Published x-change package assets (re-publish with: php artisan x-change:install)
