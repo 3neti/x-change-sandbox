@@ -98,6 +98,36 @@ export type CockpitOperatorIssuanceActivityPresentation = {
         owns_lifecycle_truth?: boolean | null;
         [key: string]: unknown;
     };
+    metadata?: {
+        journal_handoff?: {
+            status?: string | null;
+            journal_entry_id?: string | null;
+            writes_journal?: boolean | null;
+            source?: string | null;
+            reason?: string | null;
+            diagnostic?: {
+                classification?: string | null;
+                tone?: string | null;
+                label?: string | null;
+                description?: string | null;
+                operator_action?: string | null;
+                read_only?: boolean | null;
+                retry_enabled?: boolean | null;
+                mutation_enabled?: boolean | null;
+                raw_payloads_exposed?: boolean | null;
+                [key: string]: unknown;
+            };
+            metadata?: {
+                reference_number?: string | null;
+                event_type?: string | null;
+                idempotency_key?: string | null;
+                exception?: string | null;
+                [key: string]: unknown;
+            };
+            [key: string]: unknown;
+        };
+        [key: string]: unknown;
+    };
     [key: string]: unknown;
 };
 
