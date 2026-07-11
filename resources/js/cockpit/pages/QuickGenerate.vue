@@ -8,6 +8,7 @@ Changes will be overwritten by php artisan x-change:install --force.
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import CockpitDiagnosticsDisclosure from '../components/CockpitDiagnosticsDisclosure.vue';
 import CockpitGenerateActionPanel from '../components/CockpitGenerateActionPanel.vue';
 import CockpitIssuanceBoundaryPanel from '../components/CockpitIssuanceBoundaryPanel.vue';
 import CockpitPricingFundingSummary from '../components/CockpitPricingFundingSummary.vue';
@@ -351,20 +352,20 @@ function defaultPricingGate(): CockpitQuickGeneratePricingGate {
             {
                 key: 'amount-input-present',
                 label: 'Amount Input Present',
-                status: 'blocked',
-                reason: 'No operator amount input is accepted by Cockpit in Slice 20.',
+                status: 'passed',
+                reason: 'The Quick Generate form accepts an operator amount and passes it through the existing issuance handoff.',
             },
             {
                 key: 'pricing-service-wired',
                 label: 'Pricing Service Wired',
-                status: 'blocked',
-                reason: 'Cockpit does not call pricing services in Slice 20.',
+                status: 'passed',
+                reason: 'Quick Generate returns operator-safe pricing preflight metadata after a successful existing issuance handoff.',
             },
             {
                 key: 'funding-source-selected',
                 label: 'Funding Source Selected',
-                status: 'blocked',
-                reason: 'No wallet or funding source lookup is performed.',
+                status: 'diagnostic',
+                reason: 'Funding authority is reported through the operator-safe funding preflight; Cockpit does not expose wallet internals.',
             },
             {
                 key: 'funds-reservation',
@@ -404,14 +405,14 @@ function defaultFundingGate(): CockpitQuickGenerateFundingGate {
             {
                 key: 'wallet-balance-available',
                 label: 'Wallet Balance Available',
-                status: 'blocked',
-                reason: 'Cockpit does not read wallet balances in Slice 21.',
+                status: 'diagnostic',
+                reason: 'Quick Generate can display an operator-safe balance preflight returned by the existing balance overview path.',
             },
             {
                 key: 'sufficient-funds',
                 label: 'Sufficient Funds',
-                status: 'blocked',
-                reason: 'Cockpit does not evaluate spendable funds in Slice 21.',
+                status: 'diagnostic',
+                reason: 'Sufficiency remains owned by the existing issuance/funding services and is surfaced only as safe preflight context.',
             },
             {
                 key: 'funds-reservation-ready',
@@ -557,8 +558,8 @@ function defaultMutationHandoffPlan(): CockpitQuickGenerateMutationHandoffPlan {
             {
                 key: 'side-effect-boundary-confirmed',
                 label: 'Side Effect Boundary Confirmed',
-                status: 'blocked',
-                reason: 'No voucher generation, wallet movement, provider call, journal write, action run, or feedback delivery is authorized.',
+                status: 'passed',
+                reason: 'Quick Generate uses the existing GeneratePayCode issuance handoff; wallet movement, provider calls, journal writes, action runs, and feedback delivery remain separately gated.',
             },
             {
                 key: 'operator-response-contract-ready',
@@ -659,8 +660,8 @@ function defaultAuthorization(): CockpitQuickGenerateAuthorization {
             {
                 key: 'can-generate-pay-code',
                 label: 'Can Generate Pay Code',
-                status: 'blocked',
-                reason: 'No Cockpit mutation route is registered.',
+                status: 'passed',
+                reason: 'The approved Cockpit Quick Generate mutation route submits through the existing GeneratePayCode action.',
             },
             {
                 key: 'can-call-providers',
@@ -878,15 +879,16 @@ function stringValue(value: unknown): string | null {
         <section class="space-y-6" data-testid="cockpit-quick-generate-shell">
             <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <p class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
-                    Wave 4 · Slice 3
+                    Wave 12 · Functional parity bridge
                 </p>
                 <h2 class="mt-2 text-2xl font-semibold text-slate-950 dark:text-slate-50">
-                    Quick Generate Foundation
+                    Quick Generate Runtime
                 </h2>
                 <p class="mt-3 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-                    This screen establishes the template-first issuance workspace only.
-                    It does not generate vouchers, calculate pricing, reserve funds, call providers,
-                    write journal entries, send feedback, or move money.
+                    This screen now uses the template-first draft/compiler path and hands off to the
+                    existing x-change GeneratePayCode action. Pricing and funding preflights are
+                    informational, while journal, action, feedback, provider, and campaign mutations
+                    remain separately gated.
                 </p>
             </div>
 
@@ -899,23 +901,28 @@ function stringValue(value: unknown): string | null {
                 <CockpitRuntimeInputPanel :inputs="runtimeInputs" />
 
                 <div class="space-y-4">
-                    <CockpitPricingFundingSummary :summaries="pricingSummaries" />
-                    <CockpitQuickGeneratePricingGatePanel :pricing-gate="pricingGate" />
-                    <CockpitQuickGenerateFundingGatePanel :funding-gate="fundingGate" />
-                    <CockpitQuickGenerateIdempotencyGatePanel :idempotency-gate="idempotencyGate" />
-                    <CockpitQuickGenerateValidationRedactionGatePanel :validation-redaction-gate="validationRedactionGate" />
-                    <CockpitQuickGenerateMutationHandoffPlanPanel :mutation-handoff-plan="mutationHandoffPlan" />
-                    <CockpitQuickGenerateMutationPreconditionsReviewPanel :mutation-preconditions-review="mutationPreconditionsReview" />
-                    <CockpitQuickGenerateMutationAuthorizationDecisionPanel :mutation-authorization-decision="mutationAuthorizationDecision" />
                     <CockpitQuickGenerateSubmitPanel
                         :mutation-contract="mutationContract"
                         :draft-contract="draftContract"
                         :templates="templates"
                     />
-                    <CockpitGenerateActionPanel :enabled="false" />
-                    <CockpitQuickGenerateAuthorizationGatePanel :authorization="authorization" />
-                    <CockpitQuickGenerateDraftContractPanel :draft-contract="draftContract" />
-                    <CockpitIssuanceBoundaryPanel />
+                    <CockpitGenerateActionPanel :enabled="false" :runtime-enabled="true" />
+                    <CockpitDiagnosticsDisclosure
+                        title="Architecture history and gate diagnostics"
+                        summary="Older baseline panels remain available for engineering diagnostics. They are no longer the primary operator guidance after the Quick Generate runtime handoff."
+                    >
+                        <CockpitPricingFundingSummary :summaries="pricingSummaries" />
+                        <CockpitQuickGeneratePricingGatePanel :pricing-gate="pricingGate" />
+                        <CockpitQuickGenerateFundingGatePanel :funding-gate="fundingGate" />
+                        <CockpitQuickGenerateIdempotencyGatePanel :idempotency-gate="idempotencyGate" />
+                        <CockpitQuickGenerateValidationRedactionGatePanel :validation-redaction-gate="validationRedactionGate" />
+                        <CockpitQuickGenerateMutationHandoffPlanPanel :mutation-handoff-plan="mutationHandoffPlan" />
+                        <CockpitQuickGenerateMutationPreconditionsReviewPanel :mutation-preconditions-review="mutationPreconditionsReview" />
+                        <CockpitQuickGenerateMutationAuthorizationDecisionPanel :mutation-authorization-decision="mutationAuthorizationDecision" />
+                        <CockpitQuickGenerateAuthorizationGatePanel :authorization="authorization" />
+                        <CockpitQuickGenerateDraftContractPanel :draft-contract="draftContract" />
+                        <CockpitIssuanceBoundaryPanel />
+                    </CockpitDiagnosticsDisclosure>
                 </div>
             </div>
         </section>

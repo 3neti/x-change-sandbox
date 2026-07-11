@@ -12,6 +12,10 @@ import { computed, ref } from 'vue';
 import type {
     CockpitQuickGenerateDraftContract,
     CockpitQuickGenerateMutationContract,
+    CockpitQuickGenerateRuntimeActivity,
+    CockpitQuickGenerateRuntimeDraft,
+    CockpitQuickGenerateRuntimeFundingPreflight,
+    CockpitQuickGenerateRuntimePricingPreflight,
     CockpitQuickGenerateTemplate,
 } from '../types';
 
@@ -61,6 +65,22 @@ const resultCode = computed<string | null>(() => {
 
 const cockpitDetailUrl = computed<string | null>(() => {
     return stringValue(dataGet(lastResponse.value, ['result', 'links', 'cockpit_detail']));
+});
+
+const pricingPreflight = computed<CockpitQuickGenerateRuntimePricingPreflight | null>(() => {
+    return objectValue(dataGet(lastResponse.value, ['preflight', 'pricing'])) as CockpitQuickGenerateRuntimePricingPreflight | null;
+});
+
+const fundingPreflight = computed<CockpitQuickGenerateRuntimeFundingPreflight | null>(() => {
+    return objectValue(dataGet(lastResponse.value, ['preflight', 'funding'])) as CockpitQuickGenerateRuntimeFundingPreflight | null;
+});
+
+const draftRuntime = computed<CockpitQuickGenerateRuntimeDraft | null>(() => {
+    return objectValue(dataGet(lastResponse.value, ['draft'])) as CockpitQuickGenerateRuntimeDraft | null;
+});
+
+const activityRuntime = computed<CockpitQuickGenerateRuntimeActivity | null>(() => {
+    return objectValue(dataGet(lastResponse.value, ['activity'])) as CockpitQuickGenerateRuntimeActivity | null;
 });
 
 const canRefreshReadModel = computed<boolean>(() => {
@@ -202,6 +222,18 @@ function stringValue(value: unknown): string | null {
     const normalized = String(value).trim();
 
     return normalized === '' ? null : normalized;
+}
+
+function objectValue(value: unknown): Record<string, unknown> | null {
+    return typeof value === 'object' && value !== null && !Array.isArray(value)
+        ? value as Record<string, unknown>
+        : null;
+}
+
+function displayValue(value: unknown, fallback = 'not available'): string {
+    const normalized = stringValue(value);
+
+    return normalized ?? fallback;
 }
 
 function dataGet(source: unknown, path: string[]): unknown {
@@ -346,6 +378,167 @@ function dataGet(source: unknown, path: string[]): unknown {
             <p class="mt-3 leading-5 text-slate-500 dark:text-slate-400">
                 No automatic redirect is performed. The operator chooses whether to refresh Cockpit data or open the generated Pay Code detail.
             </p>
+
+            <div
+                v-if="draftRuntime || activityRuntime"
+                class="mt-4 grid gap-3 md:grid-cols-2"
+                data-testid="cockpit-quick-generate-runtime-metadata-panel"
+            >
+                <section
+                    v-if="draftRuntime"
+                    class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900"
+                    data-testid="cockpit-quick-generate-draft-runtime-card"
+                >
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="font-semibold text-slate-950 dark:text-slate-50">
+                            Draft runtime
+                        </p>
+                        <span class="rounded-full bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 ring-1 ring-slate-200 dark:bg-slate-950 dark:text-slate-300 dark:ring-slate-800">
+                            {{ displayValue(draftRuntime.status) }}
+                        </span>
+                    </div>
+                    <dl class="mt-3 grid gap-2">
+                        <div class="flex justify-between gap-3">
+                            <dt class="text-slate-500 dark:text-slate-400">
+                                Factory
+                            </dt>
+                            <dd class="font-medium text-slate-700 dark:text-slate-200">
+                                {{ displayValue(draftRuntime.factory) }}
+                            </dd>
+                        </div>
+                        <div class="flex justify-between gap-3">
+                            <dt class="text-slate-500 dark:text-slate-400">
+                                Compiler
+                            </dt>
+                            <dd class="font-medium text-slate-700 dark:text-slate-200">
+                                {{ displayValue(draftRuntime.compiler) }}
+                            </dd>
+                        </div>
+                    </dl>
+                </section>
+
+                <section
+                    v-if="activityRuntime"
+                    class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900"
+                    data-testid="cockpit-quick-generate-activity-runtime-card"
+                >
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="font-semibold text-slate-950 dark:text-slate-50">
+                            Activity runtime
+                        </p>
+                        <span class="rounded-full bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 ring-1 ring-slate-200 dark:bg-slate-950 dark:text-slate-300 dark:ring-slate-800">
+                            {{ displayValue(activityRuntime.status) }}
+                        </span>
+                    </div>
+                    <dl class="mt-3 grid gap-2">
+                        <div class="flex justify-between gap-3">
+                            <dt class="text-slate-500 dark:text-slate-400">
+                                Schema
+                            </dt>
+                            <dd class="font-medium text-slate-700 dark:text-slate-200">
+                                {{ displayValue(activityRuntime.schema) }}
+                            </dd>
+                        </div>
+                        <div class="flex justify-between gap-3">
+                            <dt class="text-slate-500 dark:text-slate-400">
+                                Presentation only
+                            </dt>
+                            <dd class="font-medium text-slate-700 dark:text-slate-200">
+                                {{ activityRuntime.presentation_only === true ? 'yes' : 'no' }}
+                            </dd>
+                        </div>
+                    </dl>
+                </section>
+            </div>
+
+            <div
+                v-if="pricingPreflight || fundingPreflight"
+                class="mt-4 grid gap-3 md:grid-cols-2"
+                data-testid="cockpit-quick-generate-runtime-preflight-panel"
+            >
+                <section
+                    v-if="pricingPreflight"
+                    class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900"
+                    data-testid="cockpit-quick-generate-pricing-preflight-card"
+                >
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="font-semibold text-slate-950 dark:text-slate-50">
+                            Pricing preflight
+                        </p>
+                        <span class="rounded-full bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 ring-1 ring-slate-200 dark:bg-slate-950 dark:text-slate-300 dark:ring-slate-800">
+                            {{ displayValue(pricingPreflight.status) }}
+                        </span>
+                    </div>
+                    <dl class="mt-3 grid gap-2">
+                        <div class="flex justify-between gap-3">
+                            <dt class="text-slate-500 dark:text-slate-400">
+                                Total
+                            </dt>
+                            <dd class="font-semibold text-slate-900 dark:text-slate-100">
+                                {{ displayValue(pricingPreflight.currency, 'PHP') }} {{ displayValue(pricingPreflight.total, '0') }}
+                            </dd>
+                        </div>
+                        <div class="flex justify-between gap-3">
+                            <dt class="text-slate-500 dark:text-slate-400">
+                                Base fee
+                            </dt>
+                            <dd class="font-medium text-slate-700 dark:text-slate-200">
+                                {{ displayValue(pricingPreflight.base_fee, '0') }}
+                            </dd>
+                        </div>
+                        <div class="flex justify-between gap-3">
+                            <dt class="text-slate-500 dark:text-slate-400">
+                                Blocking
+                            </dt>
+                            <dd class="font-medium text-slate-700 dark:text-slate-200">
+                                {{ pricingPreflight.blocking === true ? 'yes' : 'no' }}
+                            </dd>
+                        </div>
+                    </dl>
+                </section>
+
+                <section
+                    v-if="fundingPreflight"
+                    class="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900"
+                    data-testid="cockpit-quick-generate-funding-preflight-card"
+                >
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="font-semibold text-slate-950 dark:text-slate-50">
+                            Funding preflight
+                        </p>
+                        <span class="rounded-full bg-white px-2 py-1 text-[11px] font-semibold text-slate-600 ring-1 ring-slate-200 dark:bg-slate-950 dark:text-slate-300 dark:ring-slate-800">
+                            {{ displayValue(fundingPreflight.status) }}
+                        </span>
+                    </div>
+                    <dl class="mt-3 grid gap-2">
+                        <div class="flex justify-between gap-3">
+                            <dt class="text-slate-500 dark:text-slate-400">
+                                Authority
+                            </dt>
+                            <dd class="font-semibold text-slate-900 dark:text-slate-100">
+                                {{ displayValue(fundingPreflight.authority) }}
+                            </dd>
+                        </div>
+                        <div class="flex justify-between gap-3">
+                            <dt class="text-slate-500 dark:text-slate-400">
+                                Balance
+                            </dt>
+                            <dd class="font-medium text-slate-700 dark:text-slate-200">
+                                {{ displayValue(fundingPreflight.authoritative?.currency, 'PHP') }}
+                                {{ displayValue(fundingPreflight.authoritative?.balance, 'not available') }}
+                            </dd>
+                        </div>
+                        <div class="flex justify-between gap-3">
+                            <dt class="text-slate-500 dark:text-slate-400">
+                                Sync
+                            </dt>
+                            <dd class="font-medium text-slate-700 dark:text-slate-200">
+                                {{ displayValue(fundingPreflight.sync_status) }}
+                            </dd>
+                        </div>
+                    </dl>
+                </section>
+            </div>
         </div>
     </form>
 </template>
