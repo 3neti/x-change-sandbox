@@ -102,6 +102,34 @@
         },
         {
             "type": "path",
+            "url": "/Users/rli/PhpstormProjects/packages/x-journal",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "/Users/rli/PhpstormProjects/packages/x-action",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "/Users/rli/PhpstormProjects/packages/x-feedback",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "/Users/rli/PhpstormProjects/packages/x-campaign",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
             "url": "/Users/rli/PhpstormProjects/packages/x-ray",
             "options": {
                 "symlink": true
@@ -125,6 +153,7 @@
         "dedoc/scramble": "^0.13.20",
         "fakerphp/faker": "^1.24",
         "laravel/boost": "^2.4",
+        "laravel/dusk": "^8.6",
         "laravel/pail": "^1.2.5",
         "laravel/pint": "^1.27",
         "laravel/sail": "^1.53",
