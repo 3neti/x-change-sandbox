@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { expect, test } from '@playwright/test';
+import { expect, Page, test } from '@playwright/test';
 
 const email = 'playwright-cockpit@example.test';
 const mobile = '639170000004';
@@ -25,13 +25,24 @@ test.beforeAll(() => {
     });
 });
 
-test('cockpit pay code explorer filters render through Playwright without ChromeDriver', async ({ page }) => {
-    await page.goto('/login');
+async function login(page: Page): Promise<void> {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+        await page.goto('/login');
+        await page.getByLabel(/mobile number/i).fill(mobile);
+        await page.getByLabel(/pin/i).fill(password);
+        await page.getByRole('button', { name: /log in/i }).click();
+        await page.waitForLoadState('networkidle');
 
-    await page.getByLabel(/mobile number/i).fill(mobile);
-    await page.getByLabel(/pin/i).fill(password);
-    await page.getByRole('button', { name: /log in/i }).click();
-    await page.waitForLoadState('networkidle');
+        if (!page.url().includes('/login')) {
+            return;
+        }
+    }
+
+    await expect(page).not.toHaveURL(/\/login/);
+}
+
+test('cockpit pay code explorer filters render through Playwright without ChromeDriver', async ({ page }) => {
+    await login(page);
 
     await page.goto('/x/cockpit/pay-codes?search=PC-PLAYWRIGHT&status=redeemed');
 
@@ -52,12 +63,7 @@ test('cockpit pay code explorer filters render through Playwright without Chrome
 });
 
 test('cockpit pay code explorer row actions navigate through read-only links', async ({ page }) => {
-    await page.goto('/login');
-
-    await page.getByLabel(/mobile number/i).fill(mobile);
-    await page.getByLabel(/pin/i).fill(password);
-    await page.getByRole('button', { name: /log in/i }).click();
-    await page.waitForLoadState('networkidle');
+    await login(page);
 
     await page.goto('/x/cockpit/pay-codes');
 
@@ -86,4 +92,28 @@ test('cockpit pay code explorer row actions navigate through read-only links', a
     await expect(page.getByTestId('cockpit-voucher-evidence-panel')).toContainText('Read-only');
     await expect(page.getByText('provider_payload')).toHaveCount(0);
     await expect(page.getByText('raw_payload')).toHaveCount(0);
+
+    await page.goto('/x/cockpit/pay-codes');
+
+    await expect(page.getByTestId('cockpit-pay-code-explorer-shell')).toBeVisible();
+
+    const nextDistributionLink = page.getByTestId('cockpit-pay-code-row-action-link').filter({ hasText: 'Distribution' }).first();
+
+    await expect(nextDistributionLink).toBeVisible();
+    await nextDistributionLink.click();
+
+    await expect(page).toHaveURL(/\/x\/cockpit\/pay-codes\/[^/]+\/distribution$/);
+    await expect(page.getByTestId('cockpit-distribution-workspace-shell')).toBeVisible();
+    await expect(page.getByText('Distribution Workspace Runtime')).toBeVisible();
+    await expect(page.getByText('Share / QR')).toBeVisible();
+    await expect(page.getByText('Copy text', { exact: true })).toBeVisible();
+    await expect(page.getByText('QR asset', { exact: true })).toBeVisible();
+    await expect(page.getByText('Digital Distribution')).toBeVisible();
+    await expect(page.getByText('SMS', { exact: true })).toBeVisible();
+    await expect(page.getByText('Print Templates')).toBeVisible();
+    await expect(page.getByText('Receipt card', { exact: true })).toBeVisible();
+    await expect(page.getByText('blocked', { exact: false }).first()).toBeVisible();
+    await expect(page.getByText('provider_payload')).toHaveCount(0);
+    await expect(page.getByText('raw_payload')).toHaveCount(0);
+    await expect(page.getByText('wallet')).toHaveCount(0);
 });
