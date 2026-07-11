@@ -74,6 +74,7 @@ const activeSummary = computed(() => {
                     <option
                         v-for="option in statusOptions"
                         :key="option.value"
+                        :selected="option.value === (statusFilter ?? 'all')"
                         :value="option.value"
                     >
                         {{ option.label }}
