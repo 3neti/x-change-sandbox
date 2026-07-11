@@ -347,6 +347,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
                             v-for="status in searchFilters.availableStatuses"
                             :key="status"
                             :value="status"
+                            :selected="status === searchFilters.statuses[0]"
                         >
                             {{ status }}
                         </option>
@@ -369,6 +370,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
                             v-for="status in searchFilters.availableHandoffStatuses"
                             :key="status"
                             :value="status"
+                            :selected="status === searchFilters.handoffStatuses[0]"
                         >
                             {{ status }}
                         </option>
