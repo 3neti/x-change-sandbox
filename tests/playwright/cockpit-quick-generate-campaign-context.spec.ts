@@ -66,6 +66,43 @@ test('quick generate renders campaign context prefill and submits safe campaign 
                         cockpit_detail: '/x/cockpit/pay-codes/PC-PLAYWRIGHT-35',
                     },
                 },
+                campaign_attribution: {
+                    schema: 'x-change.cockpit.quick-generate-campaign-attribution.v1',
+                    status: 'available',
+                    available: true,
+                    read_only: true,
+                    mutates_campaign: false,
+                    planning_key: 'plan-playwright-35',
+                    execution_id: 'exec-playwright-35',
+                    campaign_id: 'campaign-playwright-35',
+                    audience_id: 'audience-playwright-35',
+                    recipient_id: 'recipient-playwright-35',
+                    source: 'campaign_cockpit',
+                    generated_code: 'PC-PLAYWRIGHT-35',
+                },
+                post_issuance_navigation: {
+                    schema: 'x-change.cockpit.quick-generate-post-issuance-navigation.v1',
+                    status: 'available',
+                    auto_redirect: false,
+                    items: [
+                        {
+                            key: 'campaign_explorer',
+                            label: 'Return to Campaign Explorer',
+                            href: '/x/cockpit/pay-codes?campaign_planning_key=plan-playwright-35&campaign_execution_id=exec-playwright-35&campaign_source=campaign_cockpit&activity_code=PC-PLAYWRIGHT-35&activity_source=cockpit.quick-generate&search=PC-PLAYWRIGHT-35',
+                            status: 'available',
+                            enabled: true,
+                            read_only: true,
+                        },
+                        {
+                            key: 'campaign_dashboard',
+                            label: 'Return to Campaign Dashboard',
+                            href: '/x/cockpit?campaign_planning_key=plan-playwright-35&campaign_execution_id=exec-playwright-35',
+                            status: 'available',
+                            enabled: true,
+                            read_only: true,
+                        },
+                    ],
+                },
             }),
         });
     });
@@ -83,6 +120,13 @@ test('quick generate renders campaign context prefill and submits safe campaign 
     await page.getByTestId('cockpit-quick-generate-submit-button').click();
 
     await expect(page.getByTestId('cockpit-quick-generate-result-panel')).toContainText('Generated Pay Code: PC-PLAYWRIGHT-35');
+    await expect(page.getByTestId('cockpit-quick-generate-campaign-attribution-panel')).toContainText('Campaign attribution');
+    await expect(page.getByTestId('cockpit-quick-generate-campaign-attribution-panel')).toContainText('plan-playwright-35');
+    await expect(page.getByTestId('cockpit-quick-generate-campaign-attribution-panel')).toContainText('PC-PLAYWRIGHT-35');
+    await expect(page.getByTestId('cockpit-quick-generate-post-issuance-link-campaign_explorer')).toHaveAttribute('href', /campaign_planning_key=plan-playwright-35/);
+    await expect(page.getByTestId('cockpit-quick-generate-post-issuance-link-campaign_explorer')).toContainText('read-only');
+    await expect(page.getByTestId('cockpit-quick-generate-post-issuance-link-campaign_dashboard')).toHaveAttribute('href', /campaign_execution_id=exec-playwright-35/);
+    await expect(page.getByTestId('cockpit-quick-generate-post-issuance-link-campaign_dashboard')).toContainText('read-only');
     expect(submittedPayload).not.toBeNull();
     expect(submittedPayload).toMatchObject({
         metadata: {
