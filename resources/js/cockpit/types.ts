@@ -610,7 +610,20 @@ export type CockpitPayCodeExplorerFilter = {
     key: string;
     label: string;
     value: string;
-    helper: string;
+    helper?: string;
+    active?: boolean;
+    read_only?: boolean;
+};
+
+export type CockpitPayCodeExplorerStats = {
+    total?: number;
+    active?: number;
+    awaiting_approval?: number;
+    redeemed?: number;
+    expired?: number;
+    pending?: number;
+    failed?: number;
+    filtered?: number;
 };
 
 export type CockpitPayCodeExplorerRecord = {
@@ -739,6 +752,9 @@ export type CockpitPayCodeExplorerReadModel = {
     status: string;
     authorized?: boolean;
     query?: string | null;
+    status_filter?: string | null;
+    stats?: CockpitPayCodeExplorerStats;
+    filters?: CockpitPayCodeExplorerFilter[];
     records?: CockpitPayCodeExplorerReadModelRecord[];
     redactions?: CockpitReadModelRedactions;
 };
