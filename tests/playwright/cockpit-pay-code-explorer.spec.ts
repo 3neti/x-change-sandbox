@@ -75,6 +75,15 @@ test('cockpit pay code explorer row actions navigate through read-only links', a
     await firstDetailLink.click();
     await expect(page).toHaveURL(/\/x\/cockpit\/pay-codes\/[^/]+$/);
     await expect(page.getByTestId('cockpit-voucher-detail-shell')).toBeVisible();
+    await expect(page.getByTestId('cockpit-voucher-evidence-panel')).toContainText('Evidence summary');
+    await expect(page.getByTestId('cockpit-voucher-evidence-panel')).toContainText('Lifecycle facts');
+    await expect(page.getByTestId('cockpit-voucher-evidence-panel')).toContainText('Claim evidence');
+    await expect(page.getByTestId('cockpit-voucher-evidence-panel')).toContainText('Approval evidence');
+    await expect(page.getByTestId('cockpit-voucher-evidence-panel')).toContainText('Execution evidence');
+    await expect(page.getByTestId('cockpit-voucher-evidence-panel')).toContainText('Journal evidence');
+    await expect(page.getByTestId('cockpit-voucher-evidence-panel')).toContainText('Action evidence');
+    await expect(page.getByTestId('cockpit-voucher-evidence-panel')).toContainText('Feedback evidence');
+    await expect(page.getByTestId('cockpit-voucher-evidence-panel')).toContainText('Read-only');
     await expect(page.getByText('provider_payload')).toHaveCount(0);
     await expect(page.getByText('raw_payload')).toHaveCount(0);
 });
