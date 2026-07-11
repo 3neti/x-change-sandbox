@@ -32,6 +32,7 @@ import {
 } from '../quickGenerateDefaults';
 import type {
     CockpitPricingFundingSummary as CockpitPricingFundingSummaryType,
+    CockpitQuickGenerateCampaignContext,
     CockpitQuickGenerateAuthorization,
     CockpitQuickGenerateAuthorizationGate,
     CockpitQuickGenerateDraftContract,
@@ -98,6 +99,16 @@ const pricingSummaries = computed<CockpitPricingFundingSummaryType[]>(() => {
         .filter((summary): summary is CockpitPricingFundingSummaryType => summary !== null);
 
     return mapped.length > 0 ? mapped : cockpitPricingFundingSummary;
+});
+
+const campaignContext = computed<CockpitQuickGenerateCampaignContext | undefined>(() => {
+    const context = props.quick_generate_read_model?.campaign_context;
+
+    if (!readModelAvailable.value || typeof context !== 'object' || context === null) {
+        return undefined;
+    }
+
+    return context;
 });
 
 const draftContract = computed<CockpitQuickGenerateDraftContract>(() => {
@@ -904,6 +915,7 @@ function stringValue(value: unknown): string | null {
                     <CockpitQuickGenerateSubmitPanel
                         :mutation-contract="mutationContract"
                         :draft-contract="draftContract"
+                        :campaign-context="campaignContext"
                         :templates="templates"
                     />
                     <CockpitGenerateActionPanel :enabled="false" :runtime-enabled="true" />
