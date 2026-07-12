@@ -92,12 +92,22 @@ test('dashboard campaign activity card preserves recipient context in read-only 
     await page.goto(`/x/cockpit?activity_search=${code}`);
 
     const card = page.getByTestId('cockpit-operator-issuance-activity-card').filter({ hasText: code }).first();
+    const detailLink = card.getByTestId('cockpit-operator-issuance-activity-link');
+    const distributionLink = card.getByTestId('cockpit-operator-issuance-activity-distribution-link');
     const explorerLink = card.getByTestId('cockpit-operator-issuance-activity-explorer-link');
     const campaignDashboardLink = card.getByTestId('cockpit-operator-issuance-activity-campaign-dashboard-link');
 
     await expect(card).toContainText('Campaign attribution');
     await expect(card).toContainText('Recipient: recipient-playwright-44');
     await expect(card).toContainText('Recipient reference: 09173011987');
+    await expect(detailLink).toContainText('campaign context');
+    await expect(detailLink).toContainText('read-only');
+    await expect(detailLink).toHaveAttribute('href', /\/x\/cockpit\/pay-codes\/PC-PLAYWRIGHT-44\?/);
+    await expect(detailLink).toHaveAttribute('href', /campaign_recipient_id=recipient-playwright-44/);
+    await expect(distributionLink).toContainText('campaign context');
+    await expect(distributionLink).toContainText('read-only');
+    await expect(distributionLink).toHaveAttribute('href', /\/x\/cockpit\/pay-codes\/PC-PLAYWRIGHT-44\/distribution\?/);
+    await expect(distributionLink).toHaveAttribute('href', /campaign_recipient_id=recipient-playwright-44/);
     await expect(explorerLink).toContainText('campaign context');
     await expect(explorerLink).toHaveAttribute('href', /activity_code=PC-PLAYWRIGHT-44/);
     await expect(explorerLink).toHaveAttribute('href', /campaign_recipient_id=recipient-playwright-44/);
