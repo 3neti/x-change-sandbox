@@ -117,4 +117,27 @@ test('dashboard campaign activity card preserves recipient context in read-only 
     await expect(card).not.toContainText('provider_payload');
     await expect(card).not.toContainText('raw_payload');
     await expect(card).not.toContainText('wallet');
+
+    await detailLink.click();
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).toContainText('Campaign recipient context');
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).toContainText('plan-playwright-44');
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).toContainText('exec-playwright-44');
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).toContainText('recipient-playwright-44');
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).toContainText('pay_code_detail');
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).toContainText('campaign-navigation-read-only');
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).not.toContainText('provider_payload');
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).not.toContainText('raw_payload');
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).not.toContainText('wallet');
+
+    await page.goto(`/x/cockpit?activity_search=${code}`);
+    await distributionLink.click();
+    await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).toContainText('Campaign recipient context');
+    await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).toContainText('plan-playwright-44');
+    await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).toContainText('exec-playwright-44');
+    await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).toContainText('recipient-playwright-44');
+    await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).toContainText('distribution_workspace');
+    await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).toContainText('campaign-navigation-read-only');
+    await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).not.toContainText('provider_payload');
+    await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).not.toContainText('raw_payload');
+    await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).not.toContainText('wallet');
 });

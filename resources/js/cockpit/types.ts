@@ -877,6 +877,7 @@ export type CockpitVoucherDetailPageProps = {
     redaction?: CockpitReadModelRedactions & {
         policy?: string;
     };
+    campaign_navigation_context?: CockpitCampaignNavigationContext;
     read_model?: CockpitReadModelBundle;
 };
 
@@ -982,5 +983,6 @@ export type CockpitDistributionWorkspacePageProps = {
         policy?: string;
     };
     read_model?: CockpitReadModelBundle;
+    campaign_navigation_context?: CockpitCampaignNavigationContext;
     distribution_workspace_read_model?: CockpitDistributionWorkspaceReadModel;
 };
