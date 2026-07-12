@@ -128,6 +128,13 @@ test('dashboard campaign activity card preserves recipient context in read-only 
     await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).not.toContainText('provider_payload');
     await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).not.toContainText('raw_payload');
     await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).not.toContainText('wallet');
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-explorer-return-link')).toContainText('campaign context');
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-explorer-return-link')).toHaveAttribute('href', /\/x\/cockpit\/pay-codes\?/);
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-explorer-return-link')).toHaveAttribute('href', /campaign_recipient_id=recipient-playwright-44/);
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-explorer-return-link')).toHaveAttribute('href', /activity_code=PC-PLAYWRIGHT-44/);
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-dashboard-return-link')).toContainText('read-only');
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-dashboard-return-link')).toHaveAttribute('href', /\/x\/cockpit\?/);
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-dashboard-return-link')).toHaveAttribute('href', /campaign_recipient_id=recipient-playwright-44/);
 
     await page.goto(`/x/cockpit?activity_search=${code}`);
     await distributionLink.click();
@@ -140,4 +147,13 @@ test('dashboard campaign activity card preserves recipient context in read-only 
     await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).not.toContainText('provider_payload');
     await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).not.toContainText('raw_payload');
     await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).not.toContainText('wallet');
+    await expect(page.getByTestId('cockpit-distribution-campaign-detail-return-link')).toContainText('campaign context');
+    await expect(page.getByTestId('cockpit-distribution-campaign-detail-return-link')).toHaveAttribute('href', /\/x\/cockpit\/pay-codes\/PC-PLAYWRIGHT-44\?/);
+    await expect(page.getByTestId('cockpit-distribution-campaign-detail-return-link')).toHaveAttribute('href', /campaign_recipient_id=recipient-playwright-44/);
+    await expect(page.getByTestId('cockpit-distribution-campaign-explorer-return-link')).toContainText('campaign context');
+    await expect(page.getByTestId('cockpit-distribution-campaign-explorer-return-link')).toHaveAttribute('href', /\/x\/cockpit\/pay-codes\?/);
+    await expect(page.getByTestId('cockpit-distribution-campaign-explorer-return-link')).toHaveAttribute('href', /activity_code=PC-PLAYWRIGHT-44/);
+    await expect(page.getByTestId('cockpit-distribution-campaign-dashboard-return-link')).toContainText('read-only');
+    await expect(page.getByTestId('cockpit-distribution-campaign-dashboard-return-link')).toHaveAttribute('href', /\/x\/cockpit\?/);
+    await expect(page.getByTestId('cockpit-distribution-campaign-dashboard-return-link')).toHaveAttribute('href', /campaign_recipient_id=recipient-playwright-44/);
 });
