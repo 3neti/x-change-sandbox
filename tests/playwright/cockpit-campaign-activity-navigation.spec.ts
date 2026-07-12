@@ -119,7 +119,8 @@ test('dashboard campaign activity card preserves recipient context in read-only 
     await expect(card).not.toContainText('wallet');
 
     await detailLink.click();
-    await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).toContainText('Campaign recipient context');
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).toContainText('Campaign context');
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).toContainText('Opened from campaign activity');
     await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).toContainText('plan-playwright-44');
     await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).toContainText('exec-playwright-44');
     await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).toContainText('recipient-playwright-44');
@@ -128,17 +129,20 @@ test('dashboard campaign activity card preserves recipient context in read-only 
     await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).not.toContainText('provider_payload');
     await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).not.toContainText('raw_payload');
     await expect(page.getByTestId('cockpit-voucher-detail-campaign-navigation-context')).not.toContainText('wallet');
-    await expect(page.getByTestId('cockpit-voucher-detail-campaign-explorer-return-link')).toContainText('campaign context');
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-explorer-return-link')).toContainText('Back to Explorer');
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-explorer-return-link')).toContainText('read-only');
     await expect(page.getByTestId('cockpit-voucher-detail-campaign-explorer-return-link')).toHaveAttribute('href', /\/x\/cockpit\/pay-codes\?/);
     await expect(page.getByTestId('cockpit-voucher-detail-campaign-explorer-return-link')).toHaveAttribute('href', /campaign_recipient_id=recipient-playwright-44/);
     await expect(page.getByTestId('cockpit-voucher-detail-campaign-explorer-return-link')).toHaveAttribute('href', /activity_code=PC-PLAYWRIGHT-44/);
+    await expect(page.getByTestId('cockpit-voucher-detail-campaign-dashboard-return-link')).toContainText('Back to Campaign Dashboard');
     await expect(page.getByTestId('cockpit-voucher-detail-campaign-dashboard-return-link')).toContainText('read-only');
     await expect(page.getByTestId('cockpit-voucher-detail-campaign-dashboard-return-link')).toHaveAttribute('href', /\/x\/cockpit\?/);
     await expect(page.getByTestId('cockpit-voucher-detail-campaign-dashboard-return-link')).toHaveAttribute('href', /campaign_recipient_id=recipient-playwright-44/);
 
     await page.goto(`/x/cockpit?activity_search=${code}`);
     await distributionLink.click();
-    await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).toContainText('Campaign recipient context');
+    await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).toContainText('Campaign context');
+    await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).toContainText('Inspecting distribution from campaign activity');
     await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).toContainText('plan-playwright-44');
     await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).toContainText('exec-playwright-44');
     await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).toContainText('recipient-playwright-44');
@@ -147,12 +151,15 @@ test('dashboard campaign activity card preserves recipient context in read-only 
     await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).not.toContainText('provider_payload');
     await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).not.toContainText('raw_payload');
     await expect(page.getByTestId('cockpit-distribution-campaign-navigation-context')).not.toContainText('wallet');
-    await expect(page.getByTestId('cockpit-distribution-campaign-detail-return-link')).toContainText('campaign context');
+    await expect(page.getByTestId('cockpit-distribution-campaign-detail-return-link')).toContainText('Back to Pay Code Detail');
+    await expect(page.getByTestId('cockpit-distribution-campaign-detail-return-link')).toContainText('read-only');
     await expect(page.getByTestId('cockpit-distribution-campaign-detail-return-link')).toHaveAttribute('href', /\/x\/cockpit\/pay-codes\/PC-PLAYWRIGHT-44\?/);
     await expect(page.getByTestId('cockpit-distribution-campaign-detail-return-link')).toHaveAttribute('href', /campaign_recipient_id=recipient-playwright-44/);
-    await expect(page.getByTestId('cockpit-distribution-campaign-explorer-return-link')).toContainText('campaign context');
+    await expect(page.getByTestId('cockpit-distribution-campaign-explorer-return-link')).toContainText('Back to Explorer');
+    await expect(page.getByTestId('cockpit-distribution-campaign-explorer-return-link')).toContainText('read-only');
     await expect(page.getByTestId('cockpit-distribution-campaign-explorer-return-link')).toHaveAttribute('href', /\/x\/cockpit\/pay-codes\?/);
     await expect(page.getByTestId('cockpit-distribution-campaign-explorer-return-link')).toHaveAttribute('href', /activity_code=PC-PLAYWRIGHT-44/);
+    await expect(page.getByTestId('cockpit-distribution-campaign-dashboard-return-link')).toContainText('Back to Campaign Dashboard');
     await expect(page.getByTestId('cockpit-distribution-campaign-dashboard-return-link')).toContainText('read-only');
     await expect(page.getByTestId('cockpit-distribution-campaign-dashboard-return-link')).toHaveAttribute('href', /\/x\/cockpit\?/);
     await expect(page.getByTestId('cockpit-distribution-campaign-dashboard-return-link')).toHaveAttribute('href', /campaign_recipient_id=recipient-playwright-44/);
