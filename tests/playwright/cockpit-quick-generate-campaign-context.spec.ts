@@ -79,6 +79,11 @@ test('quick generate renders campaign context prefill and submits safe campaign 
                     recipient_id: 'recipient-playwright-35',
                     source: 'campaign_cockpit',
                     generated_code: 'PC-PLAYWRIGHT-35',
+                    template_key: 'ofw-remittance',
+                    amount: '500.00',
+                    currency: 'PHP',
+                    recipient_reference: '09173011987',
+                    purpose: 'Campaign payout',
                 },
                 post_issuance_navigation: {
                     schema: 'x-change.cockpit.quick-generate-post-issuance-navigation.v1',
@@ -88,7 +93,7 @@ test('quick generate renders campaign context prefill and submits safe campaign 
                         {
                             key: 'campaign_explorer',
                             label: 'Return to Campaign Explorer',
-                            href: '/x/cockpit/pay-codes?campaign_planning_key=plan-playwright-35&campaign_execution_id=exec-playwright-35&campaign_source=campaign_cockpit&activity_code=PC-PLAYWRIGHT-35&activity_source=cockpit.quick-generate&search=PC-PLAYWRIGHT-35',
+                            href: '/x/cockpit/pay-codes?campaign_planning_key=plan-playwright-35&campaign_execution_id=exec-playwright-35&campaign_id=campaign-playwright-35&campaign_audience_id=audience-playwright-35&campaign_recipient_id=recipient-playwright-35&campaign_source=campaign_cockpit&activity_code=PC-PLAYWRIGHT-35&activity_source=cockpit.quick-generate&search=PC-PLAYWRIGHT-35',
                             status: 'available',
                             enabled: true,
                             read_only: true,
@@ -96,7 +101,7 @@ test('quick generate renders campaign context prefill and submits safe campaign 
                         {
                             key: 'campaign_dashboard',
                             label: 'Return to Campaign Dashboard',
-                            href: '/x/cockpit?campaign_planning_key=plan-playwright-35&campaign_execution_id=exec-playwright-35',
+                            href: '/x/cockpit?campaign_planning_key=plan-playwright-35&campaign_execution_id=exec-playwright-35&campaign_id=campaign-playwright-35&campaign_audience_id=audience-playwright-35&campaign_recipient_id=recipient-playwright-35',
                             status: 'available',
                             enabled: true,
                             read_only: true,
@@ -123,9 +128,15 @@ test('quick generate renders campaign context prefill and submits safe campaign 
     await expect(page.getByTestId('cockpit-quick-generate-campaign-attribution-panel')).toContainText('Campaign attribution');
     await expect(page.getByTestId('cockpit-quick-generate-campaign-attribution-panel')).toContainText('plan-playwright-35');
     await expect(page.getByTestId('cockpit-quick-generate-campaign-attribution-panel')).toContainText('PC-PLAYWRIGHT-35');
+    await expect(page.getByTestId('cockpit-quick-generate-campaign-attribution-panel')).toContainText('recipient-playwright-35');
+    await expect(page.getByTestId('cockpit-quick-generate-campaign-attribution-panel')).toContainText('09173011987');
+    await expect(page.getByTestId('cockpit-quick-generate-campaign-attribution-panel')).toContainText('ofw-remittance');
+    await expect(page.getByTestId('cockpit-quick-generate-campaign-attribution-panel')).toContainText('PHP 500.00');
     await expect(page.getByTestId('cockpit-quick-generate-post-issuance-link-campaign_explorer')).toHaveAttribute('href', /campaign_planning_key=plan-playwright-35/);
+    await expect(page.getByTestId('cockpit-quick-generate-post-issuance-link-campaign_explorer')).toHaveAttribute('href', /campaign_recipient_id=recipient-playwright-35/);
     await expect(page.getByTestId('cockpit-quick-generate-post-issuance-link-campaign_explorer')).toContainText('read-only');
     await expect(page.getByTestId('cockpit-quick-generate-post-issuance-link-campaign_dashboard')).toHaveAttribute('href', /campaign_execution_id=exec-playwright-35/);
+    await expect(page.getByTestId('cockpit-quick-generate-post-issuance-link-campaign_dashboard')).toHaveAttribute('href', /campaign_recipient_id=recipient-playwright-35/);
     await expect(page.getByTestId('cockpit-quick-generate-post-issuance-link-campaign_dashboard')).toContainText('read-only');
     expect(submittedPayload).not.toBeNull();
     expect(submittedPayload).toMatchObject({
