@@ -8,6 +8,7 @@ Changes will be overwritten by php artisan x-change:install --force.
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
+import CockpitManualCopyButton from '../components/CockpitManualCopyButton.vue';
 import CockpitVoucherAuditPanel from '../components/CockpitVoucherAuditPanel.vue';
 import CockpitVoucherDistributionPanel from '../components/CockpitVoucherDistributionPanel.vue';
 import CockpitVoucherEvidencePanel from '../components/CockpitVoucherEvidencePanel.vue';
@@ -729,6 +730,12 @@ function integrationSummary(
                         </dd>
                     </div>
                 </dl>
+                <div class="mt-5">
+                    <CockpitManualCopyButton
+                        :value="beneficiaryRedeemUrl ?? beneficiaryRedeemPath"
+                        label="Copy beneficiary URL"
+                    />
+                </div>
             </section>
 
             <CockpitVoucherOverviewPanel :items="overviewItems" />
