@@ -55,6 +55,24 @@ type SafeFeedbackSummary = {
     plannedDeliveries?: string;
 };
 
+type SafeCampaignAttribution = {
+    status?: string;
+    planningKey?: string;
+    executionId?: string;
+    campaignId?: string;
+    audienceId?: string;
+    recipientId?: string;
+    source?: string;
+    generatedCode?: string;
+    templateKey?: string;
+    amount?: string;
+    currency?: string;
+    recipientReference?: string;
+    purpose?: string;
+    readOnly: boolean;
+    mutatesCampaign: boolean;
+};
+
 type SafePresentation = {
     id: string;
     title: string;
@@ -66,6 +84,7 @@ type SafePresentation = {
     journalSummary?: SafeJournalSummary;
     actionSummary?: SafeActionSummary;
     feedbackSummary?: SafeFeedbackSummary;
+    campaignAttribution?: SafeCampaignAttribution;
     handoffs: {
         journal: string;
         action: string;
@@ -213,11 +232,68 @@ function sanitizePresentation(presentation: CockpitOperatorIssuanceActivityPrese
         journalSummary: safeJournalSummary(presentation.metadata?.journal_handoff),
         actionSummary: safeActionSummary(presentation.metadata?.action_handoff),
         feedbackSummary: safeFeedbackSummary(presentation.metadata?.feedback_handoff),
+        campaignAttribution: safeCampaignAttribution(presentation.metadata?.campaign_attribution),
         handoffs: {
             journal: stringValue(presentation.handoffs?.journal) ?? 'not_wired',
             action: stringValue(presentation.handoffs?.action) ?? 'not_wired',
             feedback: stringValue(presentation.handoffs?.feedback) ?? 'not_wired',
         },
+    };
+}
+
+function safeCampaignAttribution(value: unknown): SafeCampaignAttribution | undefined {
+    if (!isPlainObject(value)) {
+        return undefined;
+    }
+
+    const status = stringValue(value.status);
+    const planningKey = stringValue(value.planning_key);
+    const executionId = stringValue(value.execution_id);
+    const campaignId = stringValue(value.campaign_id);
+    const audienceId = stringValue(value.audience_id);
+    const recipientId = stringValue(value.recipient_id);
+    const source = stringValue(value.source);
+    const generatedCode = stringValue(value.generated_code);
+    const templateKey = stringValue(value.template_key);
+    const amount = stringValue(value.amount);
+    const currency = stringValue(value.currency);
+    const recipientReference = stringValue(value.recipient_reference);
+    const purpose = stringValue(value.purpose);
+
+    if (
+        !status
+        && !planningKey
+        && !executionId
+        && !campaignId
+        && !audienceId
+        && !recipientId
+        && !source
+        && !generatedCode
+        && !templateKey
+        && !amount
+        && !currency
+        && !recipientReference
+        && !purpose
+    ) {
+        return undefined;
+    }
+
+    return {
+        status,
+        planningKey,
+        executionId,
+        campaignId,
+        audienceId,
+        recipientId,
+        source,
+        generatedCode,
+        templateKey,
+        amount,
+        currency,
+        recipientReference,
+        purpose,
+        readOnly: value.read_only === true,
+        mutatesCampaign: value.mutates_campaign === true,
     };
 }
 
@@ -624,6 +700,97 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
                             Feedback
                         </dt>
                         <dd>feedback: {{ presentation.handoffs.feedback }}</dd>
+                    </div>
+                </dl>
+
+                <dl
+                    v-if="presentation.campaignAttribution"
+                    class="mt-4 grid gap-2 rounded-lg bg-sky-50 p-3 text-xs text-sky-800 dark:bg-sky-950/40 dark:text-sky-200 sm:grid-cols-2"
+                    data-testid="cockpit-operator-issuance-activity-campaign-attribution"
+                >
+                    <div>
+                        <dt class="font-semibold text-sky-900 dark:text-sky-100">
+                            Campaign attribution
+                        </dt>
+                        <dd>Campaign attribution: {{ presentation.campaignAttribution.status ?? 'available' }}</dd>
+                    </div>
+                    <div v-if="presentation.campaignAttribution.campaignId">
+                        <dt class="font-semibold text-sky-900 dark:text-sky-100">
+                            Campaign
+                        </dt>
+                        <dd>Campaign: {{ presentation.campaignAttribution.campaignId }}</dd>
+                    </div>
+                    <div v-if="presentation.campaignAttribution.audienceId">
+                        <dt class="font-semibold text-sky-900 dark:text-sky-100">
+                            Audience
+                        </dt>
+                        <dd>Audience: {{ presentation.campaignAttribution.audienceId }}</dd>
+                    </div>
+                    <div v-if="presentation.campaignAttribution.recipientId">
+                        <dt class="font-semibold text-sky-900 dark:text-sky-100">
+                            Recipient
+                        </dt>
+                        <dd>Recipient: {{ presentation.campaignAttribution.recipientId }}</dd>
+                    </div>
+                    <div v-if="presentation.campaignAttribution.recipientReference">
+                        <dt class="font-semibold text-sky-900 dark:text-sky-100">
+                            Recipient reference
+                        </dt>
+                        <dd>Recipient reference: {{ presentation.campaignAttribution.recipientReference }}</dd>
+                    </div>
+                    <div v-if="presentation.campaignAttribution.templateKey">
+                        <dt class="font-semibold text-sky-900 dark:text-sky-100">
+                            Template
+                        </dt>
+                        <dd>Template: {{ presentation.campaignAttribution.templateKey }}</dd>
+                    </div>
+                    <div v-if="presentation.campaignAttribution.amount || presentation.campaignAttribution.currency">
+                        <dt class="font-semibold text-sky-900 dark:text-sky-100">
+                            Amount
+                        </dt>
+                        <dd>Amount: {{ presentation.campaignAttribution.currency }} {{ presentation.campaignAttribution.amount }}</dd>
+                    </div>
+                    <div v-if="presentation.campaignAttribution.generatedCode">
+                        <dt class="font-semibold text-sky-900 dark:text-sky-100">
+                            Generated Pay Code
+                        </dt>
+                        <dd>Generated Pay Code: {{ presentation.campaignAttribution.generatedCode }}</dd>
+                    </div>
+                    <div v-if="presentation.campaignAttribution.planningKey">
+                        <dt class="font-semibold text-sky-900 dark:text-sky-100">
+                            Planning key
+                        </dt>
+                        <dd>Planning key: {{ presentation.campaignAttribution.planningKey }}</dd>
+                    </div>
+                    <div v-if="presentation.campaignAttribution.executionId">
+                        <dt class="font-semibold text-sky-900 dark:text-sky-100">
+                            Execution
+                        </dt>
+                        <dd>Execution: {{ presentation.campaignAttribution.executionId }}</dd>
+                    </div>
+                    <div v-if="presentation.campaignAttribution.source">
+                        <dt class="font-semibold text-sky-900 dark:text-sky-100">
+                            Source
+                        </dt>
+                        <dd>Source: {{ presentation.campaignAttribution.source }}</dd>
+                    </div>
+                    <div v-if="presentation.campaignAttribution.purpose">
+                        <dt class="font-semibold text-sky-900 dark:text-sky-100">
+                            Purpose
+                        </dt>
+                        <dd>Purpose: {{ presentation.campaignAttribution.purpose }}</dd>
+                    </div>
+                    <div>
+                        <dt class="font-semibold text-sky-900 dark:text-sky-100">
+                            Campaign mutation
+                        </dt>
+                        <dd>Campaign mutation: {{ presentation.campaignAttribution.mutatesCampaign ? 'yes' : 'no' }}</dd>
+                    </div>
+                    <div>
+                        <dt class="font-semibold text-sky-900 dark:text-sky-100">
+                            Read-only
+                        </dt>
+                        <dd>Read-only: {{ presentation.campaignAttribution.readOnly ? 'yes' : 'no' }}</dd>
                     </div>
                 </dl>
 
