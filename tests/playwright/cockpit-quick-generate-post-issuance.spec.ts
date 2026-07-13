@@ -266,6 +266,13 @@ test('quick generate renders post issuance detail and distribution handoff links
     await expect(
         page.getByTestId('cockpit-quick-generate-mandate-options'),
     ).toContainText('Branch release');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-mandates-preview-value'),
+    ).not.toBeVisible();
+    await page.getByText('Mandates payload preview').click();
+    await expect(
+        page.getByTestId('cockpit-quick-generate-mandates-preview-value'),
+    ).toContainText('No mandates selected');
     await page
         .getByTestId('cockpit-quick-generate-mandate-branch-release')
         .check();
@@ -275,6 +282,9 @@ test('quick generate renders post issuance detail and distribution handoff links
     await page
         .getByTestId('cockpit-quick-generate-mandates')
         .fill('manual-audit');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-mandates-preview-value'),
+    ).toContainText('branch-release, counter-check, manual-audit');
     await page.getByTestId('cockpit-quick-generate-submit-count').fill('2');
     await page
         .getByTestId('cockpit-quick-generate-validation-secret')
