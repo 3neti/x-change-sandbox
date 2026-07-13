@@ -158,6 +158,21 @@ test('quick generate renders post issuance detail and distribution handoff links
     await page
         .getByTestId('cockpit-quick-generate-validation-secret')
         .fill('branch-pin');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-engineering-preview-json'),
+    ).not.toBeVisible();
+    await page
+        .getByText('Engineering Preview — sanitized instruction payload')
+        .click();
+    await expect(
+        page.getByTestId('cockpit-quick-generate-engineering-preview-json'),
+    ).toContainText('"cash"');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-engineering-preview-json'),
+    ).toContainText('[redacted secret]');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-engineering-preview-json'),
+    ).not.toContainText('branch-pin');
 
     await page.getByTestId('cockpit-quick-generate-submit-button').click();
 
