@@ -141,7 +141,16 @@ test('quick generate renders post issuance detail and distribution handoff links
     ).toBeVisible();
     await expect(
         page.getByTestId('cockpit-voucher-instruction-builder'),
-    ).toContainText('Money and quantity');
+    ).toContainText('Money, payee, and expiry');
+    await page
+        .getByTestId('cockpit-quick-generate-submit-recipient')
+        .fill('09170000000');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-payee-help'),
+    ).toContainText('Restricted to mobile number: 09170000000');
+    await page
+        .getByTestId('cockpit-quick-generate-expiry-preset')
+        .selectOption('P3D');
     await expect(
         page.getByTestId('cockpit-voucher-instruction-builder'),
     ).toContainText('Claim inputs');
@@ -180,8 +189,8 @@ test('quick generate renders post issuance detail and distribution handoff links
         page.getByTestId('cockpit-voucher-instruction-builder'),
     ).toContainText('Validation and verification');
     await expect(
-        page.getByTestId('cockpit-quick-generate-validation-section'),
-    ).toContainText('Expected recipient mobile/reference');
+        page.getByTestId('cockpit-quick-generate-payee-interpretation'),
+    ).toContainText('cash.validation.mobile');
     await expect(
         page.getByTestId('cockpit-voucher-instruction-builder'),
     ).toContainText('Feedback channels');
@@ -206,7 +215,6 @@ test('quick generate renders post issuance detail and distribution handoff links
     await page.getByText('Advanced generation and cash fields').click();
     await page.getByTestId('cockpit-quick-generate-prefix').fill('BR');
     await page.getByTestId('cockpit-quick-generate-mask').fill('****');
-    await page.getByTestId('cockpit-quick-generate-ttl').fill('P1D');
     await page
         .getByTestId('cockpit-quick-generate-settlement-rail')
         .selectOption('INSTAPAY');
@@ -332,6 +340,7 @@ test('quick generate renders post issuance detail and distribution handoff links
             mandates: ['branch-release', 'counter-check'],
             validation: {
                 secret: 'branch-pin',
+                mobile: '09170000000',
             },
         },
         inputs: {
@@ -371,7 +380,7 @@ test('quick generate renders post issuance detail and distribution handoff links
         count: 2,
         prefix: 'BR',
         mask: '****',
-        ttl: 'P1D',
+        ttl: 'P3D',
         voucher_type: 'settlement',
         target_amount: 100,
         rules: {
@@ -392,4 +401,76 @@ test('quick generate renders post issuance detail and distribution handoff links
             },
         },
     });
+});
+
+test('quick generate maps CreateV2-style payee values to validation semantics', async ({
+    page,
+}) => {
+    await login(page);
+
+    let submittedPayload: Record<string, unknown> | null = null;
+
+    await page.route('**/x/cockpit/quick-generate', async (route) => {
+        if (route.request().method() !== 'POST') {
+            await route.continue();
+
+            return;
+        }
+
+        submittedPayload = route.request().postDataJSON() as Record<
+            string,
+            unknown
+        >;
+
+        await route.fulfill({
+            status: 201,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                status: 'issued',
+                result: {
+                    code: 'PC-PLAYWRIGHT-VENDOR',
+                    links: {},
+                },
+            }),
+        });
+    });
+
+    await page.goto('/x/cockpit/quick-generate');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-shell'),
+    ).toBeVisible();
+
+    await page
+        .getByTestId('cockpit-quick-generate-submit-recipient')
+        .fill('CASH');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-payee-help'),
+    ).toContainText('anyone can claim');
+
+    await page
+        .getByTestId('cockpit-quick-generate-submit-recipient')
+        .fill('vendor:branch-001');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-payee-help'),
+    ).toContainText('Restricted to vendor alias: vendor:branch-001');
+    await page
+        .getByTestId('cockpit-quick-generate-expiry-preset')
+        .selectOption('P7D');
+
+    await page.getByTestId('cockpit-quick-generate-submit-button').click();
+
+    await expect(
+        page.getByTestId('cockpit-quick-generate-result-panel'),
+    ).toContainText('Generated Pay Code: PC-PLAYWRIGHT-VENDOR');
+
+    expect(submittedPayload).toMatchObject({
+        cash: {
+            validation: {
+                payable: 'vendor:branch-001',
+            },
+        },
+        ttl: 'P7D',
+    });
+    expect(JSON.stringify(submittedPayload)).not.toContain('provider_payload');
+    expect(JSON.stringify(submittedPayload)).not.toContain('wallet');
 });
