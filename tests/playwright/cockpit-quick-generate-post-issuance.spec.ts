@@ -152,6 +152,21 @@ test('quick generate renders post issuance detail and distribution handoff links
         page.getByTestId('cockpit-voucher-instruction-builder'),
     ).toContainText('Feedback channels');
     await expect(
+        page.getByTestId('cockpit-voucher-instruction-coverage'),
+    ).toContainText('VoucherInstruction DTO coverage');
+    await expect(
+        page.getByTestId('cockpit-voucher-instruction-coverage'),
+    ).toContainText('feedback.mobile');
+    await expect(
+        page.getByTestId('cockpit-voucher-instruction-coverage'),
+    ).toContainText('rider.splash_meta');
+    await expect(
+        page.getByTestId('cockpit-voucher-instruction-coverage'),
+    ).toContainText('execution.driver');
+    await expect(
+        page.getByTestId('cockpit-voucher-instruction-coverage'),
+    ).toContainText('metadata.collection_wallet_id');
+    await expect(
         page.getByTestId('cockpit-voucher-instruction-summary'),
     ).toContainText('Pay Code contract summary');
     await page.getByTestId('cockpit-quick-generate-submit-count').fill('2');
