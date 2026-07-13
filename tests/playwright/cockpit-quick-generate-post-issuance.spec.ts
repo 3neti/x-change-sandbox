@@ -230,7 +230,10 @@ test('quick generate renders post issuance detail and distribution handoff links
     await expect(
         page.getByTestId('cockpit-voucher-instruction-summary'),
     ).toContainText('Pay Code contract summary');
-    await page.getByText('Advanced generation and cash fields').click();
+    await page.getByText('Advanced contract controls').click();
+    await expect(
+        page.getByTestId('cockpit-quick-generate-effective-expiry'),
+    ).toContainText('Expiry preset: P3D');
     await page.getByTestId('cockpit-quick-generate-prefix').fill('BR');
     await page.getByTestId('cockpit-quick-generate-mask').fill('****');
     await page
@@ -491,4 +494,76 @@ test('quick generate maps CreateV2-style payee values to validation semantics', 
     });
     expect(JSON.stringify(submittedPayload)).not.toContain('provider_payload');
     expect(JSON.stringify(submittedPayload)).not.toContain('wallet');
+});
+
+test('quick generate applies expiry precedence from exact expiry to ttl override to preset', async ({
+    page,
+}) => {
+    await login(page);
+
+    let submittedPayload: Record<string, unknown> | null = null;
+
+    await page.route('**/x/cockpit/quick-generate', async (route) => {
+        if (route.request().method() !== 'POST') {
+            await route.continue();
+
+            return;
+        }
+
+        submittedPayload = route.request().postDataJSON() as Record<
+            string,
+            unknown
+        >;
+
+        await route.fulfill({
+            status: 201,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                status: 'issued',
+                result: {
+                    code: 'PC-PLAYWRIGHT-EXPIRY',
+                    links: {},
+                },
+            }),
+        });
+    });
+
+    await page.goto('/x/cockpit/quick-generate');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-shell'),
+    ).toBeVisible();
+
+    await page
+        .getByTestId('cockpit-quick-generate-expiry-preset')
+        .selectOption('P7D');
+    await page.getByText('Advanced contract controls').click();
+    await expect(
+        page.getByTestId('cockpit-quick-generate-effective-expiry'),
+    ).toContainText('Expiry preset: P7D');
+
+    await page.getByTestId('cockpit-quick-generate-ttl').fill('PT12H');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-effective-expiry'),
+    ).toContainText('Raw TTL override: PT12H');
+
+    await page
+        .getByTestId('cockpit-quick-generate-expires-at')
+        .fill('2026-08-01T10:30');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-effective-expiry'),
+    ).toContainText('Absolute expiry: 2026-08-01T10:30');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-effective-expiry'),
+    ).toContainText('absolute_expires_at');
+
+    await page.getByTestId('cockpit-quick-generate-submit-button').click();
+
+    await expect(
+        page.getByTestId('cockpit-quick-generate-result-panel'),
+    ).toContainText('Generated Pay Code: PC-PLAYWRIGHT-EXPIRY');
+
+    expect(submittedPayload).toMatchObject({
+        expires_at: '2026-08-01T10:30',
+    });
+    expect(submittedPayload).not.toHaveProperty('ttl');
 });
