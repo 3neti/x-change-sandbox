@@ -146,6 +146,34 @@ test('quick generate renders post issuance detail and distribution handoff links
         page.getByTestId('cockpit-voucher-instruction-builder'),
     ).toContainText('Claim inputs');
     await expect(
+        page.getByTestId('cockpit-quick-generate-input-fields'),
+    ).toContainText('Reference code');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-input-fields'),
+    ).toContainText('Signature');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-input-fields'),
+    ).toContainText('Identity verification (KYC)');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-input-fields'),
+    ).toContainText('Residential address');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-input-fields'),
+    ).toContainText('Birth date');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-input-fields'),
+    ).toContainText('Gross monthly income');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-input-fields'),
+    ).toContainText('Location');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-input-fields'),
+    ).toContainText('OTP');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-input-fields'),
+    ).toContainText('Selfie photo');
+    await page.getByLabel(/Reference code/).check();
+    await expect(
         page.getByTestId('cockpit-voucher-instruction-builder'),
     ).toContainText('Validation and verification');
     await expect(
@@ -301,7 +329,7 @@ test('quick generate renders post issuance detail and distribution handoff links
             },
         },
         inputs: {
-            fields: ['mobile'],
+            fields: ['mobile', 'reference_code'],
         },
         feedback: {
             mobile: '09175550000',
