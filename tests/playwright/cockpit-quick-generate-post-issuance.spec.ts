@@ -150,6 +150,9 @@ test('quick generate renders post issuance detail and distribution handoff links
     ).toContainText('Reference code');
     await expect(
         page.getByTestId('cockpit-quick-generate-input-fields'),
+    ).not.toContainText('Recipient mobile/reference');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-input-fields'),
     ).toContainText('Signature');
     await expect(
         page.getByTestId('cockpit-quick-generate-input-fields'),
@@ -176,6 +179,9 @@ test('quick generate renders post issuance detail and distribution handoff links
     await expect(
         page.getByTestId('cockpit-voucher-instruction-builder'),
     ).toContainText('Validation and verification');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-validation-section'),
+    ).toContainText('Expected recipient mobile/reference');
     await expect(
         page.getByTestId('cockpit-voucher-instruction-builder'),
     ).toContainText('Feedback channels');
