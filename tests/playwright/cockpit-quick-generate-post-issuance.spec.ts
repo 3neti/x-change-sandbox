@@ -257,10 +257,24 @@ test('quick generate renders post issuance detail and distribution handoff links
     await expect(
         page.getByTestId('cockpit-quick-generate-fee-preview'),
     ).toContainText('No pricing or provider quote service is called');
-    await page.getByTestId('cockpit-quick-generate-cash-type').fill('cash');
+    await page
+        .getByTestId('cockpit-quick-generate-cash-type')
+        .selectOption('cash');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-cash-type-helper'),
+    ).toContainText('Standard claimable cash Pay Code');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-mandate-options'),
+    ).toContainText('Branch release');
+    await page
+        .getByTestId('cockpit-quick-generate-mandate-branch-release')
+        .check();
+    await page
+        .getByTestId('cockpit-quick-generate-mandate-counter-check')
+        .check();
     await page
         .getByTestId('cockpit-quick-generate-mandates')
-        .fill('branch-release, counter-check');
+        .fill('manual-audit');
     await page.getByTestId('cockpit-quick-generate-submit-count').fill('2');
     await page
         .getByTestId('cockpit-quick-generate-validation-secret')
@@ -373,7 +387,7 @@ test('quick generate renders post issuance detail and distribution handoff links
             settlement_rail: 'INSTAPAY',
             fee_strategy: 'include',
             type: 'cash',
-            mandates: ['branch-release', 'counter-check'],
+            mandates: ['branch-release', 'counter-check', 'manual-audit'],
             validation: {
                 secret: 'branch-pin',
                 mobile: '09170000000',
