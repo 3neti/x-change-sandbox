@@ -187,6 +187,17 @@ test('quick generate renders post issuance detail and distribution handoff links
     await page
         .getByTestId('cockpit-quick-generate-validation-secret')
         .fill('branch-pin');
+    await page.getByText('Structured validation rules').click();
+    await page.getByTestId('cockpit-quick-generate-signature-required').check();
+    await page
+        .getByTestId('cockpit-quick-generate-face-match-required')
+        .check();
+    await page
+        .getByTestId('cockpit-quick-generate-face-match-confidence')
+        .fill('0.82');
+    await page
+        .getByTestId('cockpit-quick-generate-time-validation-enabled')
+        .check();
     await page
         .getByTestId('cockpit-quick-generate-feedback-mobile')
         .fill('09175550000');
@@ -264,6 +275,26 @@ test('quick generate renders post issuance detail and distribution handoff links
         },
         feedback: {
             mobile: '09175550000',
+        },
+        validation: {
+            signature: {
+                required: true,
+                on_failure: 'block',
+            },
+            face_match: {
+                required: true,
+                on_failure: 'block',
+                min_confidence: 0.82,
+            },
+            time: {
+                window: {
+                    start_time: '09:00',
+                    end_time: '17:00',
+                    timezone: 'Asia/Manila',
+                },
+                limit_minutes: 10,
+                track_duration: true,
+            },
         },
         count: 2,
         prefix: 'BR',
