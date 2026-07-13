@@ -143,6 +143,24 @@ test('quick generate renders post issuance detail and distribution handoff links
         page.getByTestId('cockpit-voucher-instruction-builder'),
     ).toContainText('Money, payee, and expiry');
     await page
+        .getByTestId('cockpit-quick-generate-submit-template')
+        .selectOption('ofw-remittance');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-submit-amount'),
+    ).toHaveValue('500');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-submit-recipient'),
+    ).toHaveValue('09170000000');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-submit-purpose'),
+    ).toHaveValue('OFW remittance payout');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-expiry-preset'),
+    ).toHaveValue('P3D');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-payee-help'),
+    ).toContainText('Restricted to mobile number: 09170000000');
+    await page
         .getByTestId('cockpit-quick-generate-submit-recipient')
         .fill('09170000000');
     await expect(
@@ -344,7 +362,7 @@ test('quick generate renders post issuance detail and distribution handoff links
             },
         },
         inputs: {
-            fields: ['mobile', 'reference_code'],
+            fields: ['mobile', 'reference_code', 'name'],
         },
         feedback: {
             mobile: '09175550000',
