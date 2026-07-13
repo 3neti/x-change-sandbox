@@ -169,6 +169,20 @@ test('quick generate renders post issuance detail and distribution handoff links
     await expect(
         page.getByTestId('cockpit-voucher-instruction-summary'),
     ).toContainText('Pay Code contract summary');
+    await page.getByText('Advanced generation and cash fields').click();
+    await page.getByTestId('cockpit-quick-generate-prefix').fill('BR');
+    await page.getByTestId('cockpit-quick-generate-mask').fill('****');
+    await page.getByTestId('cockpit-quick-generate-ttl').fill('P1D');
+    await page
+        .getByTestId('cockpit-quick-generate-settlement-rail')
+        .selectOption('INSTAPAY');
+    await page
+        .getByTestId('cockpit-quick-generate-fee-strategy')
+        .selectOption('include');
+    await page.getByTestId('cockpit-quick-generate-cash-type').fill('cash');
+    await page
+        .getByTestId('cockpit-quick-generate-mandates')
+        .fill('branch-release, counter-check');
     await page.getByTestId('cockpit-quick-generate-submit-count').fill('2');
     await page
         .getByTestId('cockpit-quick-generate-validation-secret')
@@ -237,6 +251,10 @@ test('quick generate renders post issuance detail and distribution handoff links
     ).not.toContainText('wallet');
     expect(submittedPayload).toMatchObject({
         cash: {
+            settlement_rail: 'INSTAPAY',
+            fee_strategy: 'include',
+            type: 'cash',
+            mandates: ['branch-release', 'counter-check'],
             validation: {
                 secret: 'branch-pin',
             },
@@ -248,6 +266,9 @@ test('quick generate renders post issuance detail and distribution handoff links
             mobile: '09175550000',
         },
         count: 2,
+        prefix: 'BR',
+        mask: '****',
+        ttl: 'P1D',
         metadata: {
             custom: {
                 cockpit: {
