@@ -242,6 +242,21 @@ test('quick generate renders post issuance detail and distribution handoff links
     await page
         .getByTestId('cockpit-quick-generate-fee-strategy')
         .selectOption('include');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-fee-preview'),
+    ).toContainText('Include fee inside Pay Code amount');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-fee-preview'),
+    ).toContainText('PHP 10.00');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-fee-preview'),
+    ).toContainText('PHP 490.00');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-fee-preview'),
+    ).toContainText('PHP 500.00');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-fee-preview'),
+    ).toContainText('No pricing or provider quote service is called');
     await page.getByTestId('cockpit-quick-generate-cash-type').fill('cash');
     await page
         .getByTestId('cockpit-quick-generate-mandates')
