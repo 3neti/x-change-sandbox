@@ -174,7 +174,7 @@ test('quick generate renders post issuance detail and distribution handoff links
     ).toContainText('Claim inputs');
     await expect(
         page.getByTestId('cockpit-quick-generate-input-fields'),
-    ).toContainText('Reference code');
+    ).toContainText('Reference Code');
     await expect(
         page.getByTestId('cockpit-quick-generate-input-fields'),
     ).not.toContainText('Recipient mobile/reference');
@@ -183,16 +183,16 @@ test('quick generate renders post issuance detail and distribution handoff links
     ).toContainText('Signature');
     await expect(
         page.getByTestId('cockpit-quick-generate-input-fields'),
-    ).toContainText('Identity verification (KYC)');
+    ).toContainText('KYC');
     await expect(
         page.getByTestId('cockpit-quick-generate-input-fields'),
-    ).toContainText('Residential address');
+    ).toContainText('Address');
     await expect(
         page.getByTestId('cockpit-quick-generate-input-fields'),
-    ).toContainText('Birth date');
+    ).toContainText('Birthdate');
     await expect(
         page.getByTestId('cockpit-quick-generate-input-fields'),
-    ).toContainText('Gross monthly income');
+    ).toContainText('Gross Monthly Income');
     await expect(
         page.getByTestId('cockpit-quick-generate-input-fields'),
     ).toContainText('Location');
@@ -201,8 +201,36 @@ test('quick generate renders post issuance detail and distribution handoff links
     ).toContainText('OTP');
     await expect(
         page.getByTestId('cockpit-quick-generate-input-fields'),
-    ).toContainText('Selfie photo');
-    await page.getByLabel(/Reference code/).check();
+    ).toContainText('Selfie Photo');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-input-fields'),
+    ).toContainText('Mobile Number');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-input-fields'),
+    ).toContainText('Email Address');
+    const claimInputsText =
+        (await page
+            .getByTestId('cockpit-quick-generate-input-fields')
+            .textContent()) ?? '';
+    expect(claimInputsText.indexOf('Signature')).toBeLessThan(
+        claimInputsText.indexOf('Selfie Photo'),
+    );
+    expect(claimInputsText.indexOf('Selfie Photo')).toBeLessThan(
+        claimInputsText.indexOf('Location'),
+    );
+    expect(claimInputsText.indexOf('Location')).toBeLessThan(
+        claimInputsText.indexOf('OTP'),
+    );
+    expect(claimInputsText.indexOf('OTP')).toBeLessThan(
+        claimInputsText.indexOf('KYC'),
+    );
+    expect(claimInputsText.indexOf('KYC')).toBeLessThan(
+        claimInputsText.indexOf('Reference Code'),
+    );
+    expect(claimInputsText.indexOf('Reference Code')).toBeLessThan(
+        claimInputsText.indexOf('Full Name'),
+    );
+    await page.getByLabel(/Reference Code/).check();
     await expect(
         page.getByTestId('cockpit-voucher-instruction-builder'),
     ).toContainText('Validation and verification');
