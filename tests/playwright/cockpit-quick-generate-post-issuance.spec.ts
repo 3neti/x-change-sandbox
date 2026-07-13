@@ -198,6 +198,36 @@ test('quick generate renders post issuance detail and distribution handoff links
     await page
         .getByTestId('cockpit-quick-generate-time-validation-enabled')
         .check();
+    await page.getByText('Advanced rider metadata').click();
+    await page
+        .getByTestId('cockpit-quick-generate-rider-redirect-timeout')
+        .fill('12');
+    await page
+        .getByTestId('cockpit-quick-generate-rider-splash-profile')
+        .fill('operator-safe');
+    await page
+        .getByTestId('cockpit-quick-generate-rider-og-source')
+        .selectOption('splash');
+    await page.getByText('Settlement fields').click();
+    await page
+        .getByTestId('cockpit-quick-generate-voucher-type')
+        .selectOption('settlement');
+    await page.getByTestId('cockpit-quick-generate-target-amount').fill('100');
+    await page
+        .getByTestId('cockpit-quick-generate-rules-min-payment')
+        .fill('10');
+    await page.getByText('Execution instruction', { exact: true }).click();
+    await page.getByTestId('cockpit-quick-generate-include-execution').check();
+    await page
+        .getByTestId('cockpit-quick-generate-execution-driver')
+        .fill('default');
+    await page
+        .getByTestId('cockpit-quick-generate-execution-pipeline')
+        .fill('validate, execute');
+    await page.getByText('Metadata fields').click();
+    await page
+        .getByTestId('cockpit-quick-generate-metadata-flow-type')
+        .fill('cockpit.quick-generate');
     await page
         .getByTestId('cockpit-quick-generate-feedback-mobile')
         .fill('09175550000');
@@ -276,6 +306,14 @@ test('quick generate renders post issuance detail and distribution handoff links
         feedback: {
             mobile: '09175550000',
         },
+        rider: {
+            redirect_timeout: 12,
+            splash_meta: {
+                sanitized: true,
+                html_profile: 'operator-safe',
+            },
+            og_source: 'splash',
+        },
         validation: {
             signature: {
                 required: true,
@@ -300,7 +338,19 @@ test('quick generate renders post issuance detail and distribution handoff links
         prefix: 'BR',
         mask: '****',
         ttl: 'P1D',
+        voucher_type: 'settlement',
+        target_amount: 100,
+        rules: {
+            min_payment: 10,
+            auto_close_on_full_payment: true,
+        },
+        execution: {
+            schema: 'voucher.execution.v1',
+            driver: 'default',
+            pipeline: ['validate', 'execute'],
+        },
         metadata: {
+            flow_type: 'cockpit.quick-generate',
             custom: {
                 cockpit: {
                     builder: 'guided-voucher-instruction-builder',
