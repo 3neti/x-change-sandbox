@@ -158,6 +158,9 @@ test('quick generate renders post issuance detail and distribution handoff links
     await page
         .getByTestId('cockpit-quick-generate-validation-secret')
         .fill('branch-pin');
+    await page
+        .getByTestId('cockpit-quick-generate-feedback-mobile')
+        .fill('09175550000');
     await expect(
         page.getByTestId('cockpit-quick-generate-engineering-preview-json'),
     ).not.toBeVisible();
@@ -225,6 +228,9 @@ test('quick generate renders post issuance detail and distribution handoff links
         },
         inputs: {
             fields: ['mobile'],
+        },
+        feedback: {
+            mobile: '09175550000',
         },
         count: 2,
         metadata: {
