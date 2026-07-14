@@ -565,16 +565,46 @@ test('quick generate renders post issuance detail and distribution handoff links
     await expect(
         page.getByTestId('cockpit-quick-generate-feedback-mobile-toggle'),
     ).not.toBeChecked();
-    await page.getByTestId('cockpit-quick-generate-slice-mode-named').click();
     await expect(
         page.getByTestId('cockpit-quick-generate-named-slices-panel'),
-    ).toContainText('Named claim slices');
+    ).toContainText('Claim slice builder');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-fixed-slices'),
+    ).toHaveValue('1');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-max-slices'),
+    ).toHaveValue('1');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-min-withdrawal'),
+    ).toHaveValue('500');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-named-slice-0-amount'),
+    ).toHaveValue('500');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-named-slice-0-description'),
+    ).toHaveValue('Whole Amount');
     await expect(
         page.getByTestId('cockpit-quick-generate-named-slices-total'),
     ).toContainText('PHP 500.00');
     await expect(
         page.getByTestId('cockpit-quick-generate-named-slices-remaining'),
     ).toContainText('PHP 0.00');
+    await page.getByTestId('cockpit-quick-generate-add-named-slice').click();
+    await expect(
+        page.getByTestId('cockpit-quick-generate-fixed-slices'),
+    ).toHaveValue('2');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-named-slice-0-amount'),
+    ).toHaveValue('250');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-named-slice-1-amount'),
+    ).toHaveValue('250');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-named-slice-0-description'),
+    ).toHaveValue('Slice 1');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-named-slice-1-description'),
+    ).toHaveValue('Slice 2');
     await page
         .getByTestId('cockpit-quick-generate-named-slice-0-amount')
         .fill('200');
