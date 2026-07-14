@@ -734,3 +734,49 @@ test('quick generate applies expiry precedence from exact expiry to ttl override
     });
     expect(submittedPayload).not.toHaveProperty('ttl');
 });
+
+test('quick generate renders html splash body in a sandboxed local preview', async ({
+    page,
+}) => {
+    await login(page);
+
+    await page.goto('/x/cockpit/quick-generate');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-shell'),
+    ).toBeVisible();
+
+    await page.getByTestId('cockpit-quick-generate-rider-splash-body').fill(`
+<div class="text-center mx-auto" style="max-width: 1200px;">
+  <div class="relative rounded-lg shadow-lg overflow-hidden bg-black">
+    <img
+      src="https://github.com/lbhurtado/failure-of-simultaneity/blob/main/planetary-rose.PNG?raw=true"
+      alt="i carry your heart with me"
+      style="display:block; width:100%; height:auto;"
+    />
+    <div class="absolute inset-0 flex items-center justify-end">
+      <div class="text-white">
+        <h2 class="text-2xl sm:text-4xl font-serif font-normal tracking-wide mb-3">
+          i carry your heart with me
+        </h2>
+      </div>
+    </div>
+  </div>
+</div>`);
+
+    await expect(
+        page.getByTestId('cockpit-quick-generate-rider-splash-preview'),
+    ).toContainText('HTML is rendered in a sandboxed preview iframe');
+
+    const previewFrame = page.frameLocator(
+        '[data-testid="cockpit-quick-generate-rider-splash-html-preview"]',
+    );
+
+    await expect(
+        previewFrame.getByRole('heading', {
+            name: /i carry your heart with me/i,
+        }),
+    ).toBeVisible();
+    await expect(
+        previewFrame.getByAltText('i carry your heart with me'),
+    ).toBeVisible();
+});
