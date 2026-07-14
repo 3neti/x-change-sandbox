@@ -101,6 +101,7 @@ type NamedClaimSlice = {
 };
 
 const wholeSliceDescription = 'Whole Amount';
+const openSliceDescription = 'Open Slice';
 
 type QuickGenerateTemplateDefaults = {
     amount: string;
@@ -655,6 +656,10 @@ watch(amount, (): void => {
 
     if (sliceMode.value === 'fixed') {
         redistributeFixedNamedClaimSlices(fixedSliceCount());
+    }
+
+    if (sliceMode.value === 'open') {
+        configureOpenAmountSlice();
     }
 });
 
@@ -2267,6 +2272,19 @@ function defaultWholeNamedClaimSlices(): NamedClaimSlice[] {
     ];
 }
 
+function defaultOpenNamedClaimSlices(): NamedClaimSlice[] {
+    return [
+        {
+            id: 'slice_1',
+            amount: formatSliceAmount(normalizedPayCodeAmount()),
+            description: openSliceDescription,
+            tag: '',
+            claim_on: '',
+            claim_by: '',
+        },
+    ];
+}
+
 function equalFixedNamedClaimSlices(count: number): NamedClaimSlice[] {
     const safeCount = Math.max(1, Math.round(count));
     const normalizedAmount = Number(amount.value);
@@ -2296,12 +2314,36 @@ function equalFixedNamedClaimSlices(count: number): NamedClaimSlice[] {
     });
 }
 
+function redistributeExistingNamedClaimSliceAmounts(
+    existingSlices: NamedClaimSlice[],
+): NamedClaimSlice[] {
+    const redistributedSlices = equalFixedNamedClaimSlices(
+        existingSlices.length,
+    );
+
+    return existingSlices.map((slice, index) => ({
+        ...slice,
+        id: namedClaimSliceId(index),
+        amount:
+            redistributedSlices[index]?.amount ??
+            formatSliceAmount(normalizedPayCodeAmount()),
+    }));
+}
+
 function configureWholeAmountSlices(): void {
     sliceMode.value = 'whole';
     slices.value = '1';
     maxSlices.value = '1';
     minWithdrawal.value = formatSliceAmount(normalizedPayCodeAmount());
     namedClaimSlices.value = defaultWholeNamedClaimSlices();
+}
+
+function configureOpenAmountSlice(): void {
+    sliceMode.value = 'open';
+    slices.value = '1';
+    maxSlices.value = '1';
+    minWithdrawal.value = formatSliceAmount(normalizedPayCodeAmount());
+    namedClaimSlices.value = defaultOpenNamedClaimSlices();
 }
 
 function fixedSliceCount(): number {
@@ -2316,14 +2358,7 @@ function applyTemplateSliceDefaults(
     defaults: QuickGenerateTemplateDefaults,
 ): void {
     if (defaults.sliceMode === 'open') {
-        sliceMode.value = 'open';
-        slices.value = '1';
-        maxSlices.value = defaults.maxSlices;
-        minWithdrawal.value =
-            defaults.minWithdrawal === ''
-                ? formatSliceAmount(normalizedPayCodeAmount())
-                : defaults.minWithdrawal;
-        namedClaimSlices.value = defaultWholeNamedClaimSlices();
+        configureOpenAmountSlice();
 
         return;
     }
@@ -2388,6 +2423,21 @@ function reconcileSliceModeFromNamedClaimSlices(): void {
         namedClaimSlices.value.length === 1 &&
         firstSlice !== undefined &&
         namedClaimSliceAmountEquals(firstSlice, normalizedPayCodeAmount()) &&
+        firstSlice.description.trim() === openSliceDescription &&
+        !namedClaimSliceHasCustomMetadata(firstSlice)
+    ) {
+        sliceMode.value = 'open';
+        slices.value = '1';
+        maxSlices.value = '1';
+        minWithdrawal.value = formatSliceAmount(normalizedPayCodeAmount());
+
+        return;
+    }
+
+    if (
+        namedClaimSlices.value.length === 1 &&
+        firstSlice !== undefined &&
+        namedClaimSliceAmountEquals(firstSlice, normalizedPayCodeAmount()) &&
         firstSlice.description.trim() === wholeSliceDescription &&
         !namedClaimSliceHasCustomMetadata(firstSlice)
     ) {
@@ -2429,12 +2479,30 @@ function removeNamedClaimSlice(index: number): void {
         return;
     }
 
+    const wasEqualFixed = namedClaimSlicesAreEqualFixed();
+
     namedClaimSlices.value = namedClaimSlices.value
         .filter((_, sliceIndex) => sliceIndex !== index)
         .map((slice, sliceIndex) => ({
             ...slice,
             id: slice.id || namedClaimSliceId(sliceIndex),
         }));
+
+    if (wasEqualFixed && namedClaimSlices.value.length === 1) {
+        configureWholeAmountSlices();
+
+        return;
+    }
+
+    if (wasEqualFixed) {
+        redistributeFixedNamedClaimSlices(namedClaimSlices.value.length);
+
+        return;
+    }
+
+    namedClaimSlices.value = redistributeExistingNamedClaimSliceAmounts(
+        namedClaimSlices.value,
+    );
     reconcileSliceModeFromNamedClaimSlices();
 }
 
@@ -2463,12 +2531,7 @@ function setSliceMode(mode: string): void {
     }
 
     if (mode === 'open') {
-        sliceMode.value = 'open';
-        maxSlices.value = maxSlices.value === '' ? '1' : maxSlices.value;
-        minWithdrawal.value =
-            minWithdrawal.value === ''
-                ? formatSliceAmount(normalizedPayCodeAmount())
-                : minWithdrawal.value;
+        configureOpenAmountSlice();
 
         return;
     }
@@ -4499,7 +4562,11 @@ function dataGet(source: unknown, path: string[]): unknown {
                                         <p
                                             class="text-xs font-semibold text-slate-900 dark:text-slate-100"
                                         >
-                                            Slice {{ index + 1 }}
+                                            {{
+                                                sliceMode === 'open'
+                                                    ? openSliceDescription
+                                                    : `Slice ${index + 1}`
+                                            }}
                                         </p>
                                         <button
                                             type="button"
