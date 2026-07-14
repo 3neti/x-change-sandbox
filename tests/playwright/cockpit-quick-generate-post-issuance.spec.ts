@@ -238,6 +238,27 @@ test('quick generate renders post issuance detail and distribution handoff links
         page.getByTestId('cockpit-quick-generate-payee-interpretation'),
     ).toContainText('cash.validation.mobile');
     await expect(
+        page.getByTestId('cockpit-quick-generate-recipient-match-group'),
+    ).toContainText('Recipient Match');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-recipient-match-group'),
+    ).toContainText('Match Mobile Number');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-recipient-match-group'),
+    ).toContainText('Require Payable / Vendor Alias');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-secret-group'),
+    ).toContainText('Claim Secret / Branch PIN');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-evidence-required-group'),
+    ).toContainText('Evidence Required');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-evidence-required-group'),
+    ).toContainText('KYC');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-evidence-required-group'),
+    ).toContainText('OTP');
+    await expect(
         page.getByTestId('cockpit-voucher-instruction-builder'),
     ).toContainText('Feedback channels');
     await expect(
@@ -317,8 +338,32 @@ test('quick generate renders post issuance detail and distribution handoff links
     await page
         .getByTestId('cockpit-quick-generate-validation-secret')
         .fill('branch-pin');
-    await page.getByText('Structured validation rules').click();
     await page.getByTestId('cockpit-quick-generate-signature-required').check();
+    await expect(
+        page.getByTestId(
+            'cockpit-quick-generate-cash-validation-preview-value',
+        ),
+    ).not.toBeVisible();
+    await page.getByText('Validation Payload Preview').click();
+    await expect(
+        page.getByTestId(
+            'cockpit-quick-generate-cash-validation-preview-value',
+        ),
+    ).toContainText('secret configured');
+    await expect(
+        page.getByTestId(
+            'cockpit-quick-generate-cash-validation-preview-value',
+        ),
+    ).toContainText('match mobile number');
+    await expect(
+        page.getByTestId(
+            'cockpit-quick-generate-structured-validation-preview-value',
+        ),
+    ).toContainText('signature required');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-validation-preview'),
+    ).not.toContainText('branch-pin');
+    await page.getByText('Advanced verification rules').click();
     await page
         .getByTestId('cockpit-quick-generate-face-match-required')
         .check();
@@ -328,6 +373,16 @@ test('quick generate renders post issuance detail and distribution handoff links
     await page
         .getByTestId('cockpit-quick-generate-time-validation-enabled')
         .check();
+    await expect(
+        page.getByTestId(
+            'cockpit-quick-generate-structured-validation-preview-value',
+        ),
+    ).toContainText('face match required');
+    await expect(
+        page.getByTestId(
+            'cockpit-quick-generate-structured-validation-preview-value',
+        ),
+    ).toContainText('claim time window');
     await page.getByText('Advanced rider metadata').click();
     await page
         .getByTestId('cockpit-quick-generate-rider-redirect-timeout')
