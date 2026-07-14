@@ -422,9 +422,17 @@ test('quick generate renders post issuance detail and distribution handoff links
     await expect(
         page.getByTestId('cockpit-quick-generate-rider-og-preview'),
     ).toContainText('Splash preview');
+    const ogPreviewFrame = page.frameLocator(
+        '[data-testid="cockpit-quick-generate-rider-og-html-preview"]',
+    );
     await expect(
-        page.getByTestId('cockpit-quick-generate-rider-og-preview'),
-    ).toContainText('Claim your support-ready Pay Code');
+        ogPreviewFrame.getByRole('heading', {
+            name: 'Claim your support-ready Pay Code',
+        }),
+    ).toBeVisible();
+    await expect(
+        ogPreviewFrame.getByText('Read Support Instructions'),
+    ).toBeVisible();
     await expect(
         page.getByTestId('cockpit-quick-generate-rider-og-preview'),
     ).toContainText('No external OG fetch');
@@ -745,6 +753,12 @@ test('quick generate renders html splash body in a sandboxed local preview', asy
         page.getByTestId('cockpit-quick-generate-shell'),
     ).toBeVisible();
 
+    await page
+        .getByTestId('cockpit-quick-generate-rider-splash-headline')
+        .fill('Rendered HTML Preview');
+    await page
+        .getByTestId('cockpit-quick-generate-rider-splash-cta-text')
+        .fill('Open Claim Instructions');
     await page.getByTestId('cockpit-quick-generate-rider-splash-body').fill(`
 <div class="text-center mx-auto" style="max-width: 1200px;">
   <div class="relative rounded-lg shadow-lg overflow-hidden bg-black">
@@ -778,5 +792,18 @@ test('quick generate renders html splash body in a sandboxed local preview', asy
     ).toBeVisible();
     await expect(
         previewFrame.getByAltText('i carry your heart with me'),
+    ).toBeVisible();
+    await expect(
+        previewFrame.getByText('Open Claim Instructions'),
+    ).toBeVisible();
+
+    const ogPreviewFrame = page.frameLocator(
+        '[data-testid="cockpit-quick-generate-rider-og-html-preview"]',
+    );
+
+    await expect(
+        ogPreviewFrame.getByRole('heading', {
+            name: 'Rendered HTML Preview',
+        }),
     ).toBeVisible();
 });
