@@ -383,6 +383,18 @@ test('quick generate renders post issuance detail and distribution handoff links
             'cockpit-quick-generate-structured-validation-preview-value',
         ),
     ).toContainText('claim time window');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-rider-cta-section'),
+    ).toContainText('CTA / Destination');
+    await page
+        .getByTestId('cockpit-quick-generate-rider-url-preset')
+        .selectOption('support-page');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-rider-url-preset-helper'),
+    ).toContainText('Beneficiary support and help instructions');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-rider-url'),
+    ).toHaveValue('https://example.com/support');
     await page.getByText('Advanced rider metadata').click();
     await page
         .getByTestId('cockpit-quick-generate-rider-redirect-timeout')
@@ -493,6 +505,7 @@ test('quick generate renders post issuance detail and distribution handoff links
             mobile: '09175550000',
         },
         rider: {
+            url: 'https://example.com/support',
             redirect_timeout: 12,
             splash_meta: {
                 sanitized: true,
