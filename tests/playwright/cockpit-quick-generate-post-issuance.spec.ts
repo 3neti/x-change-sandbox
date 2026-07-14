@@ -484,6 +484,9 @@ test('quick generate renders post issuance detail and distribution handoff links
     await expect(
         page.getByTestId('cockpit-quick-generate-feedback-mobile-normalized'),
     ).toContainText('+639173011987');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-feedback-mobile-toggle'),
+    ).not.toBeChecked();
     await page
         .getByTestId('cockpit-quick-generate-feedback-mobile')
         .fill('639173011987');
@@ -496,6 +499,15 @@ test('quick generate renders post issuance detail and distribution handoff links
     await expect(
         page.getByTestId('cockpit-quick-generate-feedback-mobile-normalized'),
     ).toContainText('+639173011987');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-feedback-mobile-toggle'),
+    ).not.toBeChecked();
+    await page
+        .getByTestId('cockpit-quick-generate-feedback-mobile')
+        .fill('9170000004');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-feedback-mobile-toggle'),
+    ).toBeChecked();
     await page
         .getByTestId('cockpit-quick-generate-feedback-webhook-toggle')
         .check();
@@ -506,6 +518,9 @@ test('quick generate renders post issuance detail and distribution handoff links
         .getByTestId('cockpit-quick-generate-feedback-email')
         .fill('not-an-email');
     await expect(
+        page.getByTestId('cockpit-quick-generate-feedback-email-toggle'),
+    ).not.toBeChecked();
+    await expect(
         page.getByTestId('cockpit-quick-generate-feedback-email-error'),
     ).toContainText('valid email');
     await expect(
@@ -513,10 +528,22 @@ test('quick generate renders post issuance detail and distribution handoff links
     ).toBeDisabled();
     await page
         .getByTestId('cockpit-quick-generate-feedback-email')
+        .fill('PLAYWRIGHT-COCKPIT@EXAMPLE.TEST');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-feedback-email-toggle'),
+    ).toBeChecked();
+    await page
+        .getByTestId('cockpit-quick-generate-feedback-email')
         .fill('CUSTOM@Example.TEST');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-feedback-email-toggle'),
+    ).not.toBeChecked();
     await page
         .getByTestId('cockpit-quick-generate-feedback-webhook')
         .fill('javascript:alert(1)');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-feedback-webhook-toggle'),
+    ).not.toBeChecked();
     await expect(
         page.getByTestId('cockpit-quick-generate-feedback-webhook-error'),
     ).toContainText('http(s)');
@@ -526,12 +553,18 @@ test('quick generate renders post issuance detail and distribution handoff links
     await page
         .getByTestId('cockpit-quick-generate-feedback-webhook')
         .fill('https://example.com/hooks/cockpit');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-feedback-webhook-toggle'),
+    ).not.toBeChecked();
     await page
         .getByTestId('cockpit-quick-generate-feedback-mobile')
         .fill('09175550000');
     await expect(
         page.getByTestId('cockpit-quick-generate-feedback-mobile-normalized'),
     ).toContainText('+639175550000');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-feedback-mobile-toggle'),
+    ).not.toBeChecked();
     await expect(
         page.getByTestId('cockpit-quick-generate-engineering-preview-json'),
     ).not.toBeVisible();
