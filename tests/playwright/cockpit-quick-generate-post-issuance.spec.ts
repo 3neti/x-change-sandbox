@@ -565,6 +565,52 @@ test('quick generate renders post issuance detail and distribution handoff links
     await expect(
         page.getByTestId('cockpit-quick-generate-feedback-mobile-toggle'),
     ).not.toBeChecked();
+    await page.getByTestId('cockpit-quick-generate-slice-mode-named').click();
+    await expect(
+        page.getByTestId('cockpit-quick-generate-named-slices-panel'),
+    ).toContainText('Named claim slices');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-named-slices-total'),
+    ).toContainText('PHP 500.00');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-named-slices-remaining'),
+    ).toContainText('PHP 0.00');
+    await page
+        .getByTestId('cockpit-quick-generate-named-slice-0-amount')
+        .fill('200');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-named-slices-error'),
+    ).toContainText('must equal the Pay Code amount');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-submit-button'),
+    ).toBeDisabled();
+    await page
+        .getByTestId('cockpit-quick-generate-named-slice-0-amount')
+        .fill('250');
+    await page
+        .getByTestId('cockpit-quick-generate-named-slice-1-amount')
+        .fill('250');
+    await page
+        .getByTestId('cockpit-quick-generate-named-slice-0-description')
+        .fill('Food support');
+    await page
+        .getByTestId('cockpit-quick-generate-named-slice-0-tag')
+        .fill('food');
+    await page
+        .getByTestId('cockpit-quick-generate-named-slice-0-claim-on')
+        .fill('2026-07-20');
+    await page
+        .getByTestId('cockpit-quick-generate-named-slice-0-claim-by')
+        .fill('2026-07-30');
+    await page
+        .getByTestId('cockpit-quick-generate-named-slice-1-description')
+        .fill('Transport support');
+    await page
+        .getByTestId('cockpit-quick-generate-named-slice-1-tag')
+        .fill('transport');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-named-slices-remaining'),
+    ).toContainText('PHP 0.00');
     await expect(
         page.getByTestId('cockpit-quick-generate-engineering-preview-json'),
     ).not.toBeVisible();
@@ -574,6 +620,12 @@ test('quick generate renders post issuance detail and distribution handoff links
     await expect(
         page.getByTestId('cockpit-quick-generate-engineering-preview-json'),
     ).toContainText('"cash"');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-engineering-preview-json'),
+    ).toContainText('"mode": "named"');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-engineering-preview-json'),
+    ).toContainText('"Food support"');
     await expect(
         page.getByTestId('cockpit-quick-generate-engineering-preview-json'),
     ).toContainText('[redacted secret]');
@@ -634,6 +686,9 @@ test('quick generate renders post issuance detail and distribution handoff links
                 secret: 'branch-pin',
                 mobile: '09170000000',
             },
+            slice_mode: 'open',
+            max_slices: 2,
+            min_withdrawal: 250,
         },
         inputs: {
             fields: ['mobile', 'email', 'reference_code', 'name'],
@@ -691,6 +746,27 @@ test('quick generate renders post issuance detail and distribution handoff links
         },
         metadata: {
             flow_type: 'cockpit.quick-generate',
+            slices: [
+                {
+                    id: 'slice_1',
+                    amount: 250,
+                    description: 'Food support',
+                    tag: 'food',
+                    claim_on: '2026-07-20',
+                    claim_by: '2026-07-30',
+                },
+                {
+                    id: 'slice_2',
+                    amount: 250,
+                    description: 'Transport support',
+                    tag: 'transport',
+                },
+            ],
+            slice_policy: {
+                mode: 'named',
+                selection: 'one_or_many',
+                enforced: true,
+            },
             custom: {
                 cockpit: {
                     builder: 'guided-voucher-instruction-builder',
