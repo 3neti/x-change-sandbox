@@ -474,10 +474,28 @@ test('quick generate renders post issuance detail and distribution handoff links
         .check();
     await expect(
         page.getByTestId('cockpit-quick-generate-feedback-mobile'),
-    ).toHaveValue('+639170000004');
+    ).toHaveValue('(917) 000-0004');
     await expect(
         page.getByTestId('cockpit-quick-generate-feedback-mobile-normalized'),
     ).toContainText('+639170000004');
+    await page
+        .getByTestId('cockpit-quick-generate-feedback-mobile')
+        .fill('9173011987');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-feedback-mobile-normalized'),
+    ).toContainText('+639173011987');
+    await page
+        .getByTestId('cockpit-quick-generate-feedback-mobile')
+        .fill('639173011987');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-feedback-mobile-normalized'),
+    ).toContainText('+639173011987');
+    await page
+        .getByTestId('cockpit-quick-generate-feedback-mobile')
+        .fill('+639173011987');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-feedback-mobile-normalized'),
+    ).toContainText('+639173011987');
     await page
         .getByTestId('cockpit-quick-generate-feedback-webhook-toggle')
         .check();
