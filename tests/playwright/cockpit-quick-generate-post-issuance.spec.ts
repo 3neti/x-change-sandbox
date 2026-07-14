@@ -413,6 +413,21 @@ test('quick generate renders post issuance detail and distribution handoff links
     await expect(
         page.getByTestId('cockpit-quick-generate-rider-splash-preview'),
     ).toContainText('Read Support Instructions');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-rider-og-preview'),
+    ).toContainText('OG Preview');
+    await page
+        .getByTestId('cockpit-quick-generate-rider-og-source')
+        .selectOption('splash');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-rider-og-preview'),
+    ).toContainText('Splash preview');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-rider-og-preview'),
+    ).toContainText('Claim your support-ready Pay Code');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-rider-og-preview'),
+    ).toContainText('No external OG fetch');
     await page.getByText('Advanced rider metadata').click();
     await page
         .getByTestId('cockpit-quick-generate-rider-redirect-timeout')
@@ -420,9 +435,6 @@ test('quick generate renders post issuance detail and distribution handoff links
     await page
         .getByTestId('cockpit-quick-generate-rider-splash-profile')
         .fill('operator-safe');
-    await page
-        .getByTestId('cockpit-quick-generate-rider-og-source')
-        .selectOption('splash');
     await page.getByText('Settlement fields').click();
     await page
         .getByTestId('cockpit-quick-generate-voucher-type')
