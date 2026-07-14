@@ -2371,7 +2371,7 @@ function redistributeFixedNamedClaimSlices(count: number): void {
 
     sliceMode.value = 'fixed';
     slices.value = String(safeCount);
-    maxSlices.value = '1';
+    maxSlices.value = String(safeCount);
     minWithdrawal.value = formatSliceAmount(normalizedPayCodeAmount());
     namedClaimSlices.value = equalFixedNamedClaimSlices(safeCount);
 }
@@ -2452,7 +2452,7 @@ function reconcileSliceModeFromNamedClaimSlices(): void {
     if (namedClaimSlicesAreEqualFixed()) {
         sliceMode.value = 'fixed';
         slices.value = String(namedClaimSlices.value.length);
-        maxSlices.value = '1';
+        maxSlices.value = String(namedClaimSlices.value.length);
         minWithdrawal.value = formatSliceAmount(normalizedPayCodeAmount());
 
         return;
@@ -4482,7 +4482,7 @@ function dataGet(source: unknown, path: string[]): unknown {
                                 <label
                                     class="grid min-w-0 gap-1 text-xs font-medium text-slate-700 dark:text-slate-300"
                                 >
-                                    Max Open Claims
+                                    Max Claims
                                     <input
                                         v-model="maxSlices"
                                         type="number"
@@ -4498,7 +4498,8 @@ function dataGet(source: unknown, path: string[]): unknown {
                                     <span
                                         class="text-[11px] leading-snug font-normal text-slate-500 dark:text-slate-400"
                                     >
-                                        Maximum allowed claims for Open Slice.
+                                        Mirrors fixed/named claim count;
+                                        editable only for Open Slice.
                                     </span>
                                 </label>
                                 <label

@@ -614,6 +614,9 @@ test('quick generate renders post issuance detail and distribution handoff links
         page.getByTestId('cockpit-quick-generate-fixed-slices'),
     ).toHaveValue('2');
     await expect(
+        page.getByTestId('cockpit-quick-generate-max-slices'),
+    ).toHaveValue('2');
+    await expect(
         page.getByTestId('cockpit-quick-generate-named-slice-0-amount'),
     ).toHaveValue('250');
     await expect(
@@ -630,6 +633,9 @@ test('quick generate renders post issuance detail and distribution handoff links
         page.getByTestId('cockpit-quick-generate-fixed-slices'),
     ).toHaveValue('3');
     await expect(
+        page.getByTestId('cockpit-quick-generate-max-slices'),
+    ).toHaveValue('3');
+    await expect(
         page.getByTestId('cockpit-quick-generate-named-slice-0-amount'),
     ).toHaveValue('166.67');
     await expect(
@@ -643,6 +649,9 @@ test('quick generate renders post issuance detail and distribution handoff links
         .click();
     await expect(
         page.getByTestId('cockpit-quick-generate-fixed-slices'),
+    ).toHaveValue('2');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-max-slices'),
     ).toHaveValue('2');
     await expect(
         page.getByTestId('cockpit-quick-generate-named-slice-0-amount'),
