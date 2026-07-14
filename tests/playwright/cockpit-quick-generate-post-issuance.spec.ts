@@ -464,8 +464,56 @@ test('quick generate renders post issuance detail and distribution handoff links
         .getByTestId('cockpit-quick-generate-metadata-flow-type')
         .fill('cockpit.quick-generate');
     await page
+        .getByTestId('cockpit-quick-generate-feedback-email-toggle')
+        .check();
+    await expect(
+        page.getByTestId('cockpit-quick-generate-feedback-email'),
+    ).toHaveValue(email);
+    await page
+        .getByTestId('cockpit-quick-generate-feedback-mobile-toggle')
+        .check();
+    await expect(
+        page.getByTestId('cockpit-quick-generate-feedback-mobile'),
+    ).toHaveValue('+639170000004');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-feedback-mobile-normalized'),
+    ).toContainText('+639170000004');
+    await page
+        .getByTestId('cockpit-quick-generate-feedback-webhook-toggle')
+        .check();
+    await expect(
+        page.getByTestId('cockpit-quick-generate-feedback-webhook'),
+    ).toHaveValue(/\/x\/webhooks\/operator\//);
+    await page
+        .getByTestId('cockpit-quick-generate-feedback-email')
+        .fill('not-an-email');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-feedback-email-error'),
+    ).toContainText('valid email');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-submit-button'),
+    ).toBeDisabled();
+    await page
+        .getByTestId('cockpit-quick-generate-feedback-email')
+        .fill('CUSTOM@Example.TEST');
+    await page
+        .getByTestId('cockpit-quick-generate-feedback-webhook')
+        .fill('javascript:alert(1)');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-feedback-webhook-error'),
+    ).toContainText('http(s)');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-submit-button'),
+    ).toBeDisabled();
+    await page
+        .getByTestId('cockpit-quick-generate-feedback-webhook')
+        .fill('https://example.com/hooks/cockpit');
+    await page
         .getByTestId('cockpit-quick-generate-feedback-mobile')
         .fill('09175550000');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-feedback-mobile-normalized'),
+    ).toContainText('+639175550000');
     await expect(
         page.getByTestId('cockpit-quick-generate-engineering-preview-json'),
     ).not.toBeVisible();
@@ -537,10 +585,12 @@ test('quick generate renders post issuance detail and distribution handoff links
             },
         },
         inputs: {
-            fields: ['mobile', 'reference_code', 'name'],
+            fields: ['mobile', 'email', 'reference_code', 'name'],
         },
         feedback: {
-            mobile: '09175550000',
+            email: 'custom@example.test',
+            mobile: '+639175550000',
+            webhook: 'https://example.com/hooks/cockpit',
         },
         rider: {
             url: 'https://example.com/support',

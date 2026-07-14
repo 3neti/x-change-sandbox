@@ -1155,6 +1155,7 @@ function stringValue(value: unknown): string | null {
                     :mutation-contract="mutationContract"
                     :draft-contract="draftContract"
                     :campaign-context="campaignContext"
+                    :feedback-defaults="props.feedback_defaults"
                     :templates="templates"
                 />
                 <CockpitGenerateActionPanel
