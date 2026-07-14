@@ -395,6 +395,24 @@ test('quick generate renders post issuance detail and distribution handoff links
     await expect(
         page.getByTestId('cockpit-quick-generate-rider-url'),
     ).toHaveValue('https://example.com/support');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-rider-splash-builder'),
+    ).toContainText('Splash Page Builder');
+    await page
+        .getByTestId('cockpit-quick-generate-rider-splash-headline')
+        .fill('Claim your support-ready Pay Code');
+    await page
+        .getByTestId('cockpit-quick-generate-rider-splash-body')
+        .fill('Bring a valid ID and present this Pay Code at the counter.');
+    await page
+        .getByTestId('cockpit-quick-generate-rider-splash-cta-text')
+        .fill('Read Support Instructions');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-rider-splash-preview'),
+    ).toContainText('Claim your support-ready Pay Code');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-rider-splash-preview'),
+    ).toContainText('Read Support Instructions');
     await page.getByText('Advanced rider metadata').click();
     await page
         .getByTestId('cockpit-quick-generate-rider-redirect-timeout')
@@ -506,6 +524,8 @@ test('quick generate renders post issuance detail and distribution handoff links
         },
         rider: {
             url: 'https://example.com/support',
+            splash: '<h1>Claim your support-ready Pay Code</h1>\n<p>Bring a valid ID and present this Pay Code at the counter.</p>\n<p><strong>Read Support Instructions</strong></p>',
+            splash_timeout: 5,
             redirect_timeout: 12,
             splash_meta: {
                 sanitized: true,
