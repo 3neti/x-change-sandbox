@@ -675,6 +675,7 @@ const lastMessage = ref(
     'Submit will call the existing x-change issuance handoff route.',
 );
 const lastResponse = ref<Record<string, unknown> | null>(null);
+const submissionErrors = ref<Array<{ field: string; message: string }>>([]);
 
 watch(selectedTemplate, (templateKey): void => {
     applyTemplateDefaults(templateKey);
@@ -925,6 +926,20 @@ const beneficiaryClaimUrl = computed<string | null>(() => {
     }
 
     return `${window.location.origin}${beneficiaryRedeemPath.value}`;
+});
+
+const beneficiaryClaimRouteLabel = computed<string>(() => {
+    const value = beneficiaryClaimUrl.value ?? beneficiaryRedeemPath.value ?? '';
+
+    if (value.includes('/x/claim/') && value.includes('/experience')) {
+        return 'Claim experience URL';
+    }
+
+    if (value.includes('/disburse')) {
+        return 'Legacy disburse URL';
+    }
+
+    return 'Beneficiary URL';
 });
 
 const generationStatusLabel = computed<string>(() => {
@@ -2172,6 +2187,7 @@ async function submit(): Promise<void> {
     lastStatus.value = 'submitting';
     lastMessage.value =
         'Submitting through the idempotency-protected issuance handoff.';
+    submissionErrors.value = [];
 
     const idempotencyKey = generateIdempotencyKey();
     const payload = buildPayload();
@@ -2195,10 +2211,24 @@ async function submit(): Promise<void> {
         const body = await safeJson(response);
 
         if (!response.ok) {
+            const normalizedErrors = normalizeSubmissionErrors(body);
             lastStatus.value = 'failed';
             lastMessage.value =
-                stringValue(body.message) ??
-                'Quick Generate submission failed.';
+                normalizedErrors.length > 0
+                    ? 'Quick Generate needs a few fields corrected before issuance.'
+                    : stringValue(body.message) ??
+                      'Quick Generate submission failed.';
+            submissionErrors.value =
+                normalizedErrors.length > 0
+                    ? normalizedErrors
+                    : [
+                          {
+                              field: 'Submission',
+                              message:
+                                  stringValue(body.message) ??
+                                  'Quick Generate submission failed.',
+                          },
+                      ];
             emit('submitError', body);
 
             return;
@@ -2209,6 +2239,7 @@ async function submit(): Promise<void> {
             body.status === 'replayed'
                 ? 'Idempotent replay returned the existing operator-safe result.'
                 : 'Pay Code issued through the existing x-change issuance handoff.';
+        submissionErrors.value = [];
         lastResponse.value = body;
         emit('submitSuccess', body);
     } catch (error) {
@@ -2221,10 +2252,69 @@ async function submit(): Promise<void> {
 
         lastStatus.value = 'failed';
         lastMessage.value = body.message;
+        submissionErrors.value = [
+            {
+                field: 'Network',
+                message: body.message,
+            },
+        ];
         emit('submitError', body);
     } finally {
         processing.value = false;
     }
+}
+
+function normalizeSubmissionErrors(
+    body: Record<string, unknown>,
+): Array<{ field: string; message: string }> {
+    const errors = dataGet(body, ['errors']);
+
+    if (typeof errors !== 'object' || errors === null) {
+        const message = stringValue(body.message);
+
+        return message === null
+            ? []
+            : [
+                  {
+                      field: 'Submission',
+                      message,
+                  },
+              ];
+    }
+
+    return Object.entries(errors as Record<string, unknown>).flatMap(
+        ([field, messages]) => {
+            if (Array.isArray(messages)) {
+                return messages
+                    .map((message) => stringValue(message))
+                    .filter((message): message is string => message !== null)
+                    .map((message) => ({
+                        field: humanizeFieldPath(field),
+                        message,
+                    }));
+            }
+
+            const message = stringValue(messages);
+
+            return message === null
+                ? []
+                : [
+                      {
+                          field: humanizeFieldPath(field),
+                          message,
+                      },
+                  ];
+        },
+    );
+}
+
+function humanizeFieldPath(field: string): string {
+    return field
+        .replace(/\.\d+\./g, '.')
+        .replace(/[_\.]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function refreshReadModel(): void {
@@ -5648,6 +5738,25 @@ function dataGet(source: unknown, path: string[]): unknown {
             {{ lastMessage }}
         </p>
 
+        <section
+            v-if="submissionErrors.length > 0"
+            class="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-900 dark:border-rose-900/70 dark:bg-rose-950/30 dark:text-rose-100"
+            data-testid="cockpit-quick-generate-submission-errors"
+        >
+            <p class="font-semibold">Fix these fields before generating</p>
+            <ul class="mt-2 space-y-1">
+                <li
+                    v-for="error in submissionErrors"
+                    :key="`${error.field}:${error.message}`"
+                    class="leading-5"
+                    data-testid="cockpit-quick-generate-submission-error"
+                >
+                    <span class="font-semibold">{{ error.field }}:</span>
+                    {{ error.message }}
+                </li>
+            </ul>
+        </section>
+
         <div
             v-if="lastResponse"
             class="mt-4 rounded-2xl border border-emerald-200 bg-white p-4 text-xs text-slate-700 shadow-sm dark:border-emerald-900 dark:bg-slate-950 dark:text-slate-300"
@@ -5733,6 +5842,13 @@ function dataGet(source: unknown, path: string[]): unknown {
                             {{ beneficiaryClaimUrl }}
                         </p>
                         <p
+                            v-if="beneficiaryClaimUrl || beneficiaryRedeemPath"
+                            class="mt-2 inline-flex rounded-full bg-emerald-100 px-2 py-1 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-200"
+                            data-testid="cockpit-quick-generate-primary-claim-route-source"
+                        >
+                            {{ beneficiaryClaimRouteLabel }}
+                        </p>
+                        <p
                             v-else
                             class="mt-1 text-[11px] leading-4 text-emerald-800 dark:text-emerald-200"
                         >
@@ -5742,6 +5858,12 @@ function dataGet(source: unknown, path: string[]): unknown {
                     </div>
 
                     <div class="flex flex-wrap gap-2">
+                        <CockpitManualCopyButton
+                            v-if="beneficiaryClaimUrl"
+                            :value="beneficiaryClaimUrl"
+                            label="Copy claim URL"
+                            data-testid="cockpit-quick-generate-primary-copy-control"
+                        />
                         <a
                             v-if="beneficiaryClaimUrl"
                             :href="beneficiaryClaimUrl"
