@@ -576,7 +576,13 @@ test('quick generate renders post issuance detail and distribution handoff links
     ).toHaveValue('1');
     await expect(
         page.getByTestId('cockpit-quick-generate-min-withdrawal'),
-    ).toHaveValue('500');
+    ).toHaveValue('25');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-minimum-withdrawal-policy'),
+    ).toContainText('Effective Minimum');
+    await expect(
+        page.getByTestId('cockpit-quick-generate-minimum-withdrawal-policy'),
+    ).toContainText('PHP 25.00');
     await expect(
         page.getByTestId('cockpit-quick-generate-named-slice-0-amount'),
     ).toHaveValue('500');
@@ -598,7 +604,7 @@ test('quick generate renders post issuance detail and distribution handoff links
     ).toHaveValue('1');
     await expect(
         page.getByTestId('cockpit-quick-generate-min-withdrawal'),
-    ).toHaveValue('500');
+    ).toHaveValue('25');
     await expect(
         page.getByTestId('cockpit-quick-generate-named-slice-0-amount'),
     ).toHaveValue('500');
@@ -761,6 +767,7 @@ test('quick generate renders post issuance detail and distribution handoff links
         page.getByTestId('cockpit-quick-generate-result-panel'),
     ).not.toContainText('wallet');
     expect(submittedPayload).toMatchObject({
+        provider: 'netbank',
         cash: {
             settlement_rail: 'INSTAPAY',
             fee_strategy: 'include',
