@@ -7,7 +7,7 @@ Do not edit this published host copy directly.
 Changes will be overwritten by php artisan x-change:install --force.
 -->
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import CockpitCampaignAdoptionPanel from '../components/CockpitCampaignAdoptionPanel.vue';
 import CockpitLiquidityHero from '../components/CockpitLiquidityHero.vue';
 import CockpitOperatorIssuanceActivityPanel from '../components/CockpitOperatorIssuanceActivityPanel.vue';
@@ -34,6 +34,7 @@ import type {
 const props = defineProps<CockpitDashboardPageProps>();
 
 const readModel = computed(() => props.dashboard_read_model);
+const expandedIntegrationDetails = ref<Record<string, boolean>>({});
 
 const metrics = computed<CockpitDashboardMetric[]>(() => {
     if (!readModel.value?.authorized || !Array.isArray(readModel.value.metrics) || readModel.value.metrics.length === 0) {
@@ -391,6 +392,17 @@ function integrationSourceLabel(key: string): string {
 
     return 'Notification source';
 }
+
+function toggleIntegrationDetails(key: string): void {
+    expandedIntegrationDetails.value = {
+        ...expandedIntegrationDetails.value,
+        [key]: expandedIntegrationDetails.value[key] !== true,
+    };
+}
+
+function areIntegrationDetailsExpanded(key: string): boolean {
+    return expandedIntegrationDetails.value[key] === true;
+}
 </script>
 
 <template>
@@ -577,13 +589,20 @@ function integrationSourceLabel(key: string): string {
                         <p class="mt-4 text-2xl font-semibold text-slate-950 dark:text-slate-50">
                             {{ summary.count }}
                         </p>
-                        <details
+                        <button
+                            type="button"
+                            class="mt-3 inline-flex min-h-7 items-center justify-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold leading-none text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                            data-testid="cockpit-integration-summary-details-toggle"
+                            :aria-expanded="areIntegrationDetailsExpanded(summary.key)"
+                            @click="toggleIntegrationDetails(summary.key)"
+                        >
+                            {{ areIntegrationDetailsExpanded(summary.key) ? 'Hide connection details' : 'Connection details' }}
+                        </button>
+                        <div
+                            v-if="areIntegrationDetailsExpanded(summary.key)"
                             class="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:bg-slate-950 dark:text-slate-300"
                             data-testid="cockpit-integration-summary-details"
                         >
-                            <summary class="cursor-pointer font-semibold text-slate-700 dark:text-slate-200">
-                                Connection details
-                            </summary>
                             <dl class="mt-3 space-y-2">
                                 <div>
                                     <dt class="font-semibold text-slate-700 dark:text-slate-200">
@@ -598,7 +617,7 @@ function integrationSourceLabel(key: string): string {
                                     <dd>{{ displayStatus(summary.reason) }}</dd>
                                 </div>
                             </dl>
-                        </details>
+                        </div>
                     </article>
                 </div>
             </section>
