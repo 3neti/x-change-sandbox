@@ -31,7 +31,7 @@ const severityClass = (severity: CockpitRiskSignal['severity']): string => {
             Risk and Expiry
         </p>
         <h3 class="mt-2 text-lg font-semibold text-slate-950 dark:text-slate-50">
-            Attention queue placeholder
+            Risk signals
         </h3>
 
         <div class="mt-5 space-y-3">
@@ -57,4 +57,3 @@ const severityClass = (severity: CockpitRiskSignal['severity']): string => {
         </div>
     </section>
 </template>
-

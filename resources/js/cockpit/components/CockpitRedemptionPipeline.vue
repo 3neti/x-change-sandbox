@@ -25,7 +25,7 @@ defineProps<{
                     Redemption Pipeline
                 </p>
                 <h3 class="mt-2 text-lg font-semibold text-slate-950 dark:text-slate-50">
-                    Lifecycle visibility placeholder
+                    Redemption status
                 </h3>
             </div>
             <span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
@@ -50,4 +50,3 @@ defineProps<{
         </div>
     </section>
 </template>
-
