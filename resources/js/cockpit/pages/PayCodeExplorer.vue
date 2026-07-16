@@ -45,6 +45,60 @@ const stats = computed(() => ({
     failed: numberValue(readModel.value?.stats?.failed),
     filtered: numberValue(readModel.value?.stats?.filtered),
 }));
+const attentionCount = computed(() => stats.value.awaitingApproval + stats.value.pending + stats.value.failed + stats.value.expired);
+const quickGenerateHref = computed(() => '/x/cockpit/quick-generate');
+const primarySummaryItems = computed(() => [
+    {
+        key: 'filtered',
+        label: 'Visible',
+        value: String(stats.value.filtered || records.value.length),
+        helper: 'Sanitized rows matching the current read model.',
+    },
+    {
+        key: 'total',
+        label: 'Total',
+        value: String(stats.value.total || records.value.length),
+        helper: 'Total available from the read-model summary.',
+    },
+    {
+        key: 'attention',
+        label: 'Needs Attention',
+        value: String(attentionCount.value),
+        helper: 'Expired, pending, failed, or awaiting approval summaries.',
+    },
+    {
+        key: 'payload-policy',
+        label: 'Payload Policy',
+        value: payloadPolicy.value,
+        helper: 'List rows are sanitized before display.',
+    },
+]);
+const enabledRowActionCount = computed(() => records.value.reduce((count, record) => (
+    count + record.actions.filter((action) => action.enabled && action.href !== null).length
+), 0));
+const disabledRowActionCount = computed(() => records.value.reduce((count, record) => (
+    count + record.actions.filter((action) => action.disabled).length
+), 0));
+const rowActionGuidance = computed(() => [
+    {
+        key: 'navigation',
+        label: 'Navigation Links',
+        value: String(enabledRowActionCount.value),
+        helper: 'Enabled row actions are read-only links to Cockpit detail or distribution pages.',
+    },
+    {
+        key: 'blocked',
+        label: 'Blocked Actions',
+        value: String(disabledRowActionCount.value),
+        helper: 'Disabled row actions remain informational and do not execute feedback or workflow actions.',
+    },
+    {
+        key: 'result-rows',
+        label: 'Rows',
+        value: String(records.value.length),
+        helper: 'Rows are sanitized before rendering.',
+    },
+]);
 const campaignNavigationContext = computed<CockpitCampaignNavigationContext | null>(() => {
     const context = props.campaign_navigation_context;
 
@@ -164,6 +218,14 @@ const integrationBadges = computed(() => [
     integrationBadge('actions', 'Actions', props.read_model?.actions),
     integrationBadge('feedback', 'Feedback', props.read_model?.feedback),
 ]);
+const integrationReadinessCards = computed(() => integrationBadges.value.map((badge) => ({
+    ...badge,
+    helper: badge.key === 'journal'
+        ? 'Journal evidence remains read-only audit context.'
+        : badge.key === 'actions'
+          ? 'Action CTAs are presentation-only unless explicitly authorized elsewhere.'
+          : 'Feedback delivery state is communication status, not lifecycle truth.',
+})));
 
 function sanitizeRecord(record: CockpitPayCodeExplorerReadModelRecord): CockpitPayCodeExplorerRecord | null {
     const code = stringValue(record.code);
@@ -317,6 +379,112 @@ function integrationBadge(
             </div>
 
             <section
+                class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm dark:border-emerald-900/70 dark:bg-emerald-950/40"
+                data-testid="cockpit-pay-code-explorer-primary-summary"
+            >
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
+                            Operator list summary
+                        </p>
+                        <h3 class="mt-2 text-xl font-semibold text-slate-950 dark:text-slate-50">
+                            Pay Code Explorer
+                        </h3>
+                        <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+                            This page helps operators find Pay Codes using sanitized list facts. It can navigate to detail and distribution workspaces, but it does not mutate vouchers, execute drivers, send feedback, write journal entries, call providers, or move money.
+                        </p>
+                    </div>
+                    <span class="w-fit rounded-full bg-white px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200 dark:bg-slate-950 dark:text-emerald-200 dark:ring-emerald-800">
+                        read-only
+                    </span>
+                </div>
+
+                <dl class="mt-5 grid gap-3 text-sm md:grid-cols-2 xl:grid-cols-4">
+                    <div
+                        v-for="item in primarySummaryItems"
+                        :key="item.key"
+                        class="rounded-xl bg-white/80 p-4 dark:bg-slate-950/70"
+                        data-testid="cockpit-pay-code-explorer-primary-summary-item"
+                    >
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                            {{ item.label }}
+                        </dt>
+                        <dd class="mt-1 text-lg font-semibold text-slate-950 dark:text-slate-50">
+                            {{ item.value }}
+                        </dd>
+                        <p class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                            {{ item.helper }}
+                        </p>
+                    </div>
+                </dl>
+
+                <div class="mt-5 rounded-xl border border-emerald-200 bg-white/80 p-4 dark:border-emerald-900/60 dark:bg-slate-950/70">
+                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300">
+                        Current view
+                    </p>
+                    <p class="mt-2 text-sm font-semibold text-slate-950 dark:text-slate-50">
+                        Query: {{ query || 'all Pay Codes' }} · Status: {{ statusFilter ?? 'all statuses' }}
+                    </p>
+                    <p class="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                        Search and filter controls use read-only GET navigation. Row actions are navigation-only unless a future authorized mutation slice explicitly changes that boundary.
+                    </p>
+                    <div class="mt-4 flex flex-wrap gap-3">
+                        <a
+                            :href="quickGenerateHref"
+                            class="inline-flex items-center rounded-full bg-emerald-700 px-4 py-2 text-xs font-semibold text-white transition hover:bg-emerald-800"
+                            data-testid="cockpit-pay-code-explorer-primary-quick-generate-link"
+                        >
+                            Quick Generate
+                        </a>
+                        <a
+                            href="/x/cockpit/pay-codes"
+                            class="inline-flex items-center rounded-full border border-emerald-300 px-4 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-700 dark:text-emerald-200 dark:hover:bg-emerald-900/50"
+                            data-testid="cockpit-pay-code-explorer-primary-clear-link"
+                        >
+                            Clear filters
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <section
+                class="rounded-xl border border-emerald-200 bg-white p-5 shadow-sm dark:border-emerald-900/70 dark:bg-slate-900"
+                data-testid="cockpit-pay-code-row-action-guidance"
+            >
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300">
+                            Row action guidance
+                        </p>
+                        <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+                            Row actions are safe navigation or disabled placeholders. This page does not execute actions, deliver feedback, mutate vouchers, or call providers from a list row.
+                        </p>
+                    </div>
+                    <span class="w-fit rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-200">
+                        navigation-only
+                    </span>
+                </div>
+                <dl class="mt-4 grid gap-3 text-sm md:grid-cols-3">
+                    <div
+                        v-for="item in rowActionGuidance"
+                        :key="item.key"
+                        class="rounded-lg border border-slate-200 p-3 dark:border-slate-800"
+                        data-testid="cockpit-pay-code-row-action-guidance-item"
+                    >
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                            {{ item.label }}
+                        </dt>
+                        <dd class="mt-1 text-lg font-semibold text-slate-950 dark:text-slate-50">
+                            {{ item.value }}
+                        </dd>
+                        <p class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                            {{ item.helper }}
+                        </p>
+                    </div>
+                </dl>
+            </section>
+
+            <section
                 class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
                 data-testid="cockpit-pay-code-stats-summary"
             >
@@ -362,6 +530,41 @@ function integrationBadge(
                         {{ badge.label }}: {{ badge.status }}
                         <span class="ml-1 font-normal opacity-70">{{ badge.policy }}</span>
                     </span>
+                </div>
+            </section>
+
+            <section
+                class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                data-testid="cockpit-pay-code-integration-readiness"
+            >
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                    Integration readiness
+                </p>
+                <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+                    These cards summarize read-only integration context for the list. They do not write journal entries, execute actions, send feedback, or change voucher lifecycle state.
+                </p>
+                <div class="mt-4 grid gap-3 md:grid-cols-3">
+                    <article
+                        v-for="card in integrationReadinessCards"
+                        :key="card.key"
+                        class="rounded-lg border border-slate-200 p-4 dark:border-slate-800"
+                        data-testid="cockpit-pay-code-integration-readiness-card"
+                    >
+                        <div class="flex items-center justify-between gap-3">
+                            <h3 class="font-semibold text-slate-950 dark:text-slate-50">
+                                {{ card.label }}
+                            </h3>
+                            <span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                                {{ card.status }}
+                            </span>
+                        </div>
+                        <p class="mt-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                            {{ card.policy }}
+                        </p>
+                        <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                            {{ card.helper }}
+                        </p>
+                    </article>
                 </div>
             </section>
 
