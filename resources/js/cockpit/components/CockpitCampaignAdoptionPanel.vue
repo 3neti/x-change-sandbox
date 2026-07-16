@@ -178,7 +178,9 @@ function displayKey(value: string): string {
     return value
         .replaceAll('_', ' ')
         .replaceAll('-', ' ')
-        .replace(/\b\w/g, (character) => character.toUpperCase());
+        .replace(/\b\w/g, (character) => character.toUpperCase())
+        .replaceAll(' Api ', ' API ')
+        .replace(/ Api$/u, ' API');
 }
 
 function displayStatus(value: string): string {
