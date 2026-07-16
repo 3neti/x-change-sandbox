@@ -23,13 +23,13 @@ withDefaults(defineProps<{
         {
             key: 'internal',
             label: 'Internal Balance',
-            value: 'Pending read model',
+            value: 'Summary not connected',
             tone: 'neutral',
         },
         {
             key: 'live',
             label: 'Live Balance',
-            value: 'Pending provider',
+            value: 'Provider not connected',
             tone: 'neutral',
         },
     ],
@@ -63,4 +63,3 @@ withDefaults(defineProps<{
         </div>
     </header>
 </template>
-
