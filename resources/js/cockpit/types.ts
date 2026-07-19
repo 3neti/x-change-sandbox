@@ -944,6 +944,7 @@ export type CockpitDistributionChannel = {
     label: string;
     status: string;
     helper: string;
+    metadata?: Record<string, unknown>;
 };
 
 export type CockpitPrintTemplate = {
