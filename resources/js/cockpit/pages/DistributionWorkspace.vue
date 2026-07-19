@@ -265,6 +265,7 @@ const distributionMetrics = computed<CockpitDistributionMetric[]>(() => {
         label: metric.label,
         value: metric.status,
         helper: helperWithSource(metric),
+        metadata: metric.metadata,
     }));
 });
 

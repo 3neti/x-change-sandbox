@@ -966,6 +966,7 @@ export type CockpitDistributionMetric = {
     label: string;
     value: string;
     helper: string;
+    metadata?: Record<string, unknown>;
 };
 
 export type CockpitDistributionAction = {
