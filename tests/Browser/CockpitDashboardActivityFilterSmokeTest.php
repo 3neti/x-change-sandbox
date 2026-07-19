@@ -41,13 +41,6 @@ test('cockpit dashboard renders read-only operator activity search filters', fun
             ->waitForText("Pay Code {$code} issued", 10)
             ->assertPathIs('/x/cockpit')
             ->assertPresent('[data-testid="cockpit-connected-services-overview"]')
-            ->assertSee('Connected Services')
-            ->assertSee('Audit Trail')
-            ->assertSee('Follow-Up Actions')
-            ->assertSee('Notifications')
-            ->assertSee('Campaigns')
-            ->assertSee('Balances')
-            ->assertSee('Execution Evidence')
             ->assertQueryStringHas('activity_search', $code)
             ->assertQueryStringHas('activity_status', 'issued')
             ->assertQueryStringHas('activity_handoff_status', 'recorded')
@@ -69,5 +62,18 @@ test('cockpit dashboard renders read-only operator activity search filters', fun
             ->assertDontSee('Save configuration')
             ->assertDontSee('provider_payload')
             ->assertDontSee('raw_payload');
+
+        $connectedServicesText = $browser->script(
+            'return document.querySelector(\'[data-testid="cockpit-connected-services-overview"]\')?.textContent ?? "";'
+        )[0] ?? '';
+
+        expect($connectedServicesText)
+            ->toContain('Connected Services')
+            ->toContain('Audit Trail')
+            ->toContain('Follow-Up Actions')
+            ->toContain('Notifications')
+            ->toContain('Campaigns')
+            ->toContain('Balances')
+            ->toContain('Execution Evidence');
     });
 });
