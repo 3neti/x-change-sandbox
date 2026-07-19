@@ -46,6 +46,11 @@ test('cockpit voucher detail and distribution workspace render for an existing p
             ->assertPresent('[data-testid="cockpit-distribution-primary-summary"]')
             ->assertPresent('[data-testid="cockpit-distribution-connected-context-summary"]')
             ->assertPresent('[data-testid="cockpit-distribution-analytics-panel"]')
+            ->assertSee('NOTIFICATION CHANNELS')
+            ->assertSee('Message and follow-up readiness')
+            ->assertSee('Printable handout options')
+            ->assertSee('SHARE OPTIONS')
+            ->assertSee('STATUS EVIDENCE')
             ->assertDontSee('provider_payload')
             ->assertDontSee('raw_payload');
     });
