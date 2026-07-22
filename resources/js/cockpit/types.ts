@@ -318,15 +318,20 @@ export type CockpitActivityNavigationContext = {
     [key: string]: unknown;
 };
 
-export type CockpitDashboardPageProps = {
-    cockpit_header_read_model?: {
-        schema?: string;
-        status?: string;
-        authorized?: boolean;
-        read_only?: boolean;
-        balances?: CockpitBalanceMetric[];
-        redactions?: CockpitReadModelRedactions;
-    };
+export type CockpitHeaderReadModel = {
+    schema?: string;
+    status?: string;
+    authorized?: boolean;
+    read_only?: boolean;
+    balances?: CockpitBalanceMetric[];
+    redactions?: CockpitReadModelRedactions;
+};
+
+export type CockpitHeaderPageProps = {
+    cockpit_header_read_model?: CockpitHeaderReadModel;
+};
+
+export type CockpitDashboardPageProps = CockpitHeaderPageProps & {
     dashboard_read_model?: CockpitDashboardReadModel;
     campaign_read_model?: CockpitCampaignReadModel;
     operator_issuance_activity_read_model?: CockpitOperatorIssuanceActivityReadModel;
@@ -370,7 +375,7 @@ export type CockpitRuntimeProfileReadModel = {
     redactions: CockpitReadModelRedactions;
 };
 
-export type CockpitRuntimeProfilePageProps = {
+export type CockpitRuntimeProfilePageProps = CockpitHeaderPageProps & {
     runtime_profile_read_model: CockpitRuntimeProfileReadModel;
     read_model?: CockpitReadModelBundle;
 };
@@ -744,7 +749,7 @@ export type CockpitQuickGenerateReadModel = {
     [key: string]: unknown;
 };
 
-export type CockpitQuickGeneratePageProps = {
+export type CockpitQuickGeneratePageProps = CockpitHeaderPageProps & {
     quick_generate_read_model?: CockpitQuickGenerateReadModel;
     feedback_defaults?: CockpitQuickGenerateFeedbackDefaults;
 };
@@ -898,7 +903,7 @@ export type CockpitPageAuthorization = {
     [key: string]: boolean | undefined;
 };
 
-export type CockpitVoucherDetailPageProps = {
+export type CockpitVoucherDetailPageProps = CockpitHeaderPageProps & {
     context?: {
         code?: string | null;
     };
@@ -936,7 +941,7 @@ export type CockpitPayCodeExplorerReadModel = {
     redactions?: CockpitReadModelRedactions;
 };
 
-export type CockpitPayCodeExplorerPageProps = {
+export type CockpitPayCodeExplorerPageProps = CockpitHeaderPageProps & {
     pay_codes_read_model?: CockpitPayCodeExplorerReadModel;
     campaign_navigation_context?: CockpitCampaignNavigationContext;
     activity_navigation_context?: CockpitActivityNavigationContext;
@@ -1009,7 +1014,7 @@ export type CockpitDistributionWorkspaceReadModel = {
     [key: string]: unknown;
 };
 
-export type CockpitDistributionWorkspacePageProps = {
+export type CockpitDistributionWorkspacePageProps = CockpitHeaderPageProps & {
     context?: {
         code?: string | null;
     };
