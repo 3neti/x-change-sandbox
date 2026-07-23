@@ -12,6 +12,9 @@ import { approve as approveReconciliation } from '@/routes/x-change/cockpit/fund
 import { show as showFundingInstructions } from '@/routes/x-change/cockpit/funding/intents/instructions';
 import { store as storeFundingIntent } from '@/routes/x-change/cockpit/funding/intents';
 import { store as storeVerificationCheck } from '@/routes/x-change/cockpit/funding/intents/verification-checks';
+import { store as openStandingFundingAddressRoute } from '@/routes/x-change/cockpit/funding/standing-addresses/netbank';
+import { store as checkStandingFundingHistoryRoute } from '@/routes/x-change/cockpit/funding/standing-addresses/netbank/history-checks';
+import { approve as approveStandingFundingReceiptRoute } from '@/routes/x-change/cockpit/funding/standing-addresses/netbank/receipts';
 import { store as runQrPhFundingSimulationRoute } from '@/routes/x-change/cockpit/funding/scenarios/qrph';
 import { store as storeReconciliationRequest } from '@/routes/x-change/cockpit/funding/suspense/reconciliation-requests';
 import { computed, ref, watch } from 'vue';
@@ -21,6 +24,8 @@ import type {
     CockpitFundingPageProps,
     CockpitFundingInstruction,
     CockpitQrPhFundingSimulationResult,
+    CockpitStandingFundingAddress,
+    CockpitStandingFundingReceipt,
 } from '../types';
 
 const props = defineProps<CockpitFundingPageProps>();
@@ -37,6 +42,14 @@ const instructionError = ref<string | null>(null);
 const simulationRunning = ref(false);
 const simulationError = ref<string | null>(null);
 const simulationResult = ref<CockpitQrPhFundingSimulationResult | null>(null);
+const standingAddress = ref<CockpitStandingFundingAddress | null>(null);
+const standingReceipts = ref<CockpitStandingFundingReceipt[]>([]);
+const standingAddressLoading = ref(false);
+const standingHistoryLoading = ref(false);
+const standingAddressError = ref<string | null>(null);
+const standingHistoryCheckedAt = ref<string | null>(null);
+const activeStandingReceiptApproval = ref<string | null>(null);
+const standingActionNotice = ref<string | null>(null);
 const activeSimulationStepIndex = ref(0);
 const activeSimulationStep = computed(
     () =>
@@ -142,7 +155,7 @@ const summaryCards = computed(() => [
 ]);
 
 const safeguards = [
-    'A Funding Intent must exist before money can be recognized.',
+    'Every credit is bound to an exact Funding Intent or an immutable Account Funding Address.',
     'A webhook stores evidence and wakes verification; it never credits an Account.',
     'Settlement is re-queried from the provider before exact net funding is posted.',
     'Mismatches enter suspense; operators cannot type an arbitrary credit amount.',
@@ -363,6 +376,192 @@ async function runQrPhFundingSimulation(): Promise<void> {
     }
 }
 
+async function openStandingFundingAddress(): Promise<void> {
+    if (
+        standingAddressLoading.value ||
+        props.standing_funding_address?.available !== true
+    ) {
+        return;
+    }
+
+    standingAddressLoading.value = true;
+    standingAddressError.value = null;
+    const route = openStandingFundingAddressRoute();
+
+    try {
+        const response = await fetch(route.url, {
+            method: route.method.toUpperCase(),
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                ...csrfHeader(),
+            },
+            body: JSON.stringify({
+                confirm_account_funding_address: true,
+            }),
+        });
+        const body = await safeJson(response);
+
+        if (
+            !response.ok ||
+            body.schema !== 'x-change.cockpit.standing-funding-address.v1' ||
+            typeof body.address !== 'object' ||
+            body.address === null
+        ) {
+            standingAddressError.value =
+                typeof body.message === 'string'
+                    ? body.message
+                    : 'NetBank could not open the Account Funding Address.';
+
+            return;
+        }
+
+        standingAddress.value = body.address as CockpitStandingFundingAddress;
+        standingReceipts.value = [];
+        standingHistoryCheckedAt.value = null;
+    } catch {
+        standingAddressError.value =
+            'The Account Funding Address could not reach NetBank.';
+    } finally {
+        standingAddressLoading.value = false;
+    }
+}
+
+async function checkStandingFundingHistory(): Promise<void> {
+    if (standingHistoryLoading.value || standingAddress.value === null) {
+        return;
+    }
+
+    standingHistoryLoading.value = true;
+    standingAddressError.value = null;
+    const route = checkStandingFundingHistoryRoute();
+
+    try {
+        const response = await fetch(route.url, {
+            method: route.method.toUpperCase(),
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                ...csrfHeader(),
+            },
+            body: JSON.stringify({
+                confirm_account_funding_address: true,
+            }),
+        });
+        const body = await safeJson(response);
+
+        if (
+            !response.ok ||
+            body.schema !== 'x-change.cockpit.standing-funding-history.v1' ||
+            !Array.isArray(body.observations)
+        ) {
+            standingAddressError.value =
+                typeof body.message === 'string'
+                    ? body.message
+                    : 'NetBank history could not be checked.';
+
+            return;
+        }
+
+        standingReceipts.value =
+            body.observations as CockpitStandingFundingReceipt[];
+        standingHistoryCheckedAt.value =
+            typeof body.checked_at === 'string' ? body.checked_at : null;
+    } catch {
+        standingAddressError.value =
+            'The NetBank history check could not reach the provider.';
+    } finally {
+        standingHistoryLoading.value = false;
+    }
+}
+
+async function approveStandingFundingReceipt(reference: string): Promise<void> {
+    if (activeStandingReceiptApproval.value !== null) {
+        return;
+    }
+
+    activeStandingReceiptApproval.value = reference;
+    standingAddressError.value = null;
+    standingActionNotice.value = null;
+    const route = approveStandingFundingReceiptRoute(reference);
+
+    try {
+        const response = await fetch(route.url, {
+            method: route.method.toUpperCase(),
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                ...csrfHeader(),
+            },
+        });
+        const body = await safeJson(response);
+
+        if (
+            !response.ok ||
+            body.schema !==
+                'x-change.cockpit.account-funding-receipt-approval.v1'
+        ) {
+            standingAddressError.value =
+                typeof body.message === 'string'
+                    ? body.message
+                    : 'The verified funding receipt could not be approved.';
+
+            return;
+        }
+
+        standingReceipts.value = standingReceipts.value.map((receipt) =>
+            receipt.reference === reference
+                ? {
+                      ...receipt,
+                      provider_status: 'settled',
+                      can_approve: false,
+                      settled_at:
+                          typeof body.receipt === 'object' &&
+                          body.receipt !== null &&
+                          typeof (body.receipt as Record<string, unknown>)
+                              .settled_at === 'string'
+                              ? (body.receipt as Record<string, string>)
+                                    .settled_at
+                              : receipt.settled_at,
+                  }
+                : receipt,
+        );
+        standingActionNotice.value =
+            typeof body.message === 'string'
+                ? body.message
+                : 'Verified funding was credited to the Account.';
+    } catch {
+        standingAddressError.value =
+            'The funding approval could not reach the Cockpit service.';
+    } finally {
+        activeStandingReceiptApproval.value = null;
+    }
+}
+
+function hideStandingFundingAddress(): void {
+    standingAddress.value = null;
+    standingReceipts.value = [];
+    standingHistoryCheckedAt.value = null;
+    standingAddressError.value = null;
+    standingActionNotice.value = null;
+}
+
+function formatMinor(value?: number | null, currency = 'PHP'): string {
+    if (value === null || value === undefined) {
+        return 'No limit';
+    }
+
+    return new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency,
+    }).format(value / 100);
+}
+
 function csrfHeader(): Record<string, string> {
     if (typeof document === 'undefined') {
         return {};
@@ -455,6 +654,331 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                             atomically.
                         </p>
                     </div>
+                </div>
+            </section>
+
+            <section
+                v-if="standing_funding_address"
+                class="overflow-hidden rounded-2xl border border-sky-200 bg-white shadow-sm dark:border-sky-950 dark:bg-slate-900"
+                data-testid="cockpit-standing-funding-address"
+            >
+                <div
+                    class="grid gap-5 p-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start"
+                >
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <p
+                                class="text-xs font-semibold tracking-[0.16em] text-sky-700 uppercase dark:text-sky-300"
+                            >
+                                Account Funding Address
+                            </p>
+                            <span
+                                class="rounded-full bg-sky-100 px-2 py-1 text-[0.65rem] font-semibold text-sky-800 uppercase dark:bg-sky-950 dark:text-sky-200"
+                            >
+                                {{
+                                    standing_funding_address.recognition_mode.replaceAll(
+                                        '_',
+                                        ' ',
+                                    )
+                                }}
+                            </span>
+                            <span
+                                class="rounded-full bg-slate-100 px-2 py-1 text-[0.65rem] font-semibold text-slate-600 uppercase dark:bg-slate-800 dark:text-slate-300"
+                            >
+                                Purpose bound
+                            </span>
+                        </div>
+                        <h2 class="mt-1.5 text-lg font-semibold">
+                            Stable NetBank QR Ph address
+                        </h2>
+                        <p
+                            class="mt-1 max-w-4xl text-sm leading-6 text-slate-600 dark:text-slate-400"
+                        >
+                            This exact VCA is permanently classified as
+                            <strong>account funding</strong> for this Account. A
+                            payer chooses the amount; payer mobile, amount,
+                            timing, and merchant text never decide where the
+                            credit goes.
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap gap-2 lg:justify-end">
+                        <button
+                            v-if="standingAddress === null"
+                            type="button"
+                            class="h-10 rounded-lg bg-sky-700 px-4 text-sm font-semibold text-white transition hover:bg-sky-800 disabled:cursor-not-allowed disabled:opacity-50"
+                            :disabled="
+                                standingAddressLoading ||
+                                standing_funding_address.available !== true
+                            "
+                            data-testid="open-standing-funding-address"
+                            @click="openStandingFundingAddress"
+                        >
+                            {{
+                                standingAddressLoading
+                                    ? 'Contacting NetBank…'
+                                    : standing_funding_address.available
+                                      ? standing_funding_address.exists
+                                          ? 'Open Account Funding QR'
+                                          : 'Create Account Funding QR'
+                                      : 'Account Funding Address unavailable'
+                            }}
+                        </button>
+                        <template v-else>
+                            <button
+                                type="button"
+                                class="h-10 rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-sky-400 dark:text-slate-950 dark:hover:bg-sky-300"
+                                :disabled="standingHistoryLoading"
+                                data-testid="check-standing-funding-history"
+                                @click="checkStandingFundingHistory"
+                            >
+                                {{
+                                    standingHistoryLoading
+                                        ? 'Checking NetBank…'
+                                        : 'Check NetBank'
+                                }}
+                            </button>
+                            <button
+                                type="button"
+                                class="h-10 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+                                data-testid="hide-standing-funding-address"
+                                @click="hideStandingFundingAddress"
+                            >
+                                Hide sensitive QR
+                            </button>
+                        </template>
+                    </div>
+                </div>
+
+                <div
+                    v-if="standingAddress"
+                    class="border-t border-sky-100 bg-sky-50/50 p-5 dark:border-sky-950 dark:bg-sky-950/10"
+                >
+                    <div
+                        class="grid gap-5 md:grid-cols-[12rem_minmax(0,1fr)] md:items-start"
+                    >
+                        <div
+                            class="mx-auto rounded-xl border border-sky-200 bg-white p-2 shadow-sm md:mx-0 dark:border-sky-900"
+                        >
+                            <img
+                                :src="standingAddress.qr_code"
+                                alt="Account Funding Address QR Ph code"
+                                class="size-44 object-contain"
+                                data-testid="standing-funding-address-qr"
+                            />
+                        </div>
+                        <div class="min-w-0">
+                            <p
+                                class="text-xs font-semibold tracking-wide text-slate-500 uppercase"
+                            >
+                                NetBank VCA
+                            </p>
+                            <p
+                                class="mt-1 font-mono text-base font-semibold break-all"
+                                data-testid="standing-funding-address-value"
+                            >
+                                {{ standingAddress.funding_address }}
+                            </p>
+                            <div class="mt-3">
+                                <CockpitManualCopyButton
+                                    :value="standingAddress.funding_address"
+                                    label="Copy receiving address"
+                                    helper="Browser-local copy only."
+                                />
+                            </div>
+                            <dl class="mt-4 grid gap-3 text-xs sm:grid-cols-3">
+                                <div
+                                    class="rounded-lg bg-white px-3 py-2 dark:bg-slate-950"
+                                >
+                                    <dt class="text-slate-500">Amount</dt>
+                                    <dd class="mt-0.5 font-semibold">
+                                        Payer enters amount
+                                    </dd>
+                                </div>
+                                <div
+                                    class="rounded-lg bg-white px-3 py-2 dark:bg-slate-950"
+                                >
+                                    <dt class="text-slate-500">Recognition</dt>
+                                    <dd class="mt-0.5 font-semibold">
+                                        {{
+                                            displayLabel(
+                                                standingAddress.recognition_mode,
+                                            )
+                                        }}
+                                    </dd>
+                                </div>
+                                <div
+                                    class="rounded-lg bg-white px-3 py-2 dark:bg-slate-950"
+                                >
+                                    <dt class="text-slate-500">
+                                        Per-transfer range
+                                    </dt>
+                                    <dd class="mt-0.5 font-semibold">
+                                        {{
+                                            formatMinor(
+                                                standingAddress.minimum_amount_minor,
+                                                standingAddress.currency,
+                                            )
+                                        }}
+                                        –
+                                        {{
+                                            formatMinor(
+                                                standingAddress.maximum_amount_minor,
+                                                standingAddress.currency,
+                                            )
+                                        }}
+                                    </dd>
+                                </div>
+                            </dl>
+                            <p
+                                class="mt-4 text-xs leading-5 text-sky-800 dark:text-sky-200"
+                            >
+                                Scanning the QR does not itself change the
+                                Account. NetBank transaction history is the
+                                authority. Observe-only records a receipt;
+                                supervised mode waits for approval; automatic
+                                mode credits only after every destination,
+                                currency, status, and limit check passes.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        v-if="standingActionNotice"
+                        class="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200"
+                        role="status"
+                    >
+                        {{ standingActionNotice }}
+                    </div>
+
+                    <div
+                        class="mt-5 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950"
+                    >
+                        <div
+                            class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3 dark:border-slate-800"
+                        >
+                            <div>
+                                <h3 class="text-sm font-semibold">
+                                    Account Funding Receipts
+                                </h3>
+                                <p class="mt-0.5 text-xs text-slate-500">
+                                    Sanitized classification and recognition
+                                    status. Payer identity and raw provider data
+                                    stay hidden.
+                                </p>
+                            </div>
+                            <span class="text-xs text-slate-500">
+                                {{
+                                    standingHistoryCheckedAt
+                                        ? `Checked ${displayTime(
+                                              standingHistoryCheckedAt,
+                                          )}`
+                                        : 'Not checked yet'
+                                }}
+                            </span>
+                        </div>
+                        <div
+                            v-if="standingReceipts.length"
+                            class="overflow-x-auto"
+                        >
+                            <table
+                                class="w-full min-w-[42rem] text-left text-sm"
+                            >
+                                <thead
+                                    class="bg-slate-50 text-xs text-slate-500 uppercase dark:bg-slate-900"
+                                >
+                                    <tr>
+                                        <th class="px-4 py-2.5">Reference</th>
+                                        <th class="px-4 py-2.5">Amount</th>
+                                        <th class="px-4 py-2.5">Status</th>
+                                        <th class="px-4 py-2.5">Observed</th>
+                                        <th class="px-4 py-2.5 text-right">
+                                            Control
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr
+                                        v-for="receipt in standingReceipts"
+                                        :key="receipt.reference"
+                                        class="border-t border-slate-100 dark:border-slate-800"
+                                    >
+                                        <td
+                                            class="px-4 py-3 font-mono text-xs font-semibold"
+                                        >
+                                            {{ receipt.reference }}
+                                        </td>
+                                        <td class="px-4 py-3 font-semibold">
+                                            {{ receipt.gross_amount }}
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            {{
+                                                displayLabel(
+                                                    receipt.provider_status,
+                                                )
+                                            }}
+                                        </td>
+                                        <td class="px-4 py-3 text-slate-500">
+                                            {{
+                                                displayTime(
+                                                    receipt.settled_at ??
+                                                        receipt.occurred_at,
+                                                )
+                                            }}
+                                        </td>
+                                        <td class="px-4 py-3 text-right">
+                                            <button
+                                                v-if="receipt.can_approve"
+                                                type="button"
+                                                class="h-8 rounded-lg bg-emerald-700 px-3 text-xs font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
+                                                :disabled="
+                                                    activeStandingReceiptApproval !==
+                                                    null
+                                                "
+                                                data-testid="approve-standing-funding-receipt"
+                                                @click="
+                                                    approveStandingFundingReceipt(
+                                                        receipt.reference,
+                                                    )
+                                                "
+                                            >
+                                                {{
+                                                    activeStandingReceiptApproval ===
+                                                    receipt.reference
+                                                        ? 'Posting…'
+                                                        : 'Approve verified credit'
+                                                }}
+                                            </button>
+                                            <span
+                                                v-else
+                                                class="text-xs text-slate-400"
+                                            >
+                                                —
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p
+                            v-else
+                            class="px-4 py-5 text-sm text-slate-500"
+                            data-testid="standing-funding-history-empty"
+                        >
+                            {{
+                                standingHistoryCheckedAt
+                                    ? 'NetBank returned no incoming transactions for this address in the configured lookback window.'
+                                    : 'Check NetBank after a human scans and pays the QR.'
+                            }}
+                        </p>
+                    </div>
+                </div>
+
+                <div
+                    v-if="standingAddressError"
+                    class="border-t border-rose-200 bg-rose-50 px-5 py-3 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/20 dark:text-rose-200"
+                    role="alert"
+                >
+                    {{ standingAddressError }}
                 </div>
             </section>
 
