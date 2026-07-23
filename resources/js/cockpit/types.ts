@@ -24,6 +24,7 @@ export type CockpitBalanceMetric = {
     key: string;
     label: string;
     value: string;
+    helper?: string;
     tone?: 'neutral' | 'healthy' | 'warning' | 'critical';
 };
 
@@ -331,6 +332,131 @@ export type CockpitHeaderPageProps = {
     cockpit_header_read_model?: CockpitHeaderReadModel;
 };
 
+export type CockpitFundingDestinationSummary = {
+    status: string;
+    display_reference?: string | null;
+    managed_by?: string;
+};
+
+export type CockpitDedicatedFundingDestinationSummary = {
+    configured: boolean;
+    display_reference?: string | null;
+    status: string;
+    verification_status: string;
+    verified_at?: string | null;
+    last_synced_at?: string | null;
+    can_activate: boolean;
+    can_rotate_token: boolean;
+    ownership_verification_required: boolean;
+};
+
+export type CockpitAccountProvider = {
+    code: 'netbank' | 'paynamics_constellation';
+    label: string;
+    mode: 'shared' | 'dedicated';
+    shared: CockpitFundingDestinationSummary;
+    dedicated: CockpitDedicatedFundingDestinationSummary;
+};
+
+export type CockpitAccountConnectionHistory = {
+    id: string;
+    provider: string;
+    display_reference?: string | null;
+    status: string;
+    verification_status: string;
+    created_at?: string | null;
+    disabled_at?: string | null;
+};
+
+export type CockpitAccountReadModel = {
+    schema: string;
+    status: string;
+    account: {
+        reference: string;
+        currency: string;
+        ledger_authority: string;
+        funding_credit_policy: string;
+    };
+    providers: CockpitAccountProvider[];
+    connection_history: CockpitAccountConnectionHistory[];
+    controls: {
+        shared_is_default: boolean;
+        dedicated_fallback_enabled: boolean;
+        pin_confirmation_required: boolean;
+        manual_balance_adjustment_enabled: boolean;
+        provider_webhook_settlement_required: boolean;
+    };
+    redactions: {
+        account_numbers: string;
+        wallet_ids: string;
+        routing_tokens: string;
+        credentials_exposed: boolean;
+    };
+};
+
+export type CockpitAccountsPageProps = CockpitHeaderPageProps & {
+    account_read_model: CockpitAccountReadModel;
+    funding_account_notice?: string | null;
+    account_scenario?: {
+        enabled: boolean;
+        mode: 'rollback-only';
+        provider_calls: boolean;
+        balance_changes: boolean;
+    };
+};
+
+export type CockpitAccountScenarioFact = {
+    label: string;
+    value: string;
+};
+
+export type CockpitAccountScenarioProvider = {
+    code: 'netbank' | 'paynamics_constellation';
+    label: string;
+    mode: string;
+    shared: {
+        status: string;
+        display_reference?: string | null;
+    };
+    dedicated: {
+        configured: boolean;
+        display_reference?: string | null;
+        status: string;
+        verification_status: string;
+        can_activate: boolean;
+        can_rotate_token: boolean;
+        ownership_verification_required: boolean;
+    };
+};
+
+export type CockpitAccountScenarioStep = {
+    key: string;
+    label: string;
+    outcome: 'ready' | 'blocked' | 'protected' | 'complete' | 'failed';
+    summary: string;
+    providers: CockpitAccountScenarioProvider[];
+    facts: CockpitAccountScenarioFact[];
+};
+
+export type CockpitAccountScenarioResult = {
+    schema: 'x-change.lifecycle.account-management-scenario.v1';
+    scenario: string;
+    label: string;
+    mode: 'account_management';
+    success: boolean;
+    message: string;
+    rollback_completed: boolean;
+    simulation: {
+        rollback_only: boolean;
+        provider_calls: number;
+        balance_changed: boolean;
+        persisted: boolean;
+        funding_instructions_issued: boolean;
+        webhooks_received: boolean;
+    };
+    steps: CockpitAccountScenarioStep[];
+};
+
 export type CockpitDashboardPageProps = CockpitHeaderPageProps & {
     dashboard_read_model?: CockpitDashboardReadModel;
     campaign_read_model?: CockpitCampaignReadModel;
@@ -350,6 +476,9 @@ export type CockpitFundingProvider = {
     label: string;
     status: string;
     authoritative_verification: boolean;
+    destination_mode?: 'shared' | 'dedicated';
+    destination_status?: string;
+    destination_reference?: string | null;
 };
 
 export type CockpitFundingIntent = {
