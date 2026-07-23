@@ -35,6 +35,16 @@
         },
         {
             "type": "path",
+            "url": "/Users/rli/PhpstormProjects/packages/wallet",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "3neti/wallet": "1.1.1"
+                }
+            }
+        },
+        {
+            "type": "path",
             "url": "/Users/rli/PhpstormProjects/packages/voucher",
             "options": {
                 "symlink": true
@@ -152,6 +162,7 @@
         "3neti/emi-netbank": "dev-main",
         "3neti/emi-paynamics": "dev-main",
         "3neti/onboarding": "dev-main",
+        "3neti/wallet": "^1.1",
         "3neti/x-change": "dev-main",
         "inertiajs/inertia-laravel": "^3.0",
         "laravel/fortify": "^1.34",

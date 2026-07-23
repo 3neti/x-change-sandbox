@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "123ca48076b6b48337bdced120cba8df",
+    "content-hash": "1e8c68af798114f734a57298d1f34e4c",
     "packages": [
         {
             "name": "3neti/cash",
@@ -1377,17 +1377,11 @@
         },
         {
             "name": "3neti/wallet",
-            "version": "v1.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/3neti/wallet.git",
-                "reference": "f70f594dcb10e1ce2ee7fed8e054c442b0660e46"
-            },
+            "version": "1.1.1",
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/3neti/wallet/zipball/f70f594dcb10e1ce2ee7fed8e054c442b0660e46",
-                "reference": "f70f594dcb10e1ce2ee7fed8e054c442b0660e46",
-                "shasum": ""
+                "type": "path",
+                "url": "/Users/rli/PhpstormProjects/packages/wallet",
+                "reference": "11f5d0cdd3c938bdafd7136a4458a8840dc675c1"
             },
             "require": {
                 "bavix/laravel-wallet": "^11.4",
@@ -1413,7 +1407,16 @@
                     "LBHurtado\\Wallet\\Database\\Factories\\": "database/factories/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "LBHurtado\\Wallet\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "vendor/bin/pest"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -1424,11 +1427,10 @@
                 }
             ],
             "description": "Custom wallet for X-Change",
-            "support": {
-                "issues": "https://github.com/3neti/wallet/issues",
-                "source": "https://github.com/3neti/wallet/tree/v1.1.0"
-            },
-            "time": "2026-04-10T03:50:58+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": false
+            }
         },
         {
             "name": "3neti/x-action",
@@ -1560,7 +1562,7 @@
             "dist": {
                 "type": "path",
                 "url": "packages/x-change",
-                "reference": "9ec684a6bedcf24f1a44e2dc705c1eba5827855b"
+                "reference": "43f2786697abed3c2b44508a95f90509fca15fdb"
             },
             "require": {
                 "3neti/cash": "dev-main",
@@ -1579,6 +1581,7 @@
                 "3neti/onboarding": "dev-main",
                 "3neti/report-registry": "^1.1",
                 "3neti/voucher": "dev-main",
+                "3neti/wallet": "^1.1",
                 "3neti/x-action": "dev-main",
                 "3neti/x-campaign": "dev-main",
                 "3neti/x-feedback": "dev-main",
