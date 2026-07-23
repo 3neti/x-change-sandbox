@@ -27,8 +27,8 @@ const fundingSemantics = [
     },
     {
         label: 'Estimate',
-        value: 'Usable Balance',
-        helper: 'Internal balance less outstanding Pay Codes.',
+        value: 'Issuance Capacity',
+        helper: 'Internal Balance capped by provider liquidity after Outstanding Pay Codes.',
     },
     {
         label: 'External',
@@ -56,9 +56,9 @@ function metricCount(): number {
                     Funding readiness
                 </h2>
                 <p class="mt-3 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">
-                    Read-only funding posture for issuance planning. Outstanding Pay Codes and
-                    Usable Balance are bridge estimates until wallet Treasury has persisted facts.
-                    Cockpit does not reserve, release, capture, refund, or move money here.
+                    Read-only funding posture for issuance planning. Issuance Capacity is capped by
+                    provider liquidity and accounts for Outstanding Pay Codes. Cockpit does not
+                    reserve, release, capture, refund, or move money here.
                 </p>
             </div>
 
