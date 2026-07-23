@@ -129,7 +129,7 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/rli/PhpstormProjects/packages/emi-core",
-                "reference": "153e578b1263a6346d8e36b9d8780962c993d03e"
+                "reference": "f4d95a83dc245166d2fe283dff03e28dce2b3cc4"
             },
             "require": {
                 "illuminate/support": "^12.0 || ^13.0",
@@ -186,7 +186,7 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/rli/PhpstormProjects/packages/emi-netbank",
-                "reference": "3e63be7efeca07b3aa40a95bd023a7767a891e55"
+                "reference": "7990d54b90d6d2e150c76cca6adbbd1ff6394012"
             },
             "require": {
                 "3neti/emi-core": "^v1.0",
@@ -1560,7 +1560,7 @@
             "dist": {
                 "type": "path",
                 "url": "packages/x-change",
-                "reference": "51692391b4982c7cd1bdda3f70099ae182578fd2"
+                "reference": "9ec684a6bedcf24f1a44e2dc705c1eba5827855b"
             },
             "require": {
                 "3neti/cash": "dev-main",
