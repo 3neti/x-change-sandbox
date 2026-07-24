@@ -18,7 +18,7 @@ import { store as checkStandingFundingHistoryRoute } from '@/routes/x-change/coc
 import { approve as approveStandingFundingReceiptRoute } from '@/routes/x-change/cockpit/funding/standing-addresses/netbank/receipts';
 import { store as runQrPhFundingSimulationRoute } from '@/routes/x-change/cockpit/funding/scenarios/qrph';
 import { store as storeReconciliationRequest } from '@/routes/x-change/cockpit/funding/suspense/reconciliation-requests';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onUnmounted, ref, watch } from 'vue';
 import CockpitManualCopyButton from '../components/CockpitManualCopyButton.vue';
 import CockpitLayout from '../layouts/CockpitLayout.vue';
 import type {
@@ -52,6 +52,38 @@ const standingAddressError = ref<string | null>(null);
 const standingHistoryCheckedAt = ref<string | null>(null);
 const activeStandingReceiptApproval = ref<string | null>(null);
 const standingActionNotice = ref<string | null>(null);
+type FundingWorkspaceMode = 'self_top_up' | 'funding_intent' | 'simulation';
+const activeFundingMode = ref<FundingWorkspaceMode>('self_top_up');
+const fundingWorkspaceModes = computed(() => [
+    {
+        key: 'self_top_up' as const,
+        label: 'Self Top-Up',
+        description:
+            'Reveal your reusable QR Ph address, then check NetBank for incoming funds.',
+    },
+    {
+        key: 'funding_intent' as const,
+        label: 'Exact Funding Intent',
+        description:
+            'Create one-time provider instructions for an exact amount.',
+    },
+    ...(props.funding_simulation
+        ? [
+              {
+                  key: 'simulation' as const,
+                  label: 'Simulation',
+                  description:
+                      'Walk through the local rollback-only funding lifecycle.',
+              },
+          ]
+        : []),
+]);
+const activeFundingModeDetails = computed(
+    () =>
+        fundingWorkspaceModes.value.find(
+            (mode) => mode.key === activeFundingMode.value,
+        ) ?? fundingWorkspaceModes.value[0],
+);
 const processedFundingEvents = new Set<string>();
 let realtimeRefreshTimer: ReturnType<typeof setTimeout> | null = null;
 let standingHistoryCooldownTimer: ReturnType<typeof setInterval> | null = null;
@@ -73,6 +105,13 @@ const hasOpenFundingIntents = computed(() =>
         ),
     ),
 );
+const fundingExceptionCount = computed(
+    () =>
+        props.funding_read_model.approval_queue.length +
+        props.funding_read_model.suspense_cases.length +
+        props.funding_read_model.recovery_holds.length,
+);
+const hasFundingExceptions = computed(() => fundingExceptionCount.value > 0);
 const { start: startFundingPoll, stop: stopFundingPoll } = usePoll(
     Math.max(1000, props.funding_poll_interval ?? 5000),
     {
@@ -146,14 +185,6 @@ onUnmounted(() => {
     }
 });
 
-onMounted(() => {
-    if (
-        props.standing_funding_address?.exists === true &&
-        props.standing_funding_address.available === true
-    ) {
-        void openStandingFundingAddress();
-    }
-});
 const clientAmountError = computed(() => {
     if (amount.value === '' || amountToMinor(amount.value) !== null) {
         return null;
@@ -211,6 +242,37 @@ const summaryCards = computed(() => [
         tone: 'text-rose-700 dark:text-rose-300',
     },
 ]);
+
+const treasuryPortfolioCards = computed(() => {
+    const totals = props.funding_read_model.treasury_portfolio.totals;
+
+    return [
+        {
+            key: 'client-funds',
+            label: 'Client Funds',
+            value: totals.client_funds ?? 'Not available',
+            helper: 'This Account’s provider-positioned funds.',
+        },
+        {
+            key: 'pay-code-reserve',
+            label: 'Reserved for Pay Codes',
+            value: totals.pay_code_reserve ?? 'Not available',
+            helper: 'This Account’s outstanding Pay Code obligation.',
+        },
+        {
+            key: 'provider-inventory',
+            label: 'Provider Inventory',
+            value: totals.provider_inventory ?? 'Not available',
+            helper: 'Recognized provider inventory across active connections.',
+        },
+        {
+            key: 'issuance-capacity',
+            label: 'Issuance Capacity',
+            value: totals.issuance_capacity ?? 'Not available',
+            helper: 'The lower of this Account’s position and fresh provider liquidity, after Pay Code reserve.',
+        },
+    ];
+});
 
 const safeguards = [
     'Every credit is bound to an exact Funding Intent or an immutable Account Funding Address.',
@@ -743,61 +805,384 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                 {{ funding_notice }}
             </div>
             <section
-                class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-950 text-white shadow-sm dark:border-slate-800"
+                class="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                data-testid="cockpit-funding-header"
             >
                 <div
-                    class="grid gap-6 px-5 py-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:px-6"
+                    class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between"
                 >
-                    <div>
+                    <div class="min-w-0">
                         <div class="flex flex-wrap items-center gap-2">
                             <p
-                                class="text-xs font-semibold tracking-[0.22em] text-sky-300 uppercase"
+                                class="text-xs font-semibold tracking-[0.18em] text-sky-700 uppercase dark:text-sky-300"
                             >
-                                Funding control
+                                Funding workspace
                             </p>
                             <span
-                                class="rounded-full border border-white/15 bg-white/10 px-2.5 py-1 text-[0.65rem] font-semibold tracking-wide text-slate-200 uppercase"
+                                class="rounded-full bg-emerald-50 px-2 py-0.5 text-[0.65rem] font-semibold tracking-wide text-emerald-700 uppercase dark:bg-emerald-950/60 dark:text-emerald-300"
                             >
                                 provider verified
                             </span>
                         </div>
                         <h1
-                            class="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl"
+                            class="mt-1 text-xl font-semibold tracking-tight text-slate-950 dark:text-white"
                         >
                             Account Funding
                         </h1>
                         <p
-                            class="mt-2 max-w-3xl text-sm leading-6 text-slate-300"
+                            class="mt-1 max-w-3xl text-sm leading-5 text-slate-600 dark:text-slate-400"
                         >
-                            Request funding instructions and monitor
-                            authoritative settlement. There is no manual “add
-                            funds” control: only verified bank or EMI evidence
-                            can increase the Account balance.
+                            Fund this Account and monitor authoritative
+                            settlement.
                         </p>
                     </div>
 
-                    <div
-                        class="rounded-xl border border-emerald-400/20 bg-emerald-400/10 p-4"
+                    <dl
+                        class="grid shrink-0 grid-cols-3 divide-x divide-slate-200 rounded-xl border border-slate-200 bg-slate-50 dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-950/50"
+                        aria-label="Funding control posture"
                     >
-                        <p
-                            class="text-xs font-semibold tracking-[0.16em] text-emerald-300 uppercase"
-                        >
-                            Control posture
+                        <div class="min-w-0 px-3 py-2 text-center">
+                            <dt
+                                class="text-[0.62rem] font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400"
+                            >
+                                Authority
+                            </dt>
+                            <dd
+                                class="mt-0.5 text-xs font-semibold text-slate-900 dark:text-white"
+                            >
+                                Provider
+                            </dd>
+                        </div>
+                        <div class="min-w-0 px-3 py-2 text-center">
+                            <dt
+                                class="text-[0.62rem] font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400"
+                            >
+                                Posting
+                            </dt>
+                            <dd
+                                class="mt-0.5 text-xs font-semibold text-slate-900 dark:text-white"
+                            >
+                                Atomic
+                            </dd>
+                        </div>
+                        <div class="min-w-0 px-3 py-2 text-center">
+                            <dt
+                                class="text-[0.62rem] font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400"
+                            >
+                                Manual load
+                            </dt>
+                            <dd
+                                class="mt-0.5 text-xs font-semibold text-slate-900 dark:text-white"
+                            >
+                                Disabled
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <details
+                    class="mt-3 border-t border-slate-200 pt-2 text-xs text-slate-600 dark:border-slate-800 dark:text-slate-400"
+                >
+                    <summary
+                        class="cursor-pointer font-semibold text-slate-700 marker:text-slate-400 dark:text-slate-300"
+                    >
+                        Funding controls
+                    </summary>
+                    <div class="mt-2 grid gap-2 leading-5 sm:grid-cols-2">
+                        <p>
+                            There is no manual “add funds” control. Only
+                            verified bank or EMI evidence can increase the
+                            Account balance.
                         </p>
-                        <p class="mt-1 text-sm font-semibold text-white">
-                            Webhook evidence ≠ Account credit
-                        </p>
-                        <p class="mt-1 text-xs leading-5 text-emerald-100/80">
-                            The provider is queried independently before
-                            Inventory recognition and Account posting occur
-                            atomically.
+                        <p>
+                            Webhook evidence ≠ Account credit. The provider is
+                            queried independently before Inventory recognition
+                            and Account posting occur atomically.
                         </p>
                     </div>
+                </details>
+            </section>
+
+            <section
+                class="grid grid-cols-2 gap-2 xl:grid-cols-4"
+                aria-label="Funding summary"
+                data-testid="cockpit-funding-summary-strip"
+            >
+                <article
+                    v-for="card in summaryCards"
+                    :key="card.key"
+                    class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                >
+                    <p
+                        class="truncate text-[0.65rem] font-semibold tracking-[0.1em] text-slate-500 uppercase dark:text-slate-400"
+                    >
+                        {{ card.label }}
+                    </p>
+                    <p
+                        :class="[
+                            'mt-1 text-lg font-semibold tracking-tight',
+                            card.tone,
+                        ]"
+                    >
+                        {{ card.value }}
+                    </p>
+                    <p class="sr-only">
+                        {{ card.helper }}
+                    </p>
+                </article>
+            </section>
+
+            <section
+                class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                data-testid="funding-treasury-portfolio"
+            >
+                <div
+                    class="flex flex-col gap-3 border-b border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800"
+                >
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <p
+                                class="text-xs font-semibold tracking-[0.16em] text-sky-700 uppercase dark:text-sky-300"
+                            >
+                                Account Treasury
+                            </p>
+                            <span
+                                class="rounded-full bg-slate-100 px-2 py-0.5 text-[0.65rem] font-semibold text-slate-600 uppercase dark:bg-slate-800 dark:text-slate-300"
+                            >
+                                read-only
+                            </span>
+                        </div>
+                        <h2
+                            class="mt-0.5 text-base font-semibold text-slate-950 dark:text-white"
+                        >
+                            Funding position
+                        </h2>
+                    </div>
+                    <p
+                        class="text-xs text-slate-500 sm:text-right dark:text-slate-400"
+                    >
+                        Cached projections only · no provider call on page load
+                    </p>
                 </div>
+
+                <dl class="grid grid-cols-2 xl:grid-cols-4">
+                    <div
+                        v-for="(card, index) in treasuryPortfolioCards"
+                        :key="card.key"
+                        class="min-w-0 border-slate-200 px-3 py-3 text-center dark:border-slate-800"
+                        :class="[
+                            index % 2 === 1 ? 'border-l' : '',
+                            index >= 2 ? 'border-t xl:border-t-0' : '',
+                            index >= 1 ? 'xl:border-l' : '',
+                        ]"
+                    >
+                        <dt
+                            class="truncate text-[0.65rem] font-semibold tracking-[0.08em] text-slate-500 uppercase dark:text-slate-400"
+                        >
+                            {{ card.label }}
+                        </dt>
+                        <dd
+                            class="mt-1 truncate text-base font-semibold tracking-tight text-slate-950 dark:text-white"
+                        >
+                            {{ card.value }}
+                        </dd>
+                        <span class="sr-only">{{ card.helper }}</span>
+                    </div>
+                </dl>
+
+                <details
+                    class="border-t border-slate-200 px-4 py-2.5 dark:border-slate-800"
+                    data-testid="funding-treasury-provider-breakdown"
+                >
+                    <summary
+                        class="cursor-pointer text-xs font-semibold text-slate-700 marker:text-slate-400 dark:text-slate-300"
+                    >
+                        Provider breakdown
+                        <span class="font-normal text-slate-500">
+                            ({{
+                                funding_read_model.treasury_portfolio
+                                    .connections.length
+                            }})
+                        </span>
+                    </summary>
+                    <div
+                        v-if="
+                            funding_read_model.treasury_portfolio.connections
+                                .length
+                        "
+                        class="mt-3 grid gap-3 lg:grid-cols-2"
+                    >
+                        <article
+                            v-for="connection in funding_read_model
+                                .treasury_portfolio.connections"
+                            :key="`${connection.provider}-${connection.currency}`"
+                            class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-700 dark:bg-slate-950/40"
+                        >
+                            <div
+                                class="flex flex-wrap items-center justify-between gap-2"
+                            >
+                                <p
+                                    class="text-sm font-semibold text-slate-950 dark:text-white"
+                                >
+                                    {{ connection.provider_label }}
+                                </p>
+                                <span
+                                    class="rounded-full bg-white px-2 py-0.5 text-[0.65rem] font-semibold text-slate-600 uppercase ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700"
+                                >
+                                    {{ displayLabel(connection.status) }}
+                                </span>
+                            </div>
+                            <dl
+                                class="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:grid-cols-3"
+                            >
+                                <div>
+                                    <dt class="text-slate-500">Client Funds</dt>
+                                    <dd
+                                        class="mt-0.5 font-semibold text-slate-900 dark:text-white"
+                                    >
+                                        {{ connection.client_funds }}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt class="text-slate-500">
+                                        Pay Code Reserve
+                                    </dt>
+                                    <dd
+                                        class="mt-0.5 font-semibold text-slate-900 dark:text-white"
+                                    >
+                                        {{ connection.pay_code_reserve }}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt class="text-slate-500">
+                                        Provider Liquidity
+                                    </dt>
+                                    <dd
+                                        class="mt-0.5 font-semibold text-slate-900 dark:text-white"
+                                    >
+                                        {{
+                                            connection.provider_liquidity ??
+                                            'Not available'
+                                        }}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt class="text-slate-500">
+                                        Provider Inventory
+                                    </dt>
+                                    <dd
+                                        class="mt-0.5 font-semibold text-slate-900 dark:text-white"
+                                    >
+                                        {{
+                                            connection.provider_inventory ??
+                                            'Not available'
+                                        }}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt class="text-slate-500">
+                                        Issuance Capacity
+                                    </dt>
+                                    <dd
+                                        class="mt-0.5 font-semibold text-slate-900 dark:text-white"
+                                    >
+                                        {{
+                                            connection.issuance_capacity ??
+                                            'Not available'
+                                        }}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt class="text-slate-500">Control</dt>
+                                    <dd
+                                        class="mt-0.5 font-semibold text-slate-900 dark:text-white"
+                                    >
+                                        {{
+                                            displayLabel(
+                                                connection.control_status,
+                                            )
+                                        }}
+                                    </dd>
+                                </div>
+                            </dl>
+                            <p
+                                class="mt-3 border-t border-slate-200 pt-2 text-[0.7rem] text-slate-500 dark:border-slate-800 dark:text-slate-400"
+                            >
+                                Liquidity:
+                                {{
+                                    displayLabel(
+                                        connection.provider_liquidity_status,
+                                    )
+                                }}
+                                · checked
+                                {{
+                                    displayTime(
+                                        connection.provider_liquidity_checked_at,
+                                    )
+                                }}
+                            </p>
+                        </article>
+                    </div>
+                    <p
+                        v-else
+                        class="mt-3 text-xs text-slate-500 dark:text-slate-400"
+                    >
+                        No provider Treasury connection is configured.
+                    </p>
+                    <p
+                        class="mt-3 text-xs leading-5 text-slate-500 dark:text-slate-400"
+                    >
+                        Provider outflow reflects principal only. Sender-side
+                        system charges remain in the deferred Accounting Wave
+                        until explicit Treasury debit and revenue allocation are
+                        implemented.
+                    </p>
+                </details>
+            </section>
+
+            <section
+                class="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                data-testid="cockpit-funding-mode-switcher"
+            >
+                <div
+                    class="grid gap-2 sm:grid-cols-3"
+                    role="tablist"
+                    aria-label="Funding workspace mode"
+                >
+                    <button
+                        v-for="mode in fundingWorkspaceModes"
+                        :id="`funding-mode-${mode.key}`"
+                        :key="mode.key"
+                        type="button"
+                        role="tab"
+                        class="min-h-10 rounded-xl px-3 py-2 text-left text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
+                        :class="
+                            activeFundingMode === mode.key
+                                ? 'bg-slate-950 text-white shadow-sm dark:bg-sky-300 dark:text-slate-950'
+                                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
+                        "
+                        :aria-selected="activeFundingMode === mode.key"
+                        :aria-controls="`funding-panel-${mode.key}`"
+                        :data-testid="`funding-mode-${mode.key}`"
+                        @click="activeFundingMode = mode.key"
+                    >
+                        {{ mode.label }}
+                    </button>
+                </div>
+                <p
+                    class="px-2 pt-2 pb-1 text-xs leading-5 text-slate-500 dark:text-slate-400"
+                    data-testid="funding-mode-description"
+                >
+                    {{ activeFundingModeDetails?.description }}
+                </p>
             </section>
 
             <section
                 v-if="standing_funding_address"
+                v-show="activeFundingMode === 'self_top_up'"
+                id="funding-panel-self_top_up"
+                role="tabpanel"
+                aria-labelledby="funding-mode-self_top_up"
                 class="overflow-hidden rounded-2xl border border-sky-200 bg-white shadow-sm dark:border-sky-950 dark:bg-slate-900"
                 data-testid="cockpit-standing-funding-address"
             >
@@ -874,10 +1259,10 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                         >
                             {{
                                 standingAddressLoading
-                                    ? 'Contacting NetBank…'
+                                    ? 'Loading secure QR…'
                                     : standing_funding_address.available
                                       ? standing_funding_address.exists
-                                          ? 'Open Account Funding QR'
+                                          ? 'Reveal Account Funding QR'
                                           : 'Create Account Funding QR'
                                       : 'Account Funding Address unavailable'
                             }}
@@ -1194,6 +1579,10 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
 
             <section
                 v-if="funding_simulation"
+                v-show="activeFundingMode === 'simulation'"
+                id="funding-panel-simulation"
+                role="tabpanel"
+                aria-labelledby="funding-mode-simulation"
                 class="overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-sm dark:border-violet-950 dark:bg-slate-900"
                 data-testid="cockpit-qrph-funding-simulation"
             >
@@ -1391,6 +1780,10 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
             </section>
 
             <section
+                v-show="activeFundingMode === 'funding_intent'"
+                id="funding-panel-funding_intent"
+                role="tabpanel"
+                aria-labelledby="funding-mode-funding_intent"
                 class="grid gap-5 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]"
             >
                 <form
@@ -1736,155 +2129,153 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                 </article>
             </section>
 
-            <section
-                class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
-                aria-label="Funding summary"
+            <details
+                class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                data-testid="funding-provider-controls"
             >
-                <article
-                    v-for="card in summaryCards"
-                    :key="card.key"
-                    class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                <summary
+                    class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 marker:hidden"
                 >
-                    <p
-                        class="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase dark:text-slate-400"
-                    >
-                        {{ card.label }}
-                    </p>
-                    <p
-                        :class="[
-                            'mt-2 text-2xl font-semibold tracking-tight',
-                            card.tone,
-                        ]"
-                    >
-                        {{ card.value }}
-                    </p>
-                    <p
-                        class="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400"
-                    >
-                        {{ card.helper }}
-                    </p>
-                </article>
-            </section>
-
-            <section
-                class="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(20rem,0.65fr)]"
-            >
-                <article
-                    class="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
-                >
-                    <div
-                        class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 px-5 py-4 dark:border-slate-800"
-                    >
-                        <div>
-                            <p
-                                class="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase"
-                            >
-                                Funding rails
-                            </p>
-                            <h2 class="mt-1 text-lg font-semibold">
-                                Available providers
-                            </h2>
-                        </div>
-                        <span
-                            class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                    <div>
+                        <p
+                            class="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase dark:text-slate-400"
                         >
-                            {{ availableFundingProviders.length }} ready ·
-                            {{ funding_read_model.providers.length }} installed
-                        </span>
+                            Secondary controls
+                        </p>
+                        <h2 class="mt-0.5 text-sm font-semibold">
+                            Providers & safeguards
+                        </h2>
                     </div>
-                    <div
-                        v-if="funding_read_model.providers.length"
-                        class="grid gap-3 p-4 sm:grid-cols-2"
+                    <span
+                        class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                    >
+                        {{ availableFundingProviders.length }} ready ·
+                        {{ funding_read_model.providers.length }} installed
+                    </span>
+                </summary>
+                <div
+                    class="grid gap-5 border-t border-slate-200 p-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(20rem,0.65fr)] dark:border-slate-800"
+                >
+                    <article
+                        class="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
                     >
                         <div
-                            v-for="provider in funding_read_model.providers"
-                            :key="provider.code"
-                            class="rounded-lg border border-slate-200 p-4 dark:border-slate-700"
+                            class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 px-5 py-4 dark:border-slate-800"
+                        >
+                            <div>
+                                <p
+                                    class="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase"
+                                >
+                                    Funding rails
+                                </p>
+                                <h2 class="mt-1 text-lg font-semibold">
+                                    Available providers
+                                </h2>
+                            </div>
+                            <span
+                                class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                            >
+                                {{ availableFundingProviders.length }} ready ·
+                                {{ funding_read_model.providers.length }}
+                                installed
+                            </span>
+                        </div>
+                        <div
+                            v-if="funding_read_model.providers.length"
+                            class="grid gap-3 p-4 sm:grid-cols-2"
                         >
                             <div
-                                class="flex items-center justify-between gap-3"
+                                v-for="provider in funding_read_model.providers"
+                                :key="provider.code"
+                                class="rounded-lg border border-slate-200 p-4 dark:border-slate-700"
                             >
-                                <p class="font-semibold">
-                                    {{ provider.label }}
-                                </p>
-                                <span
-                                    class="rounded-full px-2 py-1 text-[0.65rem] font-semibold tracking-wide uppercase"
-                                    :class="{
-                                        'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300':
-                                            provider.status === 'blocked',
-                                        'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300':
-                                            provider.status === 'disabled',
-                                        'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300':
-                                            provider.status === 'available',
-                                    }"
+                                <div
+                                    class="flex items-center justify-between gap-3"
                                 >
-                                    {{ provider.status }}
-                                </span>
+                                    <p class="font-semibold">
+                                        {{ provider.label }}
+                                    </p>
+                                    <span
+                                        class="rounded-full px-2 py-1 text-[0.65rem] font-semibold tracking-wide uppercase"
+                                        :class="{
+                                            'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300':
+                                                provider.status === 'blocked',
+                                            'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300':
+                                                provider.status === 'disabled',
+                                            'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300':
+                                                provider.status === 'available',
+                                        }"
+                                    >
+                                        {{ provider.status }}
+                                    </span>
+                                </div>
+                                <p
+                                    class="mt-2 text-xs font-medium text-slate-700 dark:text-slate-300"
+                                >
+                                    {{
+                                        displayLabel(
+                                            provider.destination_mode ??
+                                                'shared',
+                                        )
+                                    }}
+                                    ·
+                                    {{
+                                        provider.destination_reference ??
+                                        'Not configured'
+                                    }}
+                                </p>
+                                <p
+                                    class="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400"
+                                >
+                                    {{
+                                        provider.status === 'blocked'
+                                            ? 'Dedicated funding is unavailable until authoritative destination verification succeeds.'
+                                            : provider.status === 'disabled'
+                                              ? 'Adapter installed; Funding Intake remains locked until this provider is explicitly enabled.'
+                                              : provider.simulation_only
+                                                ? 'Local-only Funding Intent happy path with zero bank or EMI calls.'
+                                                : 'Signed intake plus independent authoritative status verification.'
+                                    }}
+                                </p>
                             </div>
-                            <p
-                                class="mt-2 text-xs font-medium text-slate-700 dark:text-slate-300"
-                            >
-                                {{
-                                    displayLabel(
-                                        provider.destination_mode ?? 'shared',
-                                    )
-                                }}
-                                ·
-                                {{
-                                    provider.destination_reference ??
-                                    'Not configured'
-                                }}
-                            </p>
-                            <p
-                                class="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400"
-                            >
-                                {{
-                                    provider.status === 'blocked'
-                                        ? 'Dedicated funding is unavailable until authoritative destination verification succeeds.'
-                                        : provider.status === 'disabled'
-                                          ? 'Adapter installed; Funding Intake remains locked until this provider is explicitly enabled.'
-                                          : provider.simulation_only
-                                            ? 'Local-only Funding Intent happy path with zero bank or EMI calls.'
-                                            : 'Signed intake plus independent authoritative status verification.'
-                                }}
-                            </p>
                         </div>
-                    </div>
-                    <p v-else class="p-5 text-sm text-slate-500">
-                        No funding provider is enabled for this environment.
-                    </p>
-                </article>
+                        <p v-else class="p-5 text-sm text-slate-500">
+                            No funding provider is enabled for this environment.
+                        </p>
+                    </article>
 
-                <article
-                    class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-                >
-                    <p
-                        class="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase"
+                    <article
+                        class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
                     >
-                        Safeguards
-                    </p>
-                    <h2 class="mt-1 text-lg font-semibold">
-                        Non-negotiable controls
-                    </h2>
-                    <ol class="mt-4 space-y-3">
-                        <li
-                            v-for="(safeguard, index) in safeguards"
-                            :key="safeguard"
-                            class="flex gap-3 text-sm leading-5 text-slate-600 dark:text-slate-300"
+                        <p
+                            class="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase"
                         >
-                            <span
-                                class="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-950 text-xs font-semibold text-white dark:bg-sky-300 dark:text-slate-950"
+                            Safeguards
+                        </p>
+                        <h2 class="mt-1 text-lg font-semibold">
+                            Non-negotiable controls
+                        </h2>
+                        <ol class="mt-4 space-y-3">
+                            <li
+                                v-for="(safeguard, index) in safeguards"
+                                :key="safeguard"
+                                class="flex gap-3 text-sm leading-5 text-slate-600 dark:text-slate-300"
                             >
-                                {{ index + 1 }}
-                            </span>
-                            <span>{{ safeguard }}</span>
-                        </li>
-                    </ol>
-                </article>
-            </section>
+                                <span
+                                    class="flex size-6 shrink-0 items-center justify-center rounded-full bg-slate-950 text-xs font-semibold text-white dark:bg-sky-300 dark:text-slate-950"
+                                >
+                                    {{ index + 1 }}
+                                </span>
+                                <span>{{ safeguard }}</span>
+                            </li>
+                        </ol>
+                    </article>
+                </div>
+            </details>
 
             <section
                 class="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                data-testid="cockpit-funding-activity"
             >
                 <div
                     class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 px-5 py-4 dark:border-slate-800"
@@ -1893,10 +2284,10 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                         <p
                             class="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase"
                         >
-                            Funding activity
+                            Settlement and intent history
                         </p>
                         <h2 class="mt-1 text-lg font-semibold">
-                            Recent Funding Intents
+                            Funding Activity
                         </h2>
                     </div>
                     <span class="text-xs text-slate-500"
@@ -1989,10 +2380,10 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                                             }}
                                         </button>
                                         <button
+                                            v-if="intent.can_check_provider"
                                             type="button"
                                             class="h-8 rounded-lg bg-sky-600 px-3 text-xs font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
                                             :disabled="
-                                                !intent.can_check_provider ||
                                                 activeVerificationCheck !== null
                                             "
                                             :data-testid="`check-netbank-${intent.reference}`"
@@ -2007,6 +2398,21 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                                                     : 'Check NetBank'
                                             }}
                                         </button>
+                                        <span
+                                            v-else-if="
+                                                intent.provider ===
+                                                'qrph_simulator'
+                                            "
+                                            class="rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700 dark:bg-violet-950/60 dark:text-violet-300"
+                                        >
+                                            Simulation only
+                                        </span>
+                                        <span
+                                            v-else
+                                            class="text-xs text-slate-400"
+                                        >
+                                            —
+                                        </span>
                                     </div>
                                 </td>
                             </tr>
@@ -2026,285 +2432,291 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                 </div>
             </section>
 
-            <section
-                class="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
-                data-testid="cockpit-funding-approval-queue"
+            <details
+                class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                :open="hasFundingExceptions"
+                data-testid="funding-exception-controls"
             >
-                <div
-                    class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 px-5 py-4 dark:border-slate-800"
+                <summary
+                    class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 marker:hidden"
                 >
                     <div>
                         <p
-                            class="text-xs font-semibold tracking-[0.16em] text-indigo-700 uppercase dark:text-indigo-300"
+                            class="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase dark:text-slate-400"
                         >
-                            Dual control
+                            Controlled operations
                         </p>
-                        <h2 class="mt-1 text-lg font-semibold">
-                            Reconciliation approval queue
+                        <h2 class="mt-0.5 text-sm font-semibold">
+                            Exceptions & accounting
                         </h2>
-                        <p class="mt-1 text-xs text-slate-500">
-                            Requests are visible across Treasury operators so a
-                            different person can approve.
-                        </p>
                     </div>
                     <span
-                        class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                        class="rounded-full px-2.5 py-1 text-xs font-semibold"
+                        :class="
+                            hasFundingExceptions
+                                ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
+                                : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                        "
                     >
-                        {{ funding_read_model.approval_queue.length }} pending
+                        {{ fundingExceptionCount }} open
                     </span>
-                </div>
+                </summary>
                 <div
-                    v-if="funding_read_model.approval_queue.length"
-                    class="divide-y divide-slate-100 dark:divide-slate-800"
+                    class="space-y-5 border-t border-slate-200 p-4 dark:border-slate-800"
                 >
-                    <div
-                        v-for="approval in funding_read_model.approval_queue"
-                        :key="approval.reference"
-                        class="flex flex-col gap-3 px-5 py-4 lg:flex-row lg:items-center lg:justify-between"
-                    >
-                        <div class="min-w-0">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <p class="font-semibold">
-                                    {{
-                                        reconciliationActionLabel(
-                                            approval.action,
-                                        )
-                                    }}
-                                </p>
-                                <span
-                                    class="rounded-full bg-indigo-50 px-2 py-1 text-[0.65rem] font-semibold tracking-wide text-indigo-700 uppercase dark:bg-indigo-950/50 dark:text-indigo-300"
-                                >
-                                    {{ displayLabel(approval.provider) }}
-                                </span>
-                            </div>
-                            <p class="mt-1 text-xs text-slate-500">
-                                Case {{ approval.case_reference }} ·
-                                {{ displayLabel(approval.reason) }} ·
-                                {{ displayTime(approval.requested_at) }}
-                            </p>
-                            <p class="mt-1 text-xs text-slate-500">
-                                Exact immutable evidence only; amount and
-                                evidence inputs are disabled by contract.
-                            </p>
-                        </div>
-                        <button
-                            v-if="approval.can_approve"
-                            type="button"
-                            class="shrink-0 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
-                            :disabled="approvalForm.processing"
-                            @click="
-                                approveFundingReconciliation(approval.reference)
-                            "
-                        >
-                            {{
-                                activeApproval === approval.reference
-                                    ? 'Approving…'
-                                    : 'Approve and execute'
-                            }}
-                        </button>
-                        <span
-                            v-else
-                            class="shrink-0 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-500 dark:border-slate-700"
-                        >
-                            Awaiting another operator
-                        </span>
-                    </div>
-                </div>
-                <p v-else class="px-5 py-6 text-sm text-slate-500">
-                    No reconciliation requests are awaiting approval.
-                </p>
-                <p
-                    v-if="approvalForm.errors.approval"
-                    class="border-t border-rose-200 bg-rose-50 px-5 py-3 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950/20 dark:text-rose-300"
-                >
-                    {{ approvalForm.errors.approval }}
-                </p>
-            </section>
-
-            <section class="grid gap-5 xl:grid-cols-2">
-                <article
-                    class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-                >
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
-                            <p
-                                class="text-xs font-semibold tracking-[0.16em] text-amber-700 uppercase dark:text-amber-300"
-                            >
-                                Exception control
-                            </p>
-                            <h2 class="mt-1 text-lg font-semibold">Suspense</h2>
-                        </div>
-                        <span class="text-sm font-semibold">{{
-                            funding_read_model.suspense_cases.length
-                        }}</span>
-                    </div>
-                    <div
-                        v-if="funding_read_model.suspense_cases.length"
-                        class="mt-4 space-y-3"
+                    <section
+                        class="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                        data-testid="cockpit-funding-approval-queue"
                     >
                         <div
-                            v-for="item in funding_read_model.suspense_cases"
-                            :key="item.reference"
-                            class="rounded-lg border border-amber-200 bg-amber-50/60 p-3 dark:border-amber-900 dark:bg-amber-950/20"
+                            class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 px-5 py-4 dark:border-slate-800"
+                        >
+                            <div>
+                                <p
+                                    class="text-xs font-semibold tracking-[0.16em] text-indigo-700 uppercase dark:text-indigo-300"
+                                >
+                                    Dual control
+                                </p>
+                                <h2 class="mt-1 text-lg font-semibold">
+                                    Reconciliation approval queue
+                                </h2>
+                                <p class="mt-1 text-xs text-slate-500">
+                                    Requests are visible across Treasury
+                                    operators so a different person can approve.
+                                </p>
+                            </div>
+                            <span
+                                class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                            >
+                                {{ funding_read_model.approval_queue.length }}
+                                pending
+                            </span>
+                        </div>
+                        <div
+                            v-if="funding_read_model.approval_queue.length"
+                            class="divide-y divide-slate-100 dark:divide-slate-800"
                         >
                             <div
-                                class="flex flex-wrap items-center justify-between gap-2"
+                                v-for="approval in funding_read_model.approval_queue"
+                                :key="approval.reference"
+                                class="flex flex-col gap-3 px-5 py-4 lg:flex-row lg:items-center lg:justify-between"
                             >
-                                <p class="font-mono text-xs">
-                                    {{ item.reference }}
-                                </p>
-                                <span
-                                    class="text-xs font-semibold text-amber-800 dark:text-amber-300"
-                                    >{{ displayLabel(item.reason) }}</span
-                                >
-                            </div>
-                            <p
-                                class="mt-2 text-xs text-slate-600 dark:text-slate-400"
-                            >
-                                {{
-                                    item.pending_approval
-                                        ? 'Maker request pending independent approval.'
-                                        : 'Awaiting a controlled reconciliation request.'
-                                }}
-                            </p>
-                            <div
-                                v-if="item.allowed_actions.length"
-                                class="mt-3 flex flex-wrap gap-2"
-                            >
+                                <div class="min-w-0">
+                                    <div
+                                        class="flex flex-wrap items-center gap-2"
+                                    >
+                                        <p class="font-semibold">
+                                            {{
+                                                reconciliationActionLabel(
+                                                    approval.action,
+                                                )
+                                            }}
+                                        </p>
+                                        <span
+                                            class="rounded-full bg-indigo-50 px-2 py-1 text-[0.65rem] font-semibold tracking-wide text-indigo-700 uppercase dark:bg-indigo-950/50 dark:text-indigo-300"
+                                        >
+                                            {{
+                                                displayLabel(approval.provider)
+                                            }}
+                                        </span>
+                                    </div>
+                                    <p class="mt-1 text-xs text-slate-500">
+                                        Case {{ approval.case_reference }} ·
+                                        {{ displayLabel(approval.reason) }} ·
+                                        {{ displayTime(approval.requested_at) }}
+                                    </p>
+                                    <p class="mt-1 text-xs text-slate-500">
+                                        Exact immutable evidence only; amount
+                                        and evidence inputs are disabled by
+                                        contract.
+                                    </p>
+                                </div>
                                 <button
-                                    v-for="action in item.allowed_actions"
-                                    :key="action"
+                                    v-if="approval.can_approve"
                                     type="button"
-                                    class="rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-amber-800 dark:bg-slate-900 dark:text-amber-300 dark:hover:bg-amber-950/40"
-                                    :disabled="reconciliationForm.processing"
+                                    class="shrink-0 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                    :disabled="approvalForm.processing"
                                     @click="
-                                        requestReconciliation(
-                                            item.reference,
-                                            action,
+                                        approveFundingReconciliation(
+                                            approval.reference,
                                         )
                                     "
                                 >
                                     {{
-                                        activeReconciliationCase ===
-                                        item.reference
-                                            ? 'Submitting…'
-                                            : reconciliationActionLabel(action)
+                                        activeApproval === approval.reference
+                                            ? 'Approving…'
+                                            : 'Approve and execute'
                                     }}
                                 </button>
+                                <span
+                                    v-else
+                                    class="shrink-0 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-500 dark:border-slate-700"
+                                >
+                                    Awaiting another operator
+                                </span>
                             </div>
                         </div>
-                    </div>
-                    <p v-else class="mt-4 text-sm text-slate-500">
-                        No open funding exceptions.
-                    </p>
-                    <p
-                        v-if="reconciliationForm.errors.reconciliation"
-                        class="mt-3 text-xs text-rose-600 dark:text-rose-300"
-                    >
-                        {{ reconciliationForm.errors.reconciliation }}
-                    </p>
-                </article>
+                        <p v-else class="px-5 py-6 text-sm text-slate-500">
+                            No reconciliation requests are awaiting approval.
+                        </p>
+                        <p
+                            v-if="approvalForm.errors.approval"
+                            class="border-t border-rose-200 bg-rose-50 px-5 py-3 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950/20 dark:text-rose-300"
+                        >
+                            {{ approvalForm.errors.approval }}
+                        </p>
+                    </section>
 
-                <article
-                    class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-                >
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
-                            <p
-                                class="text-xs font-semibold tracking-[0.16em] text-rose-700 uppercase dark:text-rose-300"
-                            >
-                                Issuance protection
-                            </p>
-                            <h2 class="mt-1 text-lg font-semibold">
-                                Recovery holds
-                            </h2>
-                        </div>
-                        <span class="text-sm font-semibold">{{
-                            funding_read_model.recovery_holds.length
-                        }}</span>
-                    </div>
-                    <div
-                        v-if="funding_read_model.recovery_holds.length"
-                        class="mt-4 space-y-3"
-                    >
-                        <div
-                            v-for="hold in funding_read_model.recovery_holds"
-                            :key="hold.reference"
-                            class="rounded-lg border border-rose-200 bg-rose-50/60 p-3 dark:border-rose-900 dark:bg-rose-950/20"
+                    <section class="grid gap-5 xl:grid-cols-2">
+                        <article
+                            class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
                         >
                             <div
-                                class="flex flex-wrap items-center justify-between gap-2"
+                                class="flex items-center justify-between gap-3"
                             >
-                                <p class="font-mono text-xs">
-                                    {{ hold.reference }}
-                                </p>
-                                <p
-                                    class="font-semibold text-rose-800 dark:text-rose-300"
-                                >
-                                    {{ hold.outstanding }}
-                                </p>
+                                <div>
+                                    <p
+                                        class="text-xs font-semibold tracking-[0.16em] text-amber-700 uppercase dark:text-amber-300"
+                                    >
+                                        Exception control
+                                    </p>
+                                    <h2 class="mt-1 text-lg font-semibold">
+                                        Suspense
+                                    </h2>
+                                </div>
+                                <span class="text-sm font-semibold">{{
+                                    funding_read_model.suspense_cases.length
+                                }}</span>
                             </div>
-                            <p
-                                class="mt-2 text-xs text-slate-600 dark:text-slate-400"
+                            <div
+                                v-if="funding_read_model.suspense_cases.length"
+                                class="mt-4 space-y-3"
                             >
-                                Future verified funding repays this hold before
-                                becoming usable.
+                                <div
+                                    v-for="item in funding_read_model.suspense_cases"
+                                    :key="item.reference"
+                                    class="rounded-lg border border-amber-200 bg-amber-50/60 p-3 dark:border-amber-900 dark:bg-amber-950/20"
+                                >
+                                    <div
+                                        class="flex flex-wrap items-center justify-between gap-2"
+                                    >
+                                        <p class="font-mono text-xs">
+                                            {{ item.reference }}
+                                        </p>
+                                        <span
+                                            class="text-xs font-semibold text-amber-800 dark:text-amber-300"
+                                            >{{
+                                                displayLabel(item.reason)
+                                            }}</span
+                                        >
+                                    </div>
+                                    <p
+                                        class="mt-2 text-xs text-slate-600 dark:text-slate-400"
+                                    >
+                                        {{
+                                            item.pending_approval
+                                                ? 'Maker request pending independent approval.'
+                                                : 'Awaiting a controlled reconciliation request.'
+                                        }}
+                                    </p>
+                                    <div
+                                        v-if="item.allowed_actions.length"
+                                        class="mt-3 flex flex-wrap gap-2"
+                                    >
+                                        <button
+                                            v-for="action in item.allowed_actions"
+                                            :key="action"
+                                            type="button"
+                                            class="rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-amber-800 dark:bg-slate-900 dark:text-amber-300 dark:hover:bg-amber-950/40"
+                                            :disabled="
+                                                reconciliationForm.processing
+                                            "
+                                            @click="
+                                                requestReconciliation(
+                                                    item.reference,
+                                                    action,
+                                                )
+                                            "
+                                        >
+                                            {{
+                                                activeReconciliationCase ===
+                                                item.reference
+                                                    ? 'Submitting…'
+                                                    : reconciliationActionLabel(
+                                                          action,
+                                                      )
+                                            }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <p v-else class="mt-4 text-sm text-slate-500">
+                                No open funding exceptions.
                             </p>
-                        </div>
-                    </div>
-                    <p v-else class="mt-4 text-sm text-slate-500">
-                        No active funding recovery holds.
-                    </p>
-                </article>
-            </section>
+                            <p
+                                v-if="reconciliationForm.errors.reconciliation"
+                                class="mt-3 text-xs text-rose-600 dark:text-rose-300"
+                            >
+                                {{ reconciliationForm.errors.reconciliation }}
+                            </p>
+                        </article>
 
-            <section
-                class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-            >
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                        <p
-                            class="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase"
+                        <article
+                            class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
                         >
-                            3neti/wallet grammar
-                        </p>
-                        <h2 class="mt-1 text-lg font-semibold">
-                            Treasury Inventory
-                        </h2>
-                    </div>
-                    <span
-                        class="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                        >read-only positions</span
-                    >
+                            <div
+                                class="flex items-center justify-between gap-3"
+                            >
+                                <div>
+                                    <p
+                                        class="text-xs font-semibold tracking-[0.16em] text-rose-700 uppercase dark:text-rose-300"
+                                    >
+                                        Issuance protection
+                                    </p>
+                                    <h2 class="mt-1 text-lg font-semibold">
+                                        Recovery holds
+                                    </h2>
+                                </div>
+                                <span class="text-sm font-semibold">{{
+                                    funding_read_model.recovery_holds.length
+                                }}</span>
+                            </div>
+                            <div
+                                v-if="funding_read_model.recovery_holds.length"
+                                class="mt-4 space-y-3"
+                            >
+                                <div
+                                    v-for="hold in funding_read_model.recovery_holds"
+                                    :key="hold.reference"
+                                    class="rounded-lg border border-rose-200 bg-rose-50/60 p-3 dark:border-rose-900 dark:bg-rose-950/20"
+                                >
+                                    <div
+                                        class="flex flex-wrap items-center justify-between gap-2"
+                                    >
+                                        <p class="font-mono text-xs">
+                                            {{ hold.reference }}
+                                        </p>
+                                        <p
+                                            class="font-semibold text-rose-800 dark:text-rose-300"
+                                        >
+                                            {{ hold.outstanding }}
+                                        </p>
+                                    </div>
+                                    <p
+                                        class="mt-2 text-xs text-slate-600 dark:text-slate-400"
+                                    >
+                                        Future verified funding repays this hold
+                                        before becoming usable.
+                                    </p>
+                                </div>
+                            </div>
+                            <p v-else class="mt-4 text-sm text-slate-500">
+                                No active funding recovery holds.
+                            </p>
+                        </article>
+                    </section>
                 </div>
-                <div
-                    v-if="funding_read_model.treasury_positions.length"
-                    class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
-                >
-                    <div
-                        v-for="position in funding_read_model.treasury_positions"
-                        :key="`${position.provider}-${position.currency}`"
-                        class="rounded-lg border border-slate-200 p-4 dark:border-slate-700"
-                    >
-                        <p
-                            class="text-xs font-semibold tracking-wide text-slate-500 uppercase"
-                        >
-                            {{ displayLabel(position.provider) }}
-                        </p>
-                        <p class="mt-1 text-xl font-semibold">
-                            {{ position.recognized }}
-                        </p>
-                        <p class="mt-1 text-xs text-slate-500">
-                            {{ displayLabel(position.status) }} · durable
-                            Inventory facts
-                        </p>
-                    </div>
-                </div>
-                <p v-else class="mt-4 text-sm text-slate-500">
-                    No Treasury Inventory has been recognized from verified
-                    funding yet.
-                </p>
-            </section>
+            </details>
         </div>
     </CockpitLayout>
 </template>

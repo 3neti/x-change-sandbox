@@ -912,7 +912,7 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                                         <span>
                                             <span
                                                 class="block text-sm font-semibold text-slate-900 dark:text-white"
-                                                >Shared wallet</span
+                                                >Shared provider account</span
                                             >
                                             <span
                                                 class="mt-1 block text-xs leading-5 text-slate-600 dark:text-slate-400"
@@ -945,7 +945,7 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                                         <span>
                                             <span
                                                 class="block text-sm font-semibold text-slate-900 dark:text-white"
-                                                >Dedicated wallet</span
+                                                >Dedicated provider account</span
                                             >
                                             <span
                                                 class="mt-1 block text-xs leading-5 text-slate-600 dark:text-slate-400"
@@ -966,7 +966,7 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                             <label
                                 class="block text-xs font-semibold text-slate-700 dark:text-slate-300"
                             >
-                                Wallet ID
+                                Provider account ID
                                 <input
                                     v-model="paynamicsForm.wallet_id"
                                     autocomplete="off"
@@ -977,7 +977,7 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                                 class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
                                 data-testid="paynamics-ownership-warning"
                             >
-                                A reachable wallet is not proof of ownership.
+                                A reachable provider account is not proof of ownership.
                                 The candidate may be recorded, but dedicated
                                 funding remains blocked until Paynamics supplies
                                 authoritative ownership verification.
