@@ -22,8 +22,8 @@ withDefaults(defineProps<{
     balances: () => [
         {
             key: 'internal',
-            label: 'Internal Balance',
-            value: 'Internal balance not connected',
+            label: 'Client Funds',
+            value: 'Client Funds not connected',
             tone: 'neutral',
         },
         {
