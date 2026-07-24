@@ -11,6 +11,13 @@
     "repositories": [
         {
             "type": "path",
+            "url": "/Users/rli/PhpstormProjects/packages/x-commerce",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
             "url": "packages/x-change",
             "options": {
                 "symlink": true

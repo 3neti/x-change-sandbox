@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "025774f322a2afc248b4772eabc91349",
+    "content-hash": "3d3d197abac51359643f9923462e694c",
     "packages": [
         {
             "name": "3neti/cash",
@@ -129,7 +129,7 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/rli/PhpstormProjects/packages/emi-core",
-                "reference": "0f2163e10538093f8db27c76ca7f5a0700e421ff"
+                "reference": "d3a4eda9b00eae96c5f96426c7e3b8dfbf6a26ee"
             },
             "require": {
                 "illuminate/support": "^12.0 || ^13.0",
@@ -186,7 +186,7 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/rli/PhpstormProjects/packages/emi-netbank",
-                "reference": "550fe17c8361e93b8ce3d677b429f934af4f74f0"
+                "reference": "be3917976a24d6c82a7b5b9c0dfd344716acc79a"
             },
             "require": {
                 "3neti/emi-core": "^v1.0",
@@ -253,7 +253,7 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/rli/PhpstormProjects/packages/emi-paynamics",
-                "reference": "1f7d198b50a2de4fe2400e431463db4e3bcff199"
+                "reference": "89ebc7336c43286bad5ff46b7a12ce9ff9a92e4a"
             },
             "require": {
                 "3neti/emi-core": "^v1.0.1",
@@ -999,7 +999,7 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/rli/PhpstormProjects/packages/merchant",
-                "reference": "35f5b96d8a29fb51afed5d2b879f1bc65b73b0de"
+                "reference": "a5c6c888dae1e4171a91f06b247b5cd619297e0a"
             },
             "require": {
                 "illuminate/contracts": "^11.0|^12.0|^13.0",
@@ -1383,7 +1383,7 @@
             "dist": {
                 "type": "path",
                 "url": "/Users/rli/PhpstormProjects/packages/wallet",
-                "reference": "11f5d0cdd3c938bdafd7136a4458a8840dc675c1"
+                "reference": "0d7b39aeb5d1462cb12798d3be62cb2d6be100d5"
             },
             "require": {
                 "bavix/laravel-wallet": "^11.4",
@@ -1564,7 +1564,7 @@
             "dist": {
                 "type": "path",
                 "url": "packages/x-change",
-                "reference": "fa21b26af13ea4d68f4e294d8a40db42091825f1"
+                "reference": "91f3680b865759699d75dc2a26ea0db394dc8338"
             },
             "require": {
                 "3neti/cash": "dev-main",
@@ -1588,6 +1588,7 @@
                 "3neti/wallet": "^1.1",
                 "3neti/x-action": "dev-main",
                 "3neti/x-campaign": "dev-main",
+                "3neti/x-commerce": "dev-main",
                 "3neti/x-feedback": "dev-main",
                 "3neti/x-journal": "dev-main",
                 "3neti/x-ray": "dev-main",
@@ -1610,6 +1611,9 @@
                 "orchestra/testbench": "^11.0",
                 "pestphp/pest": "^4.4",
                 "pestphp/pest-plugin-laravel": "^4.1"
+            },
+            "suggest": {
+                "3neti/x-legal": "Provides jurisdiction-aware advisory Treasury vocabulary and policy traceability."
             },
             "type": "library",
             "extra": {
@@ -1652,6 +1656,57 @@
             "transport-options": {
                 "symlink": true,
                 "relative": true
+            }
+        },
+        {
+            "name": "3neti/x-commerce",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "/Users/rli/PhpstormProjects/packages/x-commerce",
+                "reference": "9c79145a6d9be5845b29586b960ee78918770257"
+            },
+            "require": {
+                "illuminate/support": "^11.0|^12.0|^13.0",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^10.5"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "LBHurtado\\XCommerce\\XCommerceServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "LBHurtado\\XCommerce\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "LBHurtado\\XCommerce\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Commercial architecture and knowledge system for packaging, pricing, licensing, metering, and sustaining outcomes delivered through the x-change ecosystem.",
+            "keywords": [
+                "commerce",
+                "commercial-architecture",
+                "laravel",
+                "licensing",
+                "metering",
+                "pricing",
+                "x-change"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": false
             }
         },
         {
