@@ -35,6 +35,16 @@
         },
         {
             "type": "path",
+            "url": "/Users/rli/PhpstormProjects/packages/merchant",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "3neti/merchant": "1.1.1"
+                }
+            }
+        },
+        {
+            "type": "path",
             "url": "/Users/rli/PhpstormProjects/packages/wallet",
             "options": {
                 "symlink": true,
