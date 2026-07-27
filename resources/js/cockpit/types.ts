@@ -405,22 +405,24 @@ export type CockpitAccountReadModel = {
     };
 };
 
+export type CockpitFundingQrMerchantProfile = {
+    name: string;
+    city: string;
+    merchant_category_code: string;
+    merchant_name_template: string;
+    category_options: Array<{
+        code: string;
+        label: string;
+    }>;
+    presentation_only: true;
+    controls_routing: false;
+    controls_settlement: false;
+};
+
 export type CockpitAccountsPageProps = CockpitHeaderPageProps & {
     account_read_model: CockpitAccountReadModel;
     funding_account_notice?: string | null;
-    funding_qr_merchant_profile: {
-        name: string;
-        city: string;
-        merchant_category_code: string;
-        merchant_name_template: string;
-        category_options: Array<{
-            code: string;
-            label: string;
-        }>;
-        presentation_only: true;
-        controls_routing: false;
-        controls_settlement: false;
-    };
+    funding_qr_merchant_profile: CockpitFundingQrMerchantProfile;
     account_scenario?: {
         enabled: boolean;
         mode: 'rollback-only';
@@ -640,18 +642,168 @@ export type CockpitFundingReadModel = {
     redactions: CockpitReadModelRedactions;
 };
 
+export type CockpitReviewedFundingPayCode = {
+    request_reference: string;
+    code: string;
+    display_code: string;
+    last_four: string;
+    status: string;
+    amount: string;
+    voucher_type: string;
+    collection_mode: 'system_treasury' | 'recipient_claim';
+    can_claim: boolean;
+    can_copy: boolean;
+    expires_at?: string | null;
+};
+
+export type CockpitFundingEvidenceDocument = {
+    id: number;
+    type: string;
+    filename: string;
+    mime_type: string;
+    size: number;
+    review_status: string;
+    url?: string;
+};
+
+export type CockpitFundingEvidenceSummary = {
+    attachment_count: number;
+    pending_count?: number;
+    accepted_count?: number;
+    envelope_status?: string | null;
+    documents: CockpitFundingEvidenceDocument[];
+};
+
+export type CockpitFundingRequest = {
+    reference: string;
+    type: string;
+    type_label: string;
+    requested_value: string;
+    recognized_value?: string | null;
+    currency: string;
+    status: string;
+    receipt_status: string;
+    receipt_status_label: string;
+    description: string;
+    transfer?: {
+        provider: string;
+        target_label: string;
+        reference_hint?: string | null;
+        verification_status:
+            | 'ready_to_check'
+            | 'awaiting_provider_evidence'
+            | 'approval_required'
+            | 'review_required'
+            | 'credited';
+        window: 'recent' | 'last_hour' | 'today';
+        window_label: string;
+        requested_amount: string;
+        matching_adjustment?: string | null;
+        expected_amount: string;
+        instruction_status?: string | null;
+        instruction_expires_at?: string | null;
+        full_expected_amount_is_credited: boolean;
+        last_checked_at?: string | null;
+        can_check: boolean;
+        provider_authority_required: true;
+    } | null;
+    submitted_at?: string | null;
+    completed_at?: string | null;
+    evidence?: CockpitFundingEvidenceSummary;
+    pay_code?: CockpitReviewedFundingPayCode | null;
+};
+
+export type CockpitFundingRequestReviewItem = {
+    reference: string;
+    type: string;
+    type_label: string;
+    requested_value: string;
+    recognized_value?: string | null;
+    requested_value_minor: number;
+    currency: string;
+    status: string;
+    description: string;
+    evidence_reference?: string | null;
+    connection_reference?: string | null;
+    maker_id?: string | null;
+    evidence?: CockpitFundingEvidenceSummary;
+    can_prepare: boolean;
+    can_approve: boolean;
+};
+
+export type CockpitFundingRequestReadModel = {
+    schema: string;
+    requests: CockpitFundingRequest[];
+    notices: Array<{
+        reference: string;
+        type: string;
+        title: string;
+        message: string;
+        action?: Record<string, string> | null;
+        read: boolean;
+        created_at?: string | null;
+    }>;
+    review_queue: CockpitFundingRequestReviewItem[];
+    bank_transfer: {
+        enabled: boolean;
+        provider: string;
+        institution: string;
+        account_name: string;
+        account_number: string;
+        currency: string;
+        reserved_exact_amounts_enabled: boolean;
+        minimum_adjustment: string;
+        maximum_adjustment: string;
+        instruction_valid_for_minutes: number;
+        full_expected_amount_is_credited: true;
+        automatic_credit_window_minutes: number;
+        windows: Array<{
+            value: 'recent' | 'last_hour' | 'today';
+            label: string;
+            automatic: boolean;
+        }>;
+        sender_reference_authority: false;
+    };
+    controls: {
+        attachments_enabled: boolean;
+        evidence_authorizes_credit: boolean;
+        maker_checker_required: boolean;
+        reviewer: boolean;
+        provider_payout_enabled: boolean;
+    };
+    redactions: Record<string, boolean>;
+};
+
+export type CockpitPayCodeFundingPreview = {
+    eligible: boolean;
+    status: string;
+    message: string;
+    code_hint?: string | null;
+    amount?: string | null;
+    currency?: string | null;
+    expires_at?: string | null;
+    provider_calls: false;
+    inspection_token?: string | null;
+};
+
 export type CockpitFundingPageProps = CockpitHeaderPageProps & {
     funding_read_model: CockpitFundingReadModel;
+    funding_requests?: CockpitFundingRequestReadModel;
     funding_instruction?: CockpitFundingInstruction | null;
     funding_notice?: string | null;
+    funding_request_submitted_reference?: string | null;
+    funding_workspace_mode?: 'self_top_up' | 'bank_transfer' | 'pay_code';
     funding_poll_interval?: number;
     funding_realtime?: {
         enabled: boolean;
         channel: string;
         event: '.FundingProjectionChanged';
+        workflow_event: '.FundingRequestChanged';
     };
     funding_simulation?: CockpitQrPhFundingSimulation;
     standing_funding_address?: CockpitStandingFundingAddressAvailability;
+    funding_qr_merchant_profile?: CockpitFundingQrMerchantProfile;
+    pay_code_funding_preview?: CockpitPayCodeFundingPreview | null;
 };
 
 export type CockpitStandingFundingAddressAvailability = {
