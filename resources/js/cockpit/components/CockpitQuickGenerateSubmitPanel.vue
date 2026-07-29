@@ -22,6 +22,8 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import type {
     CockpitQuickGenerateCampaignAttribution,
     CockpitQuickGenerateCampaignContext,
+    CockpitClaimExperiencePreviewManifest,
+    CockpitQuickGenerateClaimPreviewContract,
     CockpitQuickGenerateDraftContract,
     CockpitQuickGenerateFeedbackDefaults,
     CockpitQuickGenerateLastInstructions,
@@ -57,6 +59,7 @@ import type {
     RiderStampTheme,
 } from '../riderStampPreview';
 import type { RiderContentFormat } from '../riderContent';
+import CockpitClaimExperiencePreview from './CockpitClaimExperiencePreview.vue';
 import CockpitIssuedPayCodeDialog from './CockpitIssuedPayCodeDialog.vue';
 import CockpitManualCopyButton from './CockpitManualCopyButton.vue';
 import CockpitPayCodeCanvas from './CockpitPayCodeCanvas.vue';
@@ -70,6 +73,7 @@ import CockpitRiderPreviewFrame from './CockpitRiderPreviewFrame.vue';
 const props = defineProps<{
     clientFundsMinor?: number | null;
     mutationContract?: CockpitQuickGenerateMutationContract;
+    claimPreviewContract?: CockpitQuickGenerateClaimPreviewContract;
     draftContract?: CockpitQuickGenerateDraftContract;
     campaignContext?: CockpitQuickGenerateCampaignContext;
     feedbackDefaults?: CockpitQuickGenerateFeedbackDefaults;
@@ -646,10 +650,17 @@ const processing = ref(false);
 const lastStatus = ref('ready');
 const lastMessage = ref('Ready to issue when the design is complete.');
 const lastResponse = ref<Record<string, unknown> | null>(null);
+const previewProcessing = ref(false);
+const previewStatus = ref<'idle' | 'ready' | 'failed'>('idle');
+const previewMessage = ref(
+    'Generate a no-money walkthrough from the current Pay Code design.',
+);
+const previewResult = ref<CockpitClaimExperiencePreviewManifest | null>(null);
+const previewDraftSnapshot = ref<string | null>(null);
 const issuedPayCodeDialogOpen = ref(false);
 const instructionBuilderElement = ref<HTMLDetailsElement | null>(null);
 const canvasSectionElement = ref<HTMLElement | null>(null);
-const canvasView = ref<'stamp' | 'design' | 'cost'>('stamp');
+const canvasView = ref<'stamp' | 'design' | 'claim' | 'cost'>('stamp');
 const riderDesignEditor = ref<RiderDesignEditor>('appearance');
 const riderDesignTeleportReady = ref(false);
 const startingPoint = ref<'blank' | 'last' | 'template'>(
@@ -1571,6 +1582,9 @@ const routeUrl = computed<string | null>(() =>
 const routeName = computed<string>(
     () => stringValue(props.mutationContract?.route) ?? 'not-loaded',
 );
+const claimPreviewRouteUrl = computed<string | null>(() =>
+    stringValue(props.claimPreviewContract?.route_url),
+);
 const allowedMethods = computed<string[]>(() => {
     if (!Array.isArray(props.mutationContract?.allowed_methods)) {
         return [];
@@ -1671,6 +1685,20 @@ const canSubmit = computed<boolean>(() => {
         namedClaimSliceValidationMessage.value === null &&
         claimRecipientError.value === null &&
         (!isAccountFundingClaim.value || sliceMode.value === 'whole')
+    );
+});
+
+const canGenerateClaimPreview = computed<boolean>(() => {
+    const normalizedAmount = Number(amount.value);
+
+    return (
+        claimPreviewRouteUrl.value !== null &&
+        !previewProcessing.value &&
+        Number.isFinite(normalizedAmount) &&
+        normalizedAmount > 0 &&
+        feedbackValid.value &&
+        namedClaimSliceValidationMessage.value === null &&
+        claimRecipientError.value === null
     );
 });
 
@@ -3149,6 +3177,24 @@ const sanitizedInstructionPayloadJson = computed<string>(() => {
     return JSON.stringify(sanitizedInstructionPayload.value, null, 2);
 });
 
+const previewStale = computed<boolean>(() => {
+    return (
+        previewStatus.value === 'ready' &&
+        previewDraftSnapshot.value !== null &&
+        previewDraftSnapshot.value !== sanitizedInstructionPayloadJson.value
+    );
+});
+
+watch(canvasView, (view): void => {
+    if (
+        view === 'claim' &&
+        previewStatus.value === 'idle' &&
+        !previewProcessing.value
+    ) {
+        void generateClaimPreview(false);
+    }
+});
+
 const settlementRulesSummary = computed<Record<string, unknown> | null>(() => {
     const minPayment = Number(rulesMinPayment.value);
     const maxPayment = Number(rulesMaxPayment.value);
@@ -3355,6 +3401,67 @@ async function submit(): Promise<void> {
         emit('submitError', body);
     } finally {
         processing.value = false;
+    }
+}
+
+async function generateClaimPreview(refreshPreview = false): Promise<void> {
+    if (!canGenerateClaimPreview.value || claimPreviewRouteUrl.value === null) {
+        return;
+    }
+
+    previewProcessing.value = true;
+    previewStatus.value = 'idle';
+    previewMessage.value = refreshPreview
+        ? 'Refreshing the claim walkthrough preview.'
+        : 'Rendering the claim walkthrough preview.';
+
+    try {
+        const response = await fetch(claimPreviewRouteUrl.value, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                ...csrfHeader(),
+            },
+            body: JSON.stringify({
+                ...buildPayload(),
+                refresh_preview: refreshPreview,
+                preview_profile: 'issuer',
+            }),
+        });
+        const body = await safeJson(response);
+
+        if (!response.ok) {
+            previewStatus.value = 'failed';
+            previewMessage.value =
+                stringValue(body.message) ??
+                'The claim walkthrough preview could not be generated.';
+            previewResult.value = null;
+            previewDraftSnapshot.value = null;
+
+            return;
+        }
+
+        previewStatus.value = 'ready';
+        previewMessage.value =
+            body.cache_hit === true
+                ? 'Cached claim walkthrough preview is ready.'
+                : 'Claim walkthrough preview is ready.';
+        previewResult.value =
+            body as unknown as CockpitClaimExperiencePreviewManifest;
+        previewDraftSnapshot.value = sanitizedInstructionPayloadJson.value;
+    } catch (error) {
+        previewStatus.value = 'failed';
+        previewMessage.value =
+            error instanceof Error
+                ? error.message
+                : 'The claim walkthrough preview could not be generated.';
+        previewResult.value = null;
+        previewDraftSnapshot.value = null;
+    } finally {
+        previewProcessing.value = false;
     }
 }
 
@@ -4904,6 +5011,18 @@ function instructionRecord(
                             id="quick-generate-rider-design-editor"
                             class="h-full overflow-y-auto overscroll-contain pr-1"
                             data-testid="cockpit-quick-generate-rider-design-editor"
+                        />
+                    </template>
+                    <template #claim>
+                        <CockpitClaimExperiencePreview
+                            :status="previewStatus"
+                            :processing="previewProcessing"
+                            :message="previewMessage"
+                            :manifest="previewResult"
+                            :stale="previewStale"
+                            :can-generate="canGenerateClaimPreview"
+                            @generate="generateClaimPreview(false)"
+                            @refresh="generateClaimPreview(true)"
                         />
                     </template>
                     <template #action>

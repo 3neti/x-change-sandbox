@@ -1380,6 +1380,63 @@ export type CockpitQuickGenerateAuthorization = {
     [key: string]: unknown;
 };
 
+export type CockpitQuickGenerateClaimPreviewContract = {
+    schema?: string | null;
+    status?: string | null;
+    route?: string | null;
+    route_url?: string | null;
+    source?: string | null;
+    artifact_contract?: string | null;
+    preview_cache?: boolean | null;
+    money_movement?: boolean | null;
+    redactions?: CockpitReadModelRedactions;
+    [key: string]: unknown;
+};
+
+export type CockpitClaimExperiencePreviewFrame = {
+    url: string;
+    mime_type: string;
+    sha256: string;
+    width: number;
+    height: number;
+};
+
+export type CockpitClaimExperiencePreviewStep = {
+    sequence: number;
+    key: string;
+    phase: string;
+    title: string;
+    description: string;
+    actor: string;
+    render_kind: 'captured_frame' | 'experience_card';
+    status: 'captured' | 'pending_capture';
+    frame: CockpitClaimExperiencePreviewFrame | null;
+};
+
+export type CockpitClaimExperiencePreviewManifest = {
+    schema: string;
+    status: 'ready';
+    reference: string;
+    fingerprint: string;
+    generated_at: string;
+    cache_hit: boolean;
+    safety: {
+        preview_only: boolean;
+        interactive: boolean;
+        money_movement: boolean;
+        provider_calls: boolean;
+        claim_submission: boolean;
+    };
+    journey: {
+        step_count: number;
+        steps: CockpitClaimExperiencePreviewStep[];
+    };
+    exports: {
+        pdf_url?: string | null;
+        html_url?: string | null;
+    };
+};
+
 export type CockpitQuickGenerateReadModel = {
     status: string;
     authorized?: boolean;
@@ -1398,6 +1455,7 @@ export type CockpitQuickGenerateReadModel = {
     campaign_context?: CockpitQuickGenerateCampaignContext;
     authorization?: CockpitQuickGenerateAuthorization;
     post_issuance_navigation?: CockpitQuickGeneratePostIssuanceNavigation;
+    claim_preview_contract?: CockpitQuickGenerateClaimPreviewContract;
     action?: {
         enabled?: boolean;
         reason?: string;
