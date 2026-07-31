@@ -13,6 +13,10 @@ it('consumes x-change as an external tagged package', function (): void {
     );
 
     expect($root.'/packages/x-change')->not->toBeDirectory();
+    expect($root.'/config/x-change.php')->not->toBeFile();
+    expect($root.'/config/lifecycle-scenarios.php')->not->toBeFile();
+    expect($root.'/config/onboarding.php')->not->toBeFile();
+    expect($root.'/config/x-feedback.php')->not->toBeFile();
     expect($composer['require']['3neti/x-change'])
         ->not->toContain('dev-');
 
@@ -24,5 +28,5 @@ it('consumes x-change as an external tagged package', function (): void {
     }
 
     expect(InstalledVersions::getPrettyVersion('3neti/x-change'))
-        ->toBe('v1.0.0-beta.2');
+        ->toBe('v1.0.0-beta.4');
 });
