@@ -13,10 +13,6 @@ jobs:
   quality:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: packages/x-change
-
     steps:
       - uses: actions/checkout@v6
 
@@ -28,14 +24,14 @@ jobs:
           coverage: none
 
       - name: Validate composer.json
-        run: composer validate --no-check-lock --strict
+        run: composer validate --strict
 
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: packages/x-change/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install Node Dependencies
         run: npm ci
