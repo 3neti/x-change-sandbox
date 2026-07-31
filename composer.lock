@@ -182,16 +182,16 @@
         },
         {
             "name": "3neti/emi-netbank",
-            "version": "v2.2.0",
+            "version": "v2.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/emi-netbank.git",
-                "reference": "32f3c6c4ee5ec7e676d788314575ad0fbae34272"
+                "reference": "6aae821c0d993e9f8a88a6957fa3d0dde14d5740"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/emi-netbank/zipball/32f3c6c4ee5ec7e676d788314575ad0fbae34272",
-                "reference": "32f3c6c4ee5ec7e676d788314575ad0fbae34272",
+                "url": "https://api.github.com/repos/3neti/emi-netbank/zipball/6aae821c0d993e9f8a88a6957fa3d0dde14d5740",
+                "reference": "6aae821c0d993e9f8a88a6957fa3d0dde14d5740",
                 "shasum": ""
             },
             "require": {
@@ -244,9 +244,9 @@
             "description": "NetBank EMI provider adapter for emi-core",
             "support": {
                 "issues": "https://github.com/3neti/emi-netbank/issues",
-                "source": "https://github.com/3neti/emi-netbank/tree/v2.2.0"
+                "source": "https://github.com/3neti/emi-netbank/tree/v2.3.0"
             },
-            "time": "2026-07-31T14:02:50+00:00"
+            "time": "2026-07-31T15:51:43+00:00"
         },
         {
             "name": "3neti/emi-paynamics",
@@ -1524,11 +1524,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.0-beta.5",
+            "version": "v1.0.0-beta.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "106f67e2134e19e67d887d1ee15ba42e9e640e4d"
+                "reference": "4b43561ba20168c02599234b6285dfde8597a0a5"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1617,7 +1617,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-07-31T15:36:20+00:00"
+            "time": "2026-07-31T16:16:16+00:00"
         },
         {
             "name": "3neti/x-commerce",
