@@ -11,7 +11,7 @@ it('loads emi funding evidence migrations before x-change funding tables', funct
     expect(InstalledVersions::getPrettyVersion('3neti/emi-core'))
         ->toBe('v2.0.0-beta.5')
         ->and(InstalledVersions::getPrettyVersion('3neti/x-change'))
-        ->toBe('v1.0.0-beta.33')
+        ->toBe('v1.0.0-beta.34')
         ->and($migrationNames)
         ->toContain(
             '2025_01_01_000008_create_webhook_receipts_table',
@@ -55,4 +55,20 @@ it('uses PostgreSQL-safe funding transfer amount reservation constraints', funct
             'xftram_funding_request_unique',
             'xftram_funding_request_foreign',
         );
+});
+
+it('uses package-owned branding on the host authentication surface', function (): void {
+    $component = file_get_contents(
+        resource_path('js/components/AppLogoIcon.vue'),
+    );
+    $packageStub = file_get_contents(
+        base_path('vendor/3neti/x-change/stubs/resources/js/components/AppLogoIcon.vue.stub'),
+    );
+
+    expect($component)->not->toBeFalse()
+        ->toContain('/vendor/x-change/images/logo-orange.png')
+        ->toContain('/vendor/x-change/images/logo-silver.png')
+        ->and($packageStub)->not->toBeFalse()
+        ->toContain('/vendor/x-change/images/logo-orange.png')
+        ->toContain('/vendor/x-change/images/logo-silver.png');
 });

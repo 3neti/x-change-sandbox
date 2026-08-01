@@ -34,7 +34,9 @@ onUnmounted(() => {
 });
 
 const logoSrc = computed(() => {
-    return isDark.value ? '/images/logo-silver.png' : '/images/logo-orange.png';
+    return isDark.value
+        ? '/vendor/x-change/images/logo-silver.png'
+        : '/vendor/x-change/images/logo-orange.png';
 });
 </script>
 
