@@ -26,6 +26,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->configureApiDocumentation();
+        $this->configureDefaults();
+    }
+
+    /**
+     * Configure development-only API documentation.
+     */
+    protected function configureApiDocumentation(): void
+    {
+        if (! $this->app->isLocal() || ! class_exists(Scramble::class)) {
+            return;
+        }
+
         Scramble::configure()
             ->routes(function (Route $route): bool {
                 $action = $route->getActionName();
@@ -37,7 +50,6 @@ class AppServiceProvider extends ServiceProvider
                 return Str::startsWith($route->uri(), 'api/x/v1')
                     && Str::startsWith($action, 'LBHurtado\\XChange\\Lifecycle\\Http\\Controllers\\');
             });
-        $this->configureDefaults();
     }
 
     /**
