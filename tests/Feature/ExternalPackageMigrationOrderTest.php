@@ -10,6 +10,8 @@ it('loads emi funding evidence migrations before x-change funding tables', funct
 
     expect(InstalledVersions::getPrettyVersion('3neti/emi-core'))
         ->toBe('v2.0.0-beta.5')
+        ->and(InstalledVersions::getPrettyVersion('3neti/x-change'))
+        ->toBe('v1.0.0-beta.32')
         ->and($migrationNames)
         ->toContain(
             '2025_01_01_000008_create_webhook_receipts_table',
@@ -27,4 +29,18 @@ it('loads emi funding evidence migrations before x-change funding tables', funct
         $migrationNames,
         true,
     ));
+});
+
+it('uses PostgreSQL-safe funding transfer match constraints', function (): void {
+    $migration = file_get_contents(
+        base_path('vendor/3neti/x-change/database/migrations/2026_07_27_103900_create_x_change_funding_request_transfer_matches_table.php'),
+    );
+
+    expect($migration)->not->toBeFalse()
+        ->toContain(
+            'xfrtm_funding_request_unique',
+            'xfrtm_funding_request_foreign',
+            'xfrtm_observation_unique',
+            'xfrtm_observation_foreign',
+        );
 });
