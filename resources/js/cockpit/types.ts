@@ -413,16 +413,24 @@ export type CockpitFundingQrMerchantProfile = {
     controls_settlement: false;
 };
 
-export type CockpitAccountsPageProps = CockpitHeaderPageProps & {
-    account_read_model: CockpitAccountReadModel;
-    funding_account_notice?: string | null;
-    funding_qr_merchant_profile: CockpitFundingQrMerchantProfile;
-    account_scenario?: {
-        enabled: boolean;
-        mode: 'rollback-only';
-        provider_calls: boolean;
-        balance_changes: boolean;
+export type CockpitDepositorAccountOverview = {
+    schema: 'x-change.cockpit.depositor-account.v1';
+    status: 'available';
+    account: {
+        reference: string;
+        currency: string;
     };
+    funding_destinations: Array<{
+        code: string;
+        label: string;
+        mode: 'shared' | 'dedicated';
+        status: string;
+        display_reference?: string | null;
+    }>;
+};
+
+export type CockpitAccountsPageProps = CockpitHeaderPageProps & {
+    account_overview: CockpitDepositorAccountOverview;
 };
 
 export type CockpitAccountScenarioFact = {
@@ -1018,12 +1026,64 @@ export type CockpitRuntimeProfile = {
     safety: Record<string, unknown>;
 };
 
+export type CockpitSystemReadinessCheck = {
+    name: string;
+    passed: boolean;
+    message: string;
+};
+
+export type CockpitSystemReadinessSection = {
+    key: string;
+    label: string;
+    description: string;
+    status: 'ready' | 'attention';
+    checks: CockpitSystemReadinessCheck[];
+};
+
+export type CockpitSystemReadiness = {
+    schema: string;
+    status: 'operational' | 'attention_required';
+    checked_at: string;
+    summary: {
+        ready: number;
+        total: number;
+        attention: number;
+    };
+    context: {
+        environment: string;
+        profile: string;
+        active_connections: string[];
+        active_providers: string[];
+    };
+    sections: CockpitSystemReadinessSection[];
+    providers: {
+        status: 'ready' | 'attention';
+        active: string[];
+        connections: string[];
+        installed_but_disabled: string[];
+        capabilities: Record<string, { ready: boolean; missing: string[] }>;
+    };
+    runtime_processes: {
+        queues: string[];
+        local: Record<string, string>;
+        cloud: string[];
+        forge: string[];
+        broadcasting_required: boolean;
+    };
+    technical: {
+        operator_activity: CockpitRuntimeProfile;
+        legacy_published_config: boolean;
+    };
+    redactions: Record<string, boolean>;
+};
+
 export type CockpitRuntimeProfileReadModel = {
     schema: string;
     status: string;
     authorized: boolean;
     read_only: boolean;
     profile: CockpitRuntimeProfile;
+    system_readiness: CockpitSystemReadiness;
     copy: {
         eyebrow: string;
         title: string;
@@ -1468,8 +1528,19 @@ export type CockpitQuickGenerateReadModel = {
 export type CockpitQuickGeneratePageProps = CockpitHeaderPageProps & {
     quick_generate_read_model?: CockpitQuickGenerateReadModel;
     feedback_defaults?: CockpitQuickGenerateFeedbackDefaults;
+    onboarding_policy?: CockpitQuickGenerateOnboardingPolicy;
+    invitation_preset?: CockpitQuickGenerateInvitationPreset;
     last_instructions?: CockpitQuickGenerateLastInstructions | null;
     saved_templates?: CockpitSavedPayCodeTemplate[];
+};
+
+export type CockpitQuickGenerateOnboardingPolicy = {
+    otp_required: boolean;
+};
+
+export type CockpitQuickGenerateInvitationPreset = {
+    enabled: boolean;
+    source: 'cockpit';
 };
 
 export type CockpitSavedPayCodeTemplate = {

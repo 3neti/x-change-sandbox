@@ -10,16 +10,16 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use LBHurtado\ModelChannel\Contracts\HasMobileChannel;
 use LBHurtado\ModelChannel\Traits\HasChannels;
 use LBHurtado\Wallet\Traits\HasPlatformWallets;
+use LBHurtado\XChange\Auth\XChangeAuthenticatable;
 
-#[Fillable(['name', 'mobile', 'mobile_verified_at', 'email', 'password'])]
+#[Fillable(['name', 'mobile', 'mobile_verified_at', 'email', 'password', 'onboarding_meta'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements Customer, HasMobileChannel
+class User extends XChangeAuthenticatable implements Customer, HasMobileChannel
 {
     use CanPay;
     use HasChannels;
@@ -40,6 +40,7 @@ class User extends Authenticatable implements Customer, HasMobileChannel
         return [
             'email_verified_at' => 'datetime',
             'mobile_verified_at' => 'datetime',
+            'onboarding_meta' => 'array',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
         ];

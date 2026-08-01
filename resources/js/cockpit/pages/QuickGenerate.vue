@@ -3,7 +3,6 @@ import { index as fundingIndex } from '@/routes/x-change/cockpit/funding';
 import { Link } from '@inertiajs/vue3';
 import { Landmark } from 'lucide-vue-next';
 import { computed } from 'vue';
-import CockpitDiagnosticsDisclosure from '../components/CockpitDiagnosticsDisclosure.vue';
 import CockpitGenerateActionPanel from '../components/CockpitGenerateActionPanel.vue';
 import CockpitIssuanceBoundaryPanel from '../components/CockpitIssuanceBoundaryPanel.vue';
 import CockpitPricingFundingSummary from '../components/CockpitPricingFundingSummary.vue';
@@ -505,9 +504,10 @@ const mutationContract = computed<CockpitQuickGenerateMutationContract>(() => {
     };
 });
 
-const claimPreviewContract =
-    computed<CockpitQuickGenerateClaimPreviewContract>(() => {
-        const contract = props.quick_generate_read_model?.claim_preview_contract;
+const claimPreviewContract = computed<CockpitQuickGenerateClaimPreviewContract>(
+    () => {
+        const contract =
+            props.quick_generate_read_model?.claim_preview_contract;
 
         if (
             !readModelAvailable.value ||
@@ -524,7 +524,8 @@ const claimPreviewContract =
         }
 
         return contract;
-    });
+    },
+);
 
 function defaultDraftContract(): CockpitQuickGenerateDraftContract {
     return {
@@ -1116,13 +1117,12 @@ function stringValue(value: unknown): string | null {
                     <h2
                         class="text-xl font-semibold tracking-tight text-slate-950 dark:text-slate-50"
                     >
-                        Create Pay Code
+                        Pay Code Issuance
                     </h2>
                     <p
                         class="mt-1 text-sm leading-5 text-slate-600 dark:text-slate-300"
                     >
-                        Set the value, recipient, and purpose. Add safeguards
-                        only when needed.
+                        Create a Pay Code for someone to claim.
                     </p>
                 </div>
                 <Link
@@ -1147,6 +1147,12 @@ function stringValue(value: unknown): string | null {
                     :draft-contract="draftContract"
                     :campaign-context="campaignContext"
                     :feedback-defaults="props.feedback_defaults"
+                    :onboarding-otp-required="
+                        props.onboarding_policy?.otp_required ?? true
+                    "
+                    :onboarding-preset="
+                        props.invitation_preset?.enabled ?? false
+                    "
                     :last-instructions="props.last_instructions"
                     :saved-templates="props.saved_templates ?? []"
                     :templates="templates"

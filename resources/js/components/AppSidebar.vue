@@ -1,50 +1,88 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-vue-next';
+import { Link, usePage } from '@inertiajs/vue3';
+import {
+    BadgePlus,
+    BookOpen,
+    CircleGauge,
+    FileStack,
+    Landmark,
+    Megaphone,
+    RadioTower,
+    UsersRound,
+} from 'lucide-vue-next';
 import AppLogo from '@/components/AppLogo.vue';
-import NavFooter from '@/components/NavFooter.vue';
-import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
 import {
     Sidebar,
     SidebarContent,
     SidebarFooter,
+    SidebarGroup,
+    SidebarGroupLabel,
     SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useCurrentUrl } from '@/composables/useCurrentUrl';
+import {
+    dashboard,
+    documentation,
+    quickGenerate,
+} from '@/routes/x-change/cockpit';
+import accounts from '@/routes/x-change/cockpit/accounts';
+import campaigns from '@/routes/x-change/cockpit/campaigns';
+import diagnostics from '@/routes/x-change/cockpit/diagnostics';
+import funding from '@/routes/x-change/cockpit/funding';
+import payCodes from '@/routes/x-change/cockpit/pay-codes';
 import type { NavItem } from '@/types';
+import { computed } from 'vue';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-        icon: LayoutGrid,
-    },
+// X-CHANGE HOST SHELL · package-owned navigation, account controls remain host-owned.
+const workspaceItems: NavItem[] = [
+    { title: 'Cockpit', href: dashboard(), icon: CircleGauge },
+    { title: 'Create', href: quickGenerate(), icon: BadgePlus },
+    { title: 'Funding', href: funding.index(), icon: Landmark },
+    { title: 'Pay Codes', href: payCodes.index(), icon: FileStack },
+    { title: 'Campaigns', href: campaigns.index(), icon: Megaphone },
 ];
 
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
-    },
-];
+type XChangeSharedProps = {
+    xchange?: {
+        navigation?: {
+            system_readiness_visible?: boolean;
+        };
+    };
+};
+
+const page = usePage<XChangeSharedProps>();
+const controlItems = computed<NavItem[]>(() => [
+    { title: 'Your Account', href: accounts.index(), icon: UsersRound },
+    ...(page.props.xchange?.navigation?.system_readiness_visible
+        ? [
+              {
+                  title: 'System Readiness',
+                  href: diagnostics.runtimeProfile(),
+                  icon: RadioTower,
+              },
+          ]
+        : []),
+    { title: 'Documentation', href: documentation(), icon: BookOpen },
+]);
+
+const { isCurrentUrl } = useCurrentUrl();
 </script>
 
 <template>
-    <Sidebar collapsible="icon" variant="inset">
+    <Sidebar
+        collapsible="icon"
+        variant="inset"
+        data-testid="x-change-application-sidebar"
+    >
         <SidebarHeader>
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <Link href="/dashboard">
+                        <Link :href="dashboard()" aria-label="Open Cockpit">
                             <AppLogo />
                         </Link>
                     </SidebarMenuButton>
@@ -53,11 +91,36 @@ const footerNavItems: NavItem[] = [
         </SidebarHeader>
 
         <SidebarContent>
-            <NavMain :items="mainNavItems" />
+            <SidebarGroup
+                v-for="group in [
+                    { label: 'Workspace', items: workspaceItems },
+                    { label: 'Account & Help', items: controlItems },
+                ]"
+                :key="group.label"
+                class="px-2 py-0"
+            >
+                <SidebarGroupLabel>{{ group.label }}</SidebarGroupLabel>
+                <SidebarMenu>
+                    <SidebarMenuItem
+                        v-for="item in group.items"
+                        :key="item.title"
+                    >
+                        <SidebarMenuButton
+                            as-child
+                            :is-active="isCurrentUrl(item.href)"
+                            :tooltip="item.title"
+                        >
+                            <Link :href="item.href" prefetch>
+                                <component :is="item.icon" />
+                                <span>{{ item.title }}</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarGroup>
         </SidebarContent>
 
         <SidebarFooter>
-            <NavFooter :items="footerNavItems" />
             <NavUser />
         </SidebarFooter>
     </Sidebar>

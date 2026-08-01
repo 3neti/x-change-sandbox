@@ -1,0 +1,89 @@
+schema: 3neti.x-change.deployment.v1
+application:
+  display_name: x-change-testing
+  slug: x-change-testing
+  environment: testing
+package:
+  name: 3neti/x-change
+  locked_version: v1.0.0-beta.31
+deployment:
+  target: laravel-cloud
+  profile: netbank
+  connections:
+    - netbank-primary
+environment:
+  source: platform
+  example_file: .env.example
+  required:
+    - NETBANK_BALANCE_ENDPOINT
+    - NETBANK_CLIENT_ALIAS
+    - NETBANK_CLIENT_ID
+    - NETBANK_CLIENT_SECRET
+    - NETBANK_DISBURSEMENT_ENDPOINT
+    - NETBANK_FUNDING_CORPORATE_ACCOUNT_NAME
+    - NETBANK_FUNDING_QR_MERCHANT_CITY
+    - NETBANK_FUNDING_QR_MERCHANT_NAME
+    - NETBANK_QR_ENDPOINT
+    - NETBANK_SENDER_CUSTOMER_ID
+    - NETBANK_SOURCE_ACCOUNT_NUMBER
+    - NETBANK_STATUS_ENDPOINT
+    - NETBANK_TOKEN_ENDPOINT
+    - XCHANGE_DEPLOYMENT_PROFILE
+    - XCHANGE_SYSTEM_USER_COLUMN
+    - XCHANGE_SYSTEM_USER_ID
+    - XCHANGE_TREASURY_LEGAL_ENTITY_REFERENCE
+    - XCHANGE_TREASURY_LEGAL_PROFILE_VERSION
+  secrets:
+    provider: platform-secret-store
+    keys:
+      - CONSTELLATION_FUNDING_WALLET_ID
+      - CONSTELLATION_MERCHANT_KEY
+      - CONSTELLATION_PASSWORD
+      - CONSTELLATION_REVENUE_WALLET_ID
+      - CONSTELLATION_SETTLEMENT_WALLET_ID
+      - ENGAGESPARK_API_KEY
+      - ENGAGESPARK_ORGANIZATION_ID
+      - MAILGUN_SECRET
+      - MAIL_PASSWORD
+      - MAIL_USERNAME
+      - NETBANK_CLIENT_ALIAS
+      - NETBANK_CLIENT_ID
+      - NETBANK_CLIENT_SECRET
+      - NETBANK_FUNDING_CLIENT_SECRET
+      - NETBANK_FUNDING_CORPORATE_ACCOUNT_NUMBER
+      - NETBANK_FUNDING_STANDING_HMAC_KEY
+      - NETBANK_FUNDING_VCA_ALIAS
+      - NETBANK_SENDER_CUSTOMER_ID
+      - NETBANK_SOURCE_ACCOUNT_NUMBER
+      - RESEND_KEY
+      - XCHANGE_COMMISSIONING_ACCESS_TOKEN
+      - XCHANGE_REDEMPTION_FEEDBACK_WEBHOOK_SECRET
+    permit_plaintext_repository_files: false
+operations:
+  setup:
+    - configure
+    - preflight
+    - install
+    - verify
+  commission:
+    - preflight
+    - install
+    - verify
+  deploy:
+    - validate
+    - platform-deploy
+    - commission
+    - verify
+runtime:
+  queues:
+    - x-change-funding
+    - x-change-feedback
+    - default
+  scheduler_required: true
+  broadcasting_required: false
+safety:
+  fail_closed: true
+  write_production_env: false
+  automatic_database_reset: false
+  automatic_provider_transfer: false
+  require_production_confirmation: true

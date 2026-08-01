@@ -25,7 +25,7 @@ test('new users can register', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect('/x/dashboard');
+    $response->assertRedirect(route('x-change.cockpit.dashboard'));
 
     $this->assertDatabaseHas('users', [
         'name' => 'Test User',
