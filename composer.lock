@@ -964,16 +964,16 @@
         },
         {
             "name": "3neti/merchant",
-            "version": "v1.2.0",
+            "version": "v1.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/merchant.git",
-                "reference": "a8edb34dfbdef5514f7da3c1debdfd4619e897ef"
+                "reference": "fc494f3752f83171dda09a4f224deccde1231c60"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/merchant/zipball/a8edb34dfbdef5514f7da3c1debdfd4619e897ef",
-                "reference": "a8edb34dfbdef5514f7da3c1debdfd4619e897ef",
+                "url": "https://api.github.com/repos/3neti/merchant/zipball/fc494f3752f83171dda09a4f224deccde1231c60",
+                "reference": "fc494f3752f83171dda09a4f224deccde1231c60",
                 "shasum": ""
             },
             "require": {
@@ -1016,9 +1016,9 @@
             "description": "Merchant and vendor-alias helper utilities for x-change",
             "support": {
                 "issues": "https://github.com/3neti/merchant/issues",
-                "source": "https://github.com/3neti/merchant/tree/v1.2.0"
+                "source": "https://github.com/3neti/merchant/tree/v1.2.1"
             },
-            "time": "2026-07-31T03:29:20+00:00"
+            "time": "2026-08-02T15:36:59+00:00"
         },
         {
             "name": "3neti/money-issuer",
