@@ -497,16 +497,16 @@
         },
         {
             "name": "3neti/form-handler-otp",
-            "version": "v1.1.0",
+            "version": "v1.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/form-handler-otp.git",
-                "reference": "8b78c4f55b7cd0fa95db7af1586b3072fb2bff2e"
+                "reference": "d5b7f58237cd5b83b9fe24f2a6d3108e0ddaceb7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/form-handler-otp/zipball/8b78c4f55b7cd0fa95db7af1586b3072fb2bff2e",
-                "reference": "8b78c4f55b7cd0fa95db7af1586b3072fb2bff2e",
+                "url": "https://api.github.com/repos/3neti/form-handler-otp/zipball/d5b7f58237cd5b83b9fe24f2a6d3108e0ddaceb7",
+                "reference": "d5b7f58237cd5b83b9fe24f2a6d3108e0ddaceb7",
                 "shasum": ""
             },
             "require": {
@@ -548,9 +548,9 @@
             "description": "OTP verification handler for form flow system",
             "support": {
                 "issues": "https://github.com/3neti/form-handler-otp/issues",
-                "source": "https://github.com/3neti/form-handler-otp/tree/v1.1.0"
+                "source": "https://github.com/3neti/form-handler-otp/tree/v1.2.0"
             },
-            "time": "2026-07-31T07:08:45+00:00"
+            "time": "2026-08-02T06:20:09+00:00"
         },
         {
             "name": "3neti/form-handler-selfie",
@@ -1524,11 +1524,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.0-beta.34",
+            "version": "v1.0.0-beta.35",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "78d88a7316d3dfc0f4925c192f557f71d4a624bd"
+                "reference": "2c4f7bc101e54f9939694863f16f8182d3ca85a0"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1539,7 +1539,7 @@
                 "3neti/form-flow": "^1.8",
                 "3neti/form-handler-kyc": "^1.1",
                 "3neti/form-handler-location": "^1.2",
-                "3neti/form-handler-otp": "^1.1",
+                "3neti/form-handler-otp": "^1.2",
                 "3neti/form-handler-selfie": "^1.1",
                 "3neti/form-handler-signature": "^1.2",
                 "3neti/instruction": "^0.2",
@@ -1580,8 +1580,16 @@
             "suggest": {
                 "3neti/x-legal": "Provides jurisdiction-aware advisory Treasury vocabulary and policy traceability."
             },
+            "bin": [
+                "bin/x-change-cloud"
+            ],
             "type": "library",
             "extra": {
+                "x-change": {
+                    "cloud-recipe": "resources/deployment/laravel-cloud.yaml",
+                    "deployment-guide": "docs/deployment/X_CHANGE_CLOUD_RECIPE.md",
+                    "adopt-command": "x-change:adopt"
+                },
                 "laravel": {
                     "providers": [
                         "LBHurtado\\XChange\\Providers\\XChangeServiceProvider"
@@ -1618,7 +1626,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-08-01T17:44:48+00:00"
+            "time": "2026-08-02T13:38:29+00:00"
         },
         {
             "name": "3neti/x-commerce",
@@ -4980,16 +4988,16 @@
         },
         {
             "name": "lbhurtado/engagespark",
-            "version": "v3.9",
+            "version": "v3.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/lbhurtado/engagespark.git",
-                "reference": "1d225dc277b85ab142e5a677f37e5cc855906539"
+                "reference": "361c68a838de5acf3ed665b94206f9ec9b344f37"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/lbhurtado/engagespark/zipball/1d225dc277b85ab142e5a677f37e5cc855906539",
-                "reference": "1d225dc277b85ab142e5a677f37e5cc855906539",
+                "url": "https://api.github.com/repos/lbhurtado/engagespark/zipball/361c68a838de5acf3ed665b94206f9ec9b344f37",
+                "reference": "361c68a838de5acf3ed665b94206f9ec9b344f37",
                 "shasum": ""
             },
             "require": {
@@ -5001,8 +5009,8 @@
                 "php": "~7.1||^8.0.1"
             },
             "require-dev": {
-                "orchestra/testbench": "^6.4",
-                "phpunit/phpunit": "^9.3.3"
+                "orchestra/testbench": "^6.47|^7.0|^8.0|^9.0|^10.0|^11.0",
+                "phpunit/phpunit": "^9.6|^10.5|^11.5"
             },
             "suggest": {
                 "lbhurtado/missive": "Add SMS domain to a Laravel project - route, models, migrations, jobs, notifications, etc."
@@ -5043,9 +5051,9 @@
             ],
             "support": {
                 "issues": "https://github.com/lbhurtado/engagespark/issues",
-                "source": "https://github.com/lbhurtado/engagespark/tree/v3.9"
+                "source": "https://github.com/lbhurtado/engagespark/tree/v3.10"
             },
-            "time": "2026-06-30T13:31:55+00:00"
+            "time": "2026-08-02T14:32:09+00:00"
         },
         {
             "name": "lbhurtado/sms",
