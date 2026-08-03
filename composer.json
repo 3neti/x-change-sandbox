@@ -121,7 +121,8 @@
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi"
+            "@php artisan package:discover --ansi",
+            "@php artisan x-change:publish --scope=build --force --verify --no-interaction"
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
@@ -137,7 +138,10 @@
         ],
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
-        ]
+        ],
+        "x-change:cloud:plan": "@php vendor/bin/x-change-cloud plan",
+        "x-change:cloud:ship": "@php vendor/bin/x-change-cloud ship",
+        "x-change:cloud:verify": "@php vendor/bin/x-change-cloud verify"
     },
     "extra": {
         "laravel": {
