@@ -1729,6 +1729,11 @@ export type CockpitVoucherReadModel = {
     code?: string | null;
     status: string;
     summary?: Record<string, unknown>;
+    overview?: Record<string, unknown>;
+    instructions?: Record<string, unknown>;
+    claims?: Record<string, unknown>;
+    settlement?: Record<string, unknown>;
+    treasury?: Record<string, unknown>;
     evidence_summary?: CockpitVoucherEvidenceSummary[];
     distribution_links?: Record<string, unknown>;
     redactions?: CockpitReadModelRedactions;
