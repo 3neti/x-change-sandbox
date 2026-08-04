@@ -28,5 +28,5 @@ it('consumes x-change as an external tagged package', function (): void {
     }
 
     expect(InstalledVersions::getPrettyVersion('3neti/x-change'))
-        ->toBe('v1.0.0-beta.54');
+        ->toBe('v1.0.0-beta.56');
 });
