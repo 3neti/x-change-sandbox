@@ -470,6 +470,7 @@ function sanitizeRecord(
         owner: stringValue(record.owner) ?? 'Redacted',
         lastActivity:
             stringValue(record.last_activity) ?? 'Read model activity pending',
+        attention: sanitizeAttention(record.attention),
         actions: Array.isArray(record.actions)
             ? record.actions
                   .map((action) => sanitizeRowAction(action))
@@ -482,6 +483,26 @@ function sanitizeRecord(
                       > => action !== null,
                   )
             : [],
+    };
+}
+
+function sanitizeAttention(
+    attention: CockpitPayCodeExplorerReadModelRecord['attention'],
+): CockpitPayCodeExplorerRecord['attention'] {
+    const value = objectValue(attention);
+    const key = stringValue(value.key);
+    const label = stringValue(value.label);
+    const message = stringValue(value.message);
+
+    if (!key || !label || !message) {
+        return null;
+    }
+
+    return {
+        key,
+        label,
+        message,
+        tone: stringValue(value.tone) === 'warning' ? 'warning' : 'critical',
     };
 }
 

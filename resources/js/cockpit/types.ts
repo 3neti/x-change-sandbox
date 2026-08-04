@@ -1668,6 +1668,12 @@ export type CockpitPayCodeExplorerRecord = {
     };
     owner: string;
     lastActivity: string;
+    attention?: {
+        key: string;
+        label: string;
+        message: string;
+        tone: 'warning' | 'critical';
+    } | null;
     actions?: CockpitPayCodeRowAction[];
 };
 
@@ -1831,6 +1837,13 @@ export type CockpitPayCodeExplorerReadModelRecord = {
     };
     owner?: string | null;
     last_activity?: string | null;
+    attention?: {
+        key?: string | null;
+        label?: string | null;
+        message?: string | null;
+        tone?: string | null;
+        [key: string]: unknown;
+    } | null;
     created_at?: string | null;
     expires_at?: string | null;
     actions?: CockpitPayCodeRowAction[];
