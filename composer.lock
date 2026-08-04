@@ -440,16 +440,16 @@
         },
         {
             "name": "3neti/form-handler-location",
-            "version": "v1.2.0",
+            "version": "v1.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/form-handler-location.git",
-                "reference": "9ccf9a68ac343b2b47a372f5c4db80f62d84a2ae"
+                "reference": "a72756f028660f14436231ccd8e268adb6b9572e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/form-handler-location/zipball/9ccf9a68ac343b2b47a372f5c4db80f62d84a2ae",
-                "reference": "9ccf9a68ac343b2b47a372f5c4db80f62d84a2ae",
+                "url": "https://api.github.com/repos/3neti/form-handler-location/zipball/a72756f028660f14436231ccd8e268adb6b9572e",
+                "reference": "a72756f028660f14436231ccd8e268adb6b9572e",
                 "shasum": ""
             },
             "require": {
@@ -491,9 +491,9 @@
             "description": "Location capture handler for form flow system",
             "support": {
                 "issues": "https://github.com/3neti/form-handler-location/issues",
-                "source": "https://github.com/3neti/form-handler-location/tree/v1.2.0"
+                "source": "https://github.com/3neti/form-handler-location/tree/v1.2.1"
             },
-            "time": "2026-07-31T06:50:30+00:00"
+            "time": "2026-08-04T10:46:02+00:00"
         },
         {
             "name": "3neti/form-handler-otp",
@@ -1524,11 +1524,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.0-beta.56",
+            "version": "v1.0.0-beta.57",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "3abf1075ee75ac1584b1d7997fa5c32810178987"
+                "reference": "a2f83bd4c4809995c4dd405d7b95e615248b0c34"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1626,7 +1626,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-08-04T00:19:12+00:00"
+            "time": "2026-08-04T11:36:35+00:00"
         },
         {
             "name": "3neti/x-commerce",
