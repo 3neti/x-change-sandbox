@@ -137,25 +137,41 @@ function displayStatus(status: string): string {
         .join(' ');
 }
 
+function statusLabel(record: CockpitPayCodeExplorerRecord): string {
+    return record.operationalStatus.label || displayStatus(record.status);
+}
+
 function statusBadgeClass(status: string): string {
     const normalizedStatus = status.toLowerCase().replaceAll('_', '-');
 
     if (
-        ['active', 'issued', 'ready', 'redeemed', 'completed'].includes(
+        ['active', 'issued', 'ready', 'paid', 'redeemed', 'completed'].includes(
             normalizedStatus,
         )
     ) {
         return 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950 dark:text-emerald-200 dark:ring-emerald-800';
     }
 
-    if (['awaiting-approval', 'pending', 'review'].includes(normalizedStatus)) {
+    if (
+        [
+            'awaiting-approval',
+            'payout-pending',
+            'pending',
+            'processing',
+            'review',
+        ].includes(normalizedStatus)
+    ) {
         return 'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-950 dark:text-amber-200 dark:ring-amber-800';
     }
 
     if (
-        ['expired', 'failed', 'cancelled', 'canceled'].includes(
-            normalizedStatus,
-        )
+        [
+            'payout-rejected',
+            'expired',
+            'failed',
+            'cancelled',
+            'canceled',
+        ].includes(normalizedStatus)
     ) {
         return 'bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-950 dark:text-rose-200 dark:ring-rose-800';
     }
@@ -237,7 +253,8 @@ function capabilityBadgeClass(capabilityKey: string): string {
                             {{ firstVisibleRecordNumber }}–{{
                                 lastVisibleRecordNumber
                             }}
-                            of {{ records.length }}
+                            of
+                            {{ records.length }}
                         </span>
                     </p>
                     <label
@@ -271,7 +288,9 @@ function capabilityBadgeClass(capabilityKey: string): string {
             <article
                 v-for="record in visibleRecords"
                 :key="`mobile-${record.code}`"
-                :class="record.attention ? 'bg-rose-50/60 dark:bg-rose-950/20' : ''"
+                :class="
+                    record.attention ? 'bg-rose-50/60 dark:bg-rose-950/20' : ''
+                "
                 class="space-y-3 px-4 py-3"
                 data-testid="cockpit-pay-code-mobile-row"
             >
@@ -302,7 +321,7 @@ function capabilityBadgeClass(capabilityKey: string): string {
                             class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1"
                             data-testid="cockpit-pay-code-mobile-status-badge"
                         >
-                            {{ displayStatus(record.status) }}
+                            {{ statusLabel(record) }}
                         </span>
                         <p
                             class="mt-1.5 text-right font-mono text-sm font-semibold text-slate-950 tabular-nums dark:text-slate-50"
@@ -318,10 +337,17 @@ function capabilityBadgeClass(capabilityKey: string): string {
                     class="flex items-start gap-2 rounded-lg border border-rose-200 bg-white/70 px-3 py-2 text-rose-800 dark:border-rose-900/70 dark:bg-rose-950/40 dark:text-rose-200"
                     data-testid="cockpit-pay-code-mobile-attention"
                 >
-                    <CircleAlert aria-hidden="true" class="mt-0.5 size-4 shrink-0" />
+                    <CircleAlert
+                        aria-hidden="true"
+                        class="mt-0.5 size-4 shrink-0"
+                    />
                     <div class="min-w-0">
-                        <p class="text-xs font-semibold">{{ record.attention.label }}</p>
-                        <p class="truncate text-[0.7rem]">{{ record.attention.message }}</p>
+                        <p class="text-xs font-semibold">
+                            {{ record.attention.label }}
+                        </p>
+                        <p class="truncate text-[0.7rem]">
+                            {{ record.attention.message }}
+                        </p>
                     </div>
                 </div>
 
@@ -490,7 +516,11 @@ function capabilityBadgeClass(capabilityKey: string): string {
                     <tr
                         v-for="record in visibleRecords"
                         :key="record.code"
-                        :class="record.attention ? 'bg-rose-50/50 dark:bg-rose-950/15' : ''"
+                        :class="
+                            record.attention
+                                ? 'bg-rose-50/50 dark:bg-rose-950/15'
+                                : ''
+                        "
                         data-testid="cockpit-pay-code-row"
                     >
                         <td
@@ -561,7 +591,7 @@ function capabilityBadgeClass(capabilityKey: string): string {
                                 class="rounded-full px-2.5 py-1 text-xs font-semibold ring-1"
                                 data-testid="cockpit-pay-code-status-badge"
                             >
-                                {{ displayStatus(record.status) }}
+                                {{ statusLabel(record) }}
                             </span>
                             <div
                                 v-if="record.attention"
@@ -569,8 +599,13 @@ function capabilityBadgeClass(capabilityKey: string): string {
                                 data-testid="cockpit-pay-code-row-attention"
                                 :title="record.attention.message"
                             >
-                                <CircleAlert aria-hidden="true" class="mt-0.5 size-3.5 shrink-0" />
-                                <span class="text-[0.7rem] font-semibold leading-4">
+                                <CircleAlert
+                                    aria-hidden="true"
+                                    class="mt-0.5 size-3.5 shrink-0"
+                                />
+                                <span
+                                    class="text-[0.7rem] font-semibold leading-4"
+                                >
                                     {{ record.attention.label }}
                                 </span>
                             </div>
