@@ -381,16 +381,16 @@
         },
         {
             "name": "3neti/form-handler-kyc",
-            "version": "v1.1.0",
+            "version": "v1.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/form-handler-kyc.git",
-                "reference": "7221d2844f8535371397b530c03ce8d2c94bf764"
+                "reference": "f00342ab386024a65278175ab02b172547ef7e3c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/form-handler-kyc/zipball/7221d2844f8535371397b530c03ce8d2c94bf764",
-                "reference": "7221d2844f8535371397b530c03ce8d2c94bf764",
+                "url": "https://api.github.com/repos/3neti/form-handler-kyc/zipball/f00342ab386024a65278175ab02b172547ef7e3c",
+                "reference": "f00342ab386024a65278175ab02b172547ef7e3c",
                 "shasum": ""
             },
             "require": {
@@ -434,9 +434,9 @@
             "description": "KYC/identity verification handler for form flow system using HyperVerge",
             "support": {
                 "issues": "https://github.com/3neti/form-handler-kyc/issues",
-                "source": "https://github.com/3neti/form-handler-kyc/tree/v1.1.0"
+                "source": "https://github.com/3neti/form-handler-kyc/tree/v1.1.1"
             },
-            "time": "2026-07-31T05:53:54+00:00"
+            "time": "2026-08-05T03:12:32+00:00"
         },
         {
             "name": "3neti/form-handler-location",
