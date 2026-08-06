@@ -894,16 +894,16 @@
         },
         {
             "name": "3neti/laravel-vouchers",
-            "version": "v1.2.0",
+            "version": "v1.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/laravel-vouchers.git",
-                "reference": "f036e8ed4c911b2f7ee98ed38d9d824c4a181476"
+                "reference": "9e8d45c69cc4acd66a80faa04d840ca16cb2e557"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/laravel-vouchers/zipball/f036e8ed4c911b2f7ee98ed38d9d824c4a181476",
-                "reference": "f036e8ed4c911b2f7ee98ed38d9d824c4a181476",
+                "url": "https://api.github.com/repos/3neti/laravel-vouchers/zipball/9e8d45c69cc4acd66a80faa04d840ca16cb2e557",
+                "reference": "9e8d45c69cc4acd66a80faa04d840ca16cb2e557",
                 "shasum": ""
             },
             "require": {
@@ -958,9 +958,9 @@
                 "voucher"
             ],
             "support": {
-                "source": "https://github.com/3neti/laravel-vouchers/tree/v1.2.0"
+                "source": "https://github.com/3neti/laravel-vouchers/tree/v1.3.0"
             },
-            "time": "2026-07-31T04:47:44+00:00"
+            "time": "2026-08-06T02:02:05+00:00"
         },
         {
             "name": "3neti/merchant",
@@ -1524,11 +1524,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.0-beta.70",
+            "version": "v1.0.0-beta.71",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "a819d28cd30133c8a70f9ee804d139bd9a5fa438"
+                "reference": "841881c846e933ef7c7cec580803a2e90e04c53f"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1627,7 +1627,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-08-06T01:19:19+00:00"
+            "time": "2026-08-06T02:28:27+00:00"
         },
         {
             "name": "3neti/x-commerce",
