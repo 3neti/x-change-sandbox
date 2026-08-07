@@ -1514,6 +1514,7 @@ export type CockpitClaimExperiencePreviewStep = {
     actor: string;
     render_kind: 'captured_frame' | 'live_screen' | 'actual_screen';
     status: 'captured' | 'rendered';
+    preview_url: string;
     frame: CockpitClaimExperiencePreviewFrame | null;
     screen: {
         kind: string;
@@ -1553,6 +1554,11 @@ export type CockpitClaimExperiencePreviewManifest = {
         claim_submission: boolean;
     };
     journey: {
+        viewport: {
+            profile: string;
+            width: number;
+            height: number;
+        };
         step_count: number;
         steps: CockpitClaimExperiencePreviewStep[];
     };
