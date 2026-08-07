@@ -11,7 +11,7 @@ it('loads emi funding evidence migrations before x-change funding tables', funct
     expect(InstalledVersions::getPrettyVersion('3neti/emi-core'))
         ->toBe('v2.0.0-beta.5')
         ->and(InstalledVersions::getPrettyVersion('3neti/x-change'))
-        ->toBe('v1.0.0-beta.106')
+        ->toBe('v1.0.0-beta.107')
         ->and($migrationNames)
         ->toContain(
             '2025_01_01_000008_create_webhook_receipts_table',
@@ -73,7 +73,7 @@ it('uses package-owned branding on the host authentication surface', function ()
         ->toContain('/vendor/x-change/images/logo-silver.png');
 });
 
-it('uses the package-owned x-change landing page and genuine product imagery', function (): void {
+it('uses the package-owned x-change landing page and safe product presentation', function (): void {
     $page = file_get_contents(resource_path('js/pages/Welcome.vue'));
     $packageStub = file_get_contents(
         base_path('vendor/3neti/x-change/stubs/resources/js/pages/Welcome.vue.stub'),
@@ -81,10 +81,14 @@ it('uses the package-owned x-change landing page and genuine product imagery', f
 
     expect($page)->not->toBeFalse()
         ->toContain('Money should adapt to people.')
-        ->toContain('/vendor/x-change/images/landing/cockpit-overview.png')
-        ->toContain('/vendor/x-change/images/landing/claim-entry.png')
+        ->toContain('PayCodeLogo')
+        ->toContain('CockpitQuickGenerateOrderPresentation')
+        ->toContain('CockpitClaimExperiencePreview')
+        ->toContain('safe-presentation')
+        ->not->toContain('/vendor/x-change/images/logo-orange.png')
+        ->not->toContain('/vendor/x-change/images/landing/cockpit-overview.png')
         ->and($packageStub)->not->toBeFalse()
         ->toContain('Money should adapt to people.')
-        ->and(public_path('vendor/x-change/images/landing/cockpit-overview.png'))->toBeFile()
-        ->and(public_path('vendor/x-change/images/landing/claim-entry.png'))->toBeFile();
+        ->toContain('safe-presentation')
+        ->and(resource_path('js/cockpit/components/CockpitQuickGenerateOrderPresentation.vue'))->toBeFile();
 });
