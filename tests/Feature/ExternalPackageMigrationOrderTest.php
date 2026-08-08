@@ -11,7 +11,7 @@ it('loads emi funding evidence migrations before x-change funding tables', funct
     expect(InstalledVersions::getPrettyVersion('3neti/emi-core'))
         ->toBe('v2.0.0-beta.5')
         ->and(InstalledVersions::getPrettyVersion('3neti/x-change'))
-        ->toBe('v1.0.0-beta.108.2')
+        ->toBe('v1.0.0-beta.113')
         ->and($migrationNames)
         ->toContain(
             '2025_01_01_000008_create_webhook_receipts_table',
@@ -78,17 +78,43 @@ it('uses the package-owned x-change landing page and safe product presentation',
     $packageStub = file_get_contents(
         base_path('vendor/3neti/x-change/stubs/resources/js/pages/Welcome.vue.stub'),
     );
+    $claimPresentation = file_get_contents(
+        resource_path('js/cockpit/components/CockpitLandingClaimExperiencePresentation.vue'),
+    );
 
     expect($page)->not->toBeFalse()
+        ->toContain('Cashless disbursements')
         ->toContain('Money should adapt to people.')
+        ->toContain('Receive a Pay Code. Send to the account you choose.')
+        ->toContain('Claim when you’re ready—with a participating bank or')
+        ->toContain('Claim Pay Code')
+        ->toContain(':href="startClaim()"')
+        ->toContain("background-image: url('/favicon.png')")
+        ->toContain('bg-[length:auto_100%]')
+        ->toContain('opacity-[0.1]')
+        ->toContain('{{ $page.props.name }}')
+        ->toContain('Powered by x-change')
+        ->toContain('!h-18')
+        ->toContain('amount="₱537.00"')
+        ->toContain('estimated-cost="₱543.90"')
+        ->toContain('Open Cockpit')
         ->toContain('PayCodeLogo')
         ->toContain('CockpitQuickGenerateOrderPresentation')
         ->toContain('CockpitLandingClaimExperiencePresentation')
+        ->not->toContain('Pay Code disbursements')
+        ->not->toContain('Create a controlled payout')
+        ->not->toContain('Funds stay with your regulated bank or EMI provider.')
         ->not->toContain('/vendor/x-change/images/logo-orange.png')
         ->not->toContain('/vendor/x-change/images/landing/cockpit-overview.png')
         ->and($packageStub)->not->toBeFalse()
         ->toContain('Money should adapt to people.')
         ->toContain('CockpitLandingClaimExperiencePresentation')
+        ->and($claimPresentation)->not->toBeFalse()
+        ->toContain("code: 'AA-317'")
+        ->toContain("amount: '₱537.00'")
+        ->toContain("default: '537'")
+        ->not->toContain('DEMO-500')
+        ->not->toContain('₱500.00')
         ->and(resource_path('js/cockpit/components/CockpitQuickGenerateOrderPresentation.vue'))->toBeFile()
         ->and(resource_path('js/cockpit/components/CockpitLandingClaimExperiencePresentation.vue'))->toBeFile();
 });
