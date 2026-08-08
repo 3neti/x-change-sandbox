@@ -11,7 +11,7 @@ it('loads emi funding evidence migrations before x-change funding tables', funct
     expect(InstalledVersions::getPrettyVersion('3neti/emi-core'))
         ->toBe('v2.0.0-beta.5')
         ->and(InstalledVersions::getPrettyVersion('3neti/x-change'))
-        ->toBe('v1.0.0-beta.107')
+        ->toBe('v1.0.0-beta.109')
         ->and($migrationNames)
         ->toContain(
             '2025_01_01_000008_create_webhook_receipts_table',
@@ -83,12 +83,12 @@ it('uses the package-owned x-change landing page and safe product presentation',
         ->toContain('Money should adapt to people.')
         ->toContain('PayCodeLogo')
         ->toContain('CockpitQuickGenerateOrderPresentation')
-        ->toContain('CockpitClaimExperiencePreview')
-        ->toContain('safe-presentation')
+        ->toContain('CockpitLandingClaimExperiencePresentation')
         ->not->toContain('/vendor/x-change/images/logo-orange.png')
         ->not->toContain('/vendor/x-change/images/landing/cockpit-overview.png')
         ->and($packageStub)->not->toBeFalse()
         ->toContain('Money should adapt to people.')
-        ->toContain('safe-presentation')
-        ->and(resource_path('js/cockpit/components/CockpitQuickGenerateOrderPresentation.vue'))->toBeFile();
+        ->toContain('CockpitLandingClaimExperiencePresentation')
+        ->and(resource_path('js/cockpit/components/CockpitQuickGenerateOrderPresentation.vue'))->toBeFile()
+        ->and(resource_path('js/cockpit/components/CockpitLandingClaimExperiencePresentation.vue'))->toBeFile();
 });

@@ -12,6 +12,7 @@ import {
   BadgeCheck,
   BarChart3,
   Banknote,
+  Building2,
   Calculator,
   Check,
   Coins,
@@ -19,14 +20,26 @@ import {
   HandCoins,
   Landmark,
   Percent,
+  Plus,
   Scale,
   Send,
   ShieldCheck,
+  UsersRound,
 } from "lucide-vue-next";
 import { computed, ref } from "vue";
 import { store as storeOffering } from "@/routes/x-change/cockpit/commercial/offerings";
 import { store as approveOffering } from "@/routes/x-change/cockpit/commercial/offerings/approvals";
 import { store as activateOffering } from "@/routes/x-change/cockpit/commercial/offerings/activations";
+import { store as storePartner } from "@/routes/x-change/cockpit/commercial/partners";
+import { store as approvePartnerRevision } from "@/routes/x-change/cockpit/commercial/partner_revisions/approvals";
+import { store as storePartnerDestination } from "@/routes/x-change/cockpit/commercial/partners/destinations";
+import { store as approvePartnerDestination } from "@/routes/x-change/cockpit/commercial/partner_destination_revisions/approvals";
+import { store as storeProviderCostBatch } from "@/routes/x-change/cockpit/commercial/provider_cost_batches";
+import { store as storeCommissionPayoutBatch } from "@/routes/x-change/cockpit/commercial/commission_payout_batches";
+import { store as approveCommissionPayoutBatch } from "@/routes/x-change/cockpit/commercial/commission_payout_batches/approvals";
+import { store as submitCommissionPayoutBatch } from "@/routes/x-change/cockpit/commercial/commission_payout_batches/submissions";
+import { store as reconcileCommissionPayoutBatch } from "@/routes/x-change/cockpit/commercial/commission_payout_batches/reconciliations";
+import { store as retryCommissionPayoutBatch } from "@/routes/x-change/cockpit/commercial/commission_payout_batches/retries";
 import CockpitLayout from "../layouts/CockpitLayout.vue";
 
 type CatalogItem = {
@@ -125,7 +138,10 @@ type CommercialControls = {
     variance_minor: number;
     outstanding_minor: number;
     recent_batches: Array<{
+      id: number;
       reference: string;
+      commercial_partner_id: number;
+      destination_revision_id: number;
       provider: string;
       connection_reference: string;
       currency: string;
@@ -153,6 +169,21 @@ type CommercialControls = {
       status: string;
       requested_at: string | null;
       settled_at: string | null;
+      attempt_count: number;
+      last_attempt: null | {
+        number: number;
+        status: string;
+        rejection_code: string | null;
+        rejection_message: string | null;
+      };
+    }>;
+  };
+  operations: {
+    live_provider_calls_enabled: boolean;
+    connections: Array<{
+      reference: string;
+      provider: string;
+      currency: string;
     }>;
   };
   recent_sales: Array<{
@@ -192,6 +223,66 @@ type CommercialControls = {
   };
 };
 
+type CommercialPartners = {
+  schema: string;
+  summary: {
+    active_count: number;
+    awaiting_approval_count: number;
+    legacy_unresolved_count: number;
+    legacy_unresolved_minor: number;
+  };
+  partners: Array<{
+    id: number;
+    reference: string;
+    display_name: string;
+    status: string;
+    revision: null | {
+      id: number;
+      version: number;
+      legal_name: string | null;
+      attribution_basis: string;
+      authorization_reference: string;
+      effective_at: string | null;
+    };
+    destinations: Array<{
+      id: number;
+      version: number;
+      provider: string;
+      connection_reference: string;
+      currency: string;
+      summary: string;
+      effective_at: string | null;
+    }>;
+    balances: Array<{
+      currency: string;
+      earned_minor: number;
+      reserved_minor: number;
+      settled_minor: number;
+      available_minor: number;
+    }>;
+  }>;
+  pending_revisions: Array<{
+    id: number;
+    partner_reference: string;
+    display_name: string;
+    version: number;
+    attribution_basis: string;
+    authorization_reference: string;
+    submitted_at: string | null;
+  }>;
+  pending_destinations: Array<{
+    id: number;
+    partner_reference: string;
+    partner_name: string;
+    provider: string;
+    connection_reference: string;
+    currency: string;
+    summary: string;
+    authorization_reference: string;
+    submitted_at: string | null;
+  }>;
+};
+
 const props = defineProps<{
   cockpitHeaderReadModel?: Record<string, unknown>;
   commercialOffering: {
@@ -204,6 +295,8 @@ const props = defineProps<{
     can_request_commission_payouts?: boolean;
     can_approve_commission_payouts?: boolean;
     can_execute_commission_payouts?: boolean;
+    can_manage_partners?: boolean;
+    can_approve_partners?: boolean;
     pending: PendingOffering[];
     published: PublishedOffering[];
     governance: {
@@ -217,17 +310,71 @@ const props = defineProps<{
       };
     };
     controls: CommercialControls;
+    partners: CommercialPartners;
   };
 }>();
 
 const activeTab = ref<
-  "price-list" | "waterfall" | "activity" | "operations" | "policy"
+  "price-list" | "waterfall" | "partners" | "activity" | "operations" | "policy"
 >("price-list");
 const approvalReference = ref("");
 const approvingId = ref<number | null>(null);
 const activationReference = ref("");
 const activatingId = ref<number | null>(null);
 const active = computed(() => props.commercialOffering.active);
+const destinationPartnerId = ref<number | null>(null);
+const approvingPartnerId = ref<number | null>(null);
+const approvingDestinationId = ref<number | null>(null);
+const today = new Date().toISOString().slice(0, 10);
+const monthStart = `${today.slice(0, 8)}01`;
+const partnerForm = useForm({
+  reference: "",
+  display_name: "",
+  legal_name: "",
+  external_reference: "",
+  attribution_basis: "contractual_referral",
+  authorization_reference: "",
+  terms: {
+    commission_basis: "fixed",
+    settlement_cycle: "monthly",
+  },
+});
+const destinationForm = useForm({
+  provider: "netbank",
+  connection_reference: "netbank-primary",
+  currency: "PHP",
+  bank_code: "",
+  account_number: "",
+  recipient_name: "",
+  mobile: "",
+  authorization_reference: "",
+});
+const providerCostForm = useForm({
+  reference: `provider-cost:${Date.now()}`,
+  provider: "netbank",
+  connection_reference: "netbank-primary",
+  currency: "PHP",
+  evidence_type: "provider_statement",
+  evidence_reference: "",
+  observed_amount: "",
+  period_started_at: monthStart,
+  period_ended_at: today,
+  observed_at: today,
+  idempotency_key: `provider-cost:${Date.now()}`,
+});
+const commissionForm = useForm({
+  reference: `commission:${Date.now()}`,
+  partner_reference: "",
+  provider: "netbank",
+  connection_reference: "netbank-primary",
+  currency: "PHP",
+  period_started_at: monthStart,
+  period_ended_at: today,
+  idempotency_key: `commission:${Date.now()}`,
+});
+const commissionApprovalReferences = ref<Record<number, string>>({});
+const commissionRetryDestinations = ref<Record<number, number>>({});
+const operatingBatchId = ref<number | null>(null);
 const form = useForm({
   profile: props.commercialOffering.profile,
   effective_at: new Date().toISOString(),
@@ -332,6 +479,134 @@ function activate(id: number): void {
         activationReference.value = "";
       },
     },
+  );
+}
+
+function submitPartner(): void {
+  partnerForm.post(storePartner(), {
+    preserveScroll: true,
+    onSuccess: () => partnerForm.reset(),
+  });
+}
+
+function approvePartner(id: number): void {
+  approvingPartnerId.value = id;
+  router.post(
+    approvePartnerRevision(id),
+    {},
+    {
+      preserveScroll: true,
+      onFinish: () => (approvingPartnerId.value = null),
+    },
+  );
+}
+
+function openDestination(
+  partner: CommercialPartners["partners"][number],
+): void {
+  destinationPartnerId.value = partner.id;
+  destinationForm.recipient_name = partner.display_name;
+}
+
+function submitDestination(): void {
+  if (destinationPartnerId.value === null) return;
+  destinationForm.post(storePartnerDestination(destinationPartnerId.value), {
+    preserveScroll: true,
+    onSuccess: () => {
+      destinationForm.reset();
+      destinationPartnerId.value = null;
+    },
+  });
+}
+
+function approveDestination(id: number): void {
+  approvingDestinationId.value = id;
+  router.post(
+    approvePartnerDestination(id),
+    {},
+    {
+      preserveScroll: true,
+      onFinish: () => (approvingDestinationId.value = null),
+    },
+  );
+}
+
+function submitProviderCost(): void {
+  const connection =
+    props.commercialOffering.controls.operations.connections.find(
+      (candidate) =>
+        candidate.reference === providerCostForm.connection_reference,
+    );
+  if (connection) {
+    providerCostForm.provider = connection.provider;
+    providerCostForm.currency = connection.currency;
+  }
+  providerCostForm.post(storeProviderCostBatch(), {
+    preserveScroll: true,
+    onSuccess: () => {
+      providerCostForm.evidence_reference = "";
+      providerCostForm.reference = `provider-cost:${Date.now()}`;
+      providerCostForm.idempotency_key = providerCostForm.reference;
+    },
+  });
+}
+
+function submitCommissionRequest(): void {
+  const connection =
+    props.commercialOffering.controls.operations.connections.find(
+      (candidate) =>
+        candidate.reference === commissionForm.connection_reference,
+    );
+  if (connection) {
+    commissionForm.provider = connection.provider;
+    commissionForm.currency = connection.currency;
+  }
+  commissionForm.post(storeCommissionPayoutBatch(), {
+    preserveScroll: true,
+    onSuccess: () => {
+      commissionForm.reference = `commission:${Date.now()}`;
+      commissionForm.idempotency_key = commissionForm.reference;
+    },
+  });
+}
+
+function approveCommission(id: number): void {
+  const reference = commissionApprovalReferences.value[id]?.trim();
+  if (!reference) return;
+  operatingBatchId.value = id;
+  router.post(
+    approveCommissionPayoutBatch(id),
+    { authorization_reference: reference },
+    { preserveScroll: true, onFinish: () => (operatingBatchId.value = null) },
+  );
+}
+
+function submitCommission(id: number): void {
+  operatingBatchId.value = id;
+  router.post(
+    submitCommissionPayoutBatch(id),
+    { idempotency_key: `commission-submission:${id}:${Date.now()}` },
+    { preserveScroll: true, onFinish: () => (operatingBatchId.value = null) },
+  );
+}
+
+function reconcileCommission(id: number): void {
+  operatingBatchId.value = id;
+  router.post(
+    reconcileCommissionPayoutBatch(id),
+    {},
+    { preserveScroll: true, onFinish: () => (operatingBatchId.value = null) },
+  );
+}
+
+function retryCommission(id: number): void {
+  const destinationId = commissionRetryDestinations.value[id];
+  if (!destinationId) return;
+  operatingBatchId.value = id;
+  router.post(
+    retryCommissionPayoutBatch(id),
+    { destination_revision_id: destinationId },
+    { preserveScroll: true, onFinish: () => (operatingBatchId.value = null) },
   );
 }
 </script>
@@ -461,7 +736,7 @@ function activate(id: number): void {
             </p>
           </div>
           <div
-            class="inline-flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800"
+            class="flex max-w-full overflow-x-auto rounded-xl bg-slate-100 p-1 dark:bg-slate-800"
           >
             <button
               type="button"
@@ -486,6 +761,18 @@ function activate(id: number): void {
               @click="activeTab = 'waterfall'"
             >
               <GitBranch class="size-4" /> Waterfall
+            </button>
+            <button
+              type="button"
+              class="inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold"
+              :class="
+                activeTab === 'partners'
+                  ? 'bg-white text-slate-950 shadow-sm dark:bg-slate-950 dark:text-white'
+                  : 'text-slate-500'
+              "
+              @click="activeTab = 'partners'"
+            >
+              <UsersRound class="size-4" /> Partners
             </button>
             <button
               type="button"
@@ -699,6 +986,373 @@ function activate(id: number): void {
           </article>
         </div>
 
+        <div v-else-if="activeTab === 'partners'" class="space-y-5 p-5">
+          <section class="grid gap-3 sm:grid-cols-3">
+            <article
+              class="rounded-xl border border-slate-200 p-4 dark:border-slate-800"
+            >
+              <p class="text-xs font-semibold text-slate-500">
+                Active Partners
+              </p>
+              <p class="mt-1 text-2xl font-semibold">
+                {{ commercialOffering.partners.summary.active_count }}
+              </p>
+            </article>
+            <article
+              class="rounded-xl border border-slate-200 p-4 dark:border-slate-800"
+            >
+              <p class="text-xs font-semibold text-slate-500">
+                Awaiting Approval
+              </p>
+              <p class="mt-1 text-2xl font-semibold">
+                {{
+                  commercialOffering.partners.summary.awaiting_approval_count
+                }}
+              </p>
+            </article>
+            <article
+              class="rounded-xl border p-4"
+              :class="
+                commercialOffering.partners.summary.legacy_unresolved_count
+                  ? 'border-amber-300 bg-amber-50/70 dark:border-amber-900 dark:bg-amber-950/20'
+                  : 'border-slate-200 dark:border-slate-800'
+              "
+            >
+              <p class="text-xs font-semibold text-slate-500">
+                Legacy Attribution
+              </p>
+              <p class="mt-1 text-2xl font-semibold">
+                {{
+                  commercialOffering.partners.summary.legacy_unresolved_count
+                }}
+              </p>
+              <p class="mt-1 text-xs text-slate-500">
+                {{
+                  money(
+                    commercialOffering.partners.summary.legacy_unresolved_minor,
+                  )
+                }}
+                mapping required
+              </p>
+            </article>
+          </section>
+
+          <form
+            v-if="commercialOffering.can_manage_partners"
+            class="space-y-4 rounded-xl border border-slate-200 p-4 dark:border-slate-800"
+            @submit.prevent="submitPartner"
+          >
+            <div class="flex items-center gap-3">
+              <span
+                class="grid size-9 place-items-center rounded-lg bg-slate-100 dark:bg-slate-800"
+              >
+                <Plus class="size-4" />
+              </span>
+              <div>
+                <h3 class="text-sm font-semibold">Add Commercial Partner</h3>
+                <p class="text-xs text-slate-500">
+                  Identity and terms require independent approval.
+                </p>
+              </div>
+            </div>
+            <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              <label class="text-xs font-semibold text-slate-500">
+                Partner Reference
+                <input
+                  v-model="partnerForm.reference"
+                  required
+                  placeholder="partner:example"
+                  class="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-950"
+                />
+              </label>
+              <label class="text-xs font-semibold text-slate-500">
+                Display Name
+                <input
+                  v-model="partnerForm.display_name"
+                  required
+                  class="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-950"
+                />
+              </label>
+              <label class="text-xs font-semibold text-slate-500">
+                Legal Name
+                <input
+                  v-model="partnerForm.legal_name"
+                  class="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-950"
+                />
+              </label>
+              <label class="text-xs font-semibold text-slate-500">
+                Attribution Basis
+                <select
+                  v-model="partnerForm.attribution_basis"
+                  class="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-950"
+                >
+                  <option value="contractual_referral">
+                    Contractual Referral
+                  </option>
+                  <option value="marketing_agreement">
+                    Marketing Agreement
+                  </option>
+                  <option value="distribution_agreement">
+                    Distribution Agreement
+                  </option>
+                </select>
+              </label>
+              <label class="text-xs font-semibold text-slate-500 md:col-span-2">
+                Authorization Reference
+                <input
+                  v-model="partnerForm.authorization_reference"
+                  required
+                  placeholder="contract or board authority"
+                  class="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-950"
+                />
+              </label>
+            </div>
+            <p v-if="partnerForm.hasErrors" class="text-sm text-rose-600">
+              Review the highlighted Partner details.
+            </p>
+            <button
+              type="submit"
+              :disabled="partnerForm.processing"
+              class="inline-flex h-10 items-center gap-2 rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white disabled:opacity-50 dark:bg-white dark:text-slate-950"
+            >
+              <Send class="size-4" />
+              {{ partnerForm.processing ? "Submitting…" : "Submit Partner" }}
+            </button>
+          </form>
+
+          <section
+            v-if="
+              commercialOffering.can_approve_partners &&
+              (commercialOffering.partners.pending_revisions.length ||
+                commercialOffering.partners.pending_destinations.length)
+            "
+            class="space-y-3 rounded-xl border border-sky-200 bg-sky-50/60 p-4 dark:border-sky-900 dark:bg-sky-950/20"
+          >
+            <div>
+              <h3 class="text-sm font-semibold">Approval Inbox</h3>
+              <p class="text-xs text-slate-500">
+                Approve only records independently verified against their
+                authority.
+              </p>
+            </div>
+            <article
+              v-for="revision in commercialOffering.partners.pending_revisions"
+              :key="`partner-${revision.id}`"
+              class="flex flex-col gap-3 rounded-lg bg-white p-3 sm:flex-row sm:items-center sm:justify-between dark:bg-slate-900"
+            >
+              <div>
+                <p class="text-sm font-semibold">{{ revision.display_name }}</p>
+                <p class="text-xs text-slate-500">
+                  {{ revision.partner_reference }} ·
+                  {{ label(revision.attribution_basis) }} · v{{
+                    revision.version
+                  }}
+                </p>
+              </div>
+              <button
+                type="button"
+                :disabled="approvingPartnerId === revision.id"
+                class="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-sky-700 px-3 text-sm font-semibold text-white disabled:opacity-50"
+                @click="approvePartner(revision.id)"
+              >
+                <BadgeCheck class="size-4" /> Approve Partner
+              </button>
+            </article>
+            <article
+              v-for="destination in commercialOffering.partners
+                .pending_destinations"
+              :key="`destination-${destination.id}`"
+              class="flex flex-col gap-3 rounded-lg bg-white p-3 sm:flex-row sm:items-center sm:justify-between dark:bg-slate-900"
+            >
+              <div>
+                <p class="text-sm font-semibold">
+                  {{ destination.partner_name }} · {{ destination.summary }}
+                </p>
+                <p class="text-xs text-slate-500">
+                  {{ destination.provider }} ·
+                  {{ destination.connection_reference }} ·
+                  {{ destination.currency }}
+                </p>
+              </div>
+              <button
+                type="button"
+                :disabled="approvingDestinationId === destination.id"
+                class="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-sky-700 px-3 text-sm font-semibold text-white disabled:opacity-50"
+                @click="approveDestination(destination.id)"
+              >
+                <BadgeCheck class="size-4" /> Approve Destination
+              </button>
+            </article>
+          </section>
+
+          <section class="space-y-3">
+            <div>
+              <h3 class="text-sm font-semibold">Commercial Partners</h3>
+              <p class="text-xs text-slate-500">
+                Named participants, approved destinations, and commission
+                balances.
+              </p>
+            </div>
+            <article
+              v-for="partner in commercialOffering.partners.partners"
+              :key="partner.id"
+              class="rounded-xl border border-slate-200 p-4 dark:border-slate-800"
+            >
+              <div
+                class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
+              >
+                <div class="flex items-start gap-3">
+                  <span
+                    class="grid size-10 place-items-center rounded-lg bg-slate-100 dark:bg-slate-800"
+                    ><Building2 class="size-4"
+                  /></span>
+                  <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                      <p class="text-sm font-semibold">
+                        {{ partner.display_name }}
+                      </p>
+                      <span
+                        class="rounded-full bg-slate-100 px-2 py-0.5 text-[0.68rem] font-semibold dark:bg-slate-800"
+                        >{{ label(partner.status) }}</span
+                      >
+                    </div>
+                    <p class="mt-0.5 text-xs text-slate-500">
+                      {{ partner.reference
+                      }}<template v-if="partner.revision">
+                        · {{ label(partner.revision.attribution_basis) }} · v{{
+                          partner.revision.version
+                        }}</template
+                      >
+                    </p>
+                  </div>
+                </div>
+                <button
+                  v-if="
+                    commercialOffering.can_manage_partners &&
+                    partner.status === 'active'
+                  "
+                  type="button"
+                  class="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-semibold dark:border-slate-700"
+                  @click="openDestination(partner)"
+                >
+                  <Landmark class="size-4" /> Add Destination
+                </button>
+              </div>
+              <div class="mt-4 grid gap-3 md:grid-cols-2">
+                <div class="rounded-lg bg-slate-50 p-3 dark:bg-slate-950/50">
+                  <p class="text-xs font-semibold text-slate-500">
+                    Approved Destinations
+                  </p>
+                  <p
+                    v-if="!partner.destinations.length"
+                    class="mt-1 text-sm text-slate-500"
+                  >
+                    No approved destination
+                  </p>
+                  <p
+                    v-for="destination in partner.destinations"
+                    :key="destination.id"
+                    class="mt-1 text-sm font-medium"
+                  >
+                    {{ destination.summary }} · {{ destination.currency }}
+                  </p>
+                </div>
+                <div class="rounded-lg bg-slate-50 p-3 dark:bg-slate-950/50">
+                  <p class="text-xs font-semibold text-slate-500">Commission</p>
+                  <p
+                    v-if="!partner.balances.length"
+                    class="mt-1 text-sm text-slate-500"
+                  >
+                    No earned commission
+                  </p>
+                  <div
+                    v-for="balance in partner.balances"
+                    :key="balance.currency"
+                    class="mt-1 flex items-center justify-between gap-3 text-sm"
+                  >
+                    <span>{{ balance.currency }}</span
+                    ><span class="font-semibold"
+                      >{{
+                        money(balance.available_minor, balance.currency)
+                      }}
+                      available</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </article>
+            <p
+              v-if="!commercialOffering.partners.partners.length"
+              class="rounded-xl border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500 dark:border-slate-700"
+            >
+              No Commercial Partners registered yet.
+            </p>
+          </section>
+
+          <form
+            v-if="destinationPartnerId !== null"
+            class="space-y-4 rounded-xl border border-sky-200 bg-sky-50/50 p-4 dark:border-sky-900 dark:bg-sky-950/20"
+            @submit.prevent="submitDestination"
+          >
+            <div>
+              <h3 class="text-sm font-semibold">New Partner Destination</h3>
+              <p class="text-xs text-slate-500">
+                Account details are encrypted and become usable only after
+                independent approval.
+              </p>
+            </div>
+            <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <label class="text-xs font-semibold text-slate-500"
+                >Bank Or Wallet Code<input
+                  v-model="destinationForm.bank_code"
+                  required
+                  class="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-950"
+              /></label>
+              <label class="text-xs font-semibold text-slate-500"
+                >Account Number<input
+                  v-model="destinationForm.account_number"
+                  required
+                  class="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-950"
+              /></label>
+              <label class="text-xs font-semibold text-slate-500"
+                >Recipient Name<input
+                  v-model="destinationForm.recipient_name"
+                  required
+                  class="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-950"
+              /></label>
+              <label class="text-xs font-semibold text-slate-500"
+                >Contact Mobile<input
+                  v-model="destinationForm.mobile"
+                  required
+                  class="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-950"
+              /></label>
+              <label
+                class="text-xs font-semibold text-slate-500 md:col-span-2 xl:col-span-4"
+                >Authorization Reference<input
+                  v-model="destinationForm.authorization_reference"
+                  required
+                  class="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-950"
+              /></label>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button
+                type="submit"
+                :disabled="destinationForm.processing"
+                class="inline-flex h-10 items-center gap-2 rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white disabled:opacity-50 dark:bg-white dark:text-slate-950"
+              >
+                <Send class="size-4" /> Submit Destination
+              </button>
+              <button
+                type="button"
+                class="h-10 rounded-lg px-4 text-sm font-semibold text-slate-500"
+                @click="destinationPartnerId = null"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+
         <div v-else-if="activeTab === 'activity'" class="space-y-5 p-5">
           <section class="space-y-3" data-testid="commercial-position-balances">
             <div>
@@ -863,6 +1517,101 @@ function activate(id: number): void {
             >
               <h3 class="text-sm font-semibold">Recent Commercial Sales</h3>
             </div>
+            <form
+              v-if="commercialOffering.can_reconcile_provider_costs"
+              class="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-4 dark:border-slate-800 dark:bg-slate-950/40"
+              @submit.prevent="submitProviderCost"
+            >
+              <label
+                class="text-xs font-semibold text-slate-600 dark:text-slate-300"
+              >
+                Treasury Connection
+                <select
+                  v-model="providerCostForm.connection_reference"
+                  class="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+                >
+                  <option
+                    v-for="connection in commercialOffering.controls.operations
+                      .connections"
+                    :key="connection.reference"
+                    :value="connection.reference"
+                  >
+                    {{ connection.reference }} ·
+                    {{ label(connection.provider) }}
+                  </option>
+                </select>
+              </label>
+              <label
+                class="text-xs font-semibold text-slate-600 dark:text-slate-300"
+              >
+                Evidence Reference
+                <input
+                  v-model="providerCostForm.evidence_reference"
+                  required
+                  placeholder="Statement or invoice reference"
+                  class="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+                />
+              </label>
+              <label
+                class="text-xs font-semibold text-slate-600 dark:text-slate-300"
+              >
+                Observed Amount
+                <input
+                  v-model="providerCostForm.observed_amount"
+                  required
+                  inputmode="decimal"
+                  class="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+                />
+              </label>
+              <label
+                class="text-xs font-semibold text-slate-600 dark:text-slate-300"
+              >
+                Observed Date
+                <input
+                  v-model="providerCostForm.observed_at"
+                  required
+                  type="date"
+                  class="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+                />
+              </label>
+              <label
+                class="text-xs font-semibold text-slate-600 dark:text-slate-300"
+              >
+                Period Start
+                <input
+                  v-model="providerCostForm.period_started_at"
+                  required
+                  type="date"
+                  class="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+                />
+              </label>
+              <label
+                class="text-xs font-semibold text-slate-600 dark:text-slate-300"
+              >
+                Period End
+                <input
+                  v-model="providerCostForm.period_ended_at"
+                  required
+                  type="date"
+                  class="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+                />
+              </label>
+              <div class="flex items-end sm:col-span-2">
+                <button
+                  type="submit"
+                  :disabled="providerCostForm.processing"
+                  class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white disabled:opacity-50 dark:bg-white dark:text-slate-950"
+                >
+                  <ShieldCheck class="size-4" /> Record Authoritative Evidence
+                </button>
+              </div>
+              <p
+                v-if="Object.keys(providerCostForm.errors).length"
+                class="text-xs text-rose-600 sm:col-span-2 lg:col-span-4"
+              >
+                {{ Object.values(providerCostForm.errors)[0] }}
+              </p>
+            </form>
             <div
               v-if="commercialOffering.controls.recent_sales.length"
               class="divide-y divide-slate-100 dark:divide-slate-800"
@@ -912,10 +1661,16 @@ function activate(id: number): void {
                 Provider Cost Payable
               </p>
               <p class="mt-1 text-xl font-semibold">
-                {{ money(commercialOffering.controls.provider_costs.outstanding_minor) }}
+                {{
+                  money(
+                    commercialOffering.controls.provider_costs
+                      .outstanding_minor,
+                  )
+                }}
               </p>
               <p class="mt-1 text-xs text-slate-500">
-                Settles only against exact provider statement or invoice evidence.
+                Settles only against exact provider statement or invoice
+                evidence.
               </p>
             </article>
             <article
@@ -925,7 +1680,9 @@ function activate(id: number): void {
                 Commission Available
               </p>
               <p class="mt-1 text-xl font-semibold">
-                {{ money(commercialOffering.controls.commissions.available_minor) }}
+                {{
+                  money(commercialOffering.controls.commissions.available_minor)
+                }}
               </p>
               <p class="mt-1 text-xs text-slate-500">
                 Earned allocations not yet included in a controlled payout.
@@ -941,24 +1698,225 @@ function activate(id: number): void {
                   Exact batches settle; differences remain under review.
                 </p>
               </div>
-              <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold dark:bg-slate-800">
-                {{ commercialOffering.can_reconcile_provider_costs ? "Operator Enabled" : "Read Only" }}
+              <span
+                class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold dark:bg-slate-800"
+              >
+                {{
+                  commercialOffering.can_reconcile_provider_costs
+                    ? "Operator Enabled"
+                    : "Read Only"
+                }}
               </span>
             </div>
-            <div class="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+            <form
+              v-if="commercialOffering.can_request_commission_payouts"
+              class="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-4 dark:border-slate-800 dark:bg-slate-950/40"
+              @submit.prevent="submitCommissionRequest"
+            >
+              <label
+                class="text-xs font-semibold text-slate-600 dark:text-slate-300"
+              >
+                Commercial Partner
+                <select
+                  v-model="commissionForm.partner_reference"
+                  required
+                  class="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+                >
+                  <option value="" disabled>Select a governed Partner</option>
+                  <option
+                    v-for="partner in commercialOffering.partners.partners.filter(
+                      (candidate) => candidate.status === 'active',
+                    )"
+                    :key="partner.id"
+                    :value="partner.reference"
+                  >
+                    {{ partner.display_name }}
+                  </option>
+                </select>
+              </label>
+              <label
+                class="text-xs font-semibold text-slate-600 dark:text-slate-300"
+              >
+                Treasury Connection
+                <select
+                  v-model="commissionForm.connection_reference"
+                  class="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+                >
+                  <option
+                    v-for="connection in commercialOffering.controls.operations
+                      .connections"
+                    :key="connection.reference"
+                    :value="connection.reference"
+                  >
+                    {{ connection.reference }}
+                  </option>
+                </select>
+              </label>
+              <label
+                class="text-xs font-semibold text-slate-600 dark:text-slate-300"
+              >
+                Period Start
+                <input
+                  v-model="commissionForm.period_started_at"
+                  required
+                  type="date"
+                  class="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+                />
+              </label>
+              <label
+                class="text-xs font-semibold text-slate-600 dark:text-slate-300"
+              >
+                Period End
+                <input
+                  v-model="commissionForm.period_ended_at"
+                  required
+                  type="date"
+                  class="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
+                />
+              </label>
+              <button
+                type="submit"
+                :disabled="commissionForm.processing"
+                class="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white disabled:opacity-50 sm:col-span-2 lg:col-span-4 dark:bg-white dark:text-slate-950"
+              >
+                <HandCoins class="size-4" /> Request Commission Payout
+              </button>
+              <p
+                v-if="Object.keys(commissionForm.errors).length"
+                class="text-xs text-rose-600 sm:col-span-2 lg:col-span-4"
+              >
+                {{ Object.values(commissionForm.errors)[0] }}
+              </p>
+            </form>
+            <div
+              class="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800"
+            >
               <div
-                v-for="batch in commercialOffering.controls.provider_costs.recent_batches"
+                v-for="batch in commercialOffering.controls.provider_costs
+                  .recent_batches"
                 :key="batch.reference"
-                class="grid gap-2 border-b border-slate-100 px-4 py-3 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center dark:border-slate-800"
+                class="grid gap-3 border-b border-slate-100 px-4 py-3 last:border-b-0 lg:grid-cols-[minmax(0,1fr)_auto_auto_minmax(12rem,auto)] lg:items-center dark:border-slate-800"
               >
                 <div class="min-w-0">
-                  <p class="truncate text-sm font-semibold">{{ batch.reference }}</p>
-                  <p class="text-xs text-slate-500">{{ label(batch.provider) }} · {{ batch.connection_reference }}</p>
+                  <p class="truncate text-sm font-semibold">
+                    {{ batch.reference }}
+                  </p>
+                  <p class="text-xs text-slate-500">
+                    {{ label(batch.provider) }} ·
+                    {{ batch.connection_reference }}
+                  </p>
                 </div>
-                <p class="text-sm font-semibold">{{ money(batch.observed_amount_minor, batch.currency) }}</p>
-                <span class="w-fit rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold dark:bg-slate-800">{{ label(batch.status) }}</span>
+                <p class="text-sm font-semibold">
+                  {{ money(batch.observed_amount_minor, batch.currency) }}
+                </p>
+                <span
+                  class="w-fit rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold dark:bg-slate-800"
+                  >{{ label(batch.status) }}</span
+                >
+                <div
+                  class="flex min-w-0 flex-wrap items-center gap-2 lg:justify-end"
+                >
+                  <template
+                    v-if="
+                      batch.status === 'awaiting_approval' &&
+                      commercialOffering.can_approve_commission_payouts
+                    "
+                  >
+                    <input
+                      v-model="commissionApprovalReferences[batch.id]"
+                      placeholder="Approval reference"
+                      class="h-9 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-900"
+                    />
+                    <button
+                      type="button"
+                      class="h-9 rounded-lg bg-sky-600 px-3 text-xs font-semibold text-white"
+                      :disabled="operatingBatchId === batch.id"
+                      @click="approveCommission(batch.id)"
+                    >
+                      Approve
+                    </button>
+                  </template>
+                  <button
+                    v-else-if="
+                      batch.status === 'approved' &&
+                      commercialOffering.can_execute_commission_payouts &&
+                      commercialOffering.controls.operations
+                        .live_provider_calls_enabled
+                    "
+                    type="button"
+                    class="h-9 rounded-lg bg-emerald-600 px-3 text-xs font-semibold text-white"
+                    :disabled="operatingBatchId === batch.id"
+                    @click="submitCommission(batch.id)"
+                  >
+                    Submit Payout
+                  </button>
+                  <span
+                    v-else-if="batch.status === 'approved'"
+                    class="text-xs text-amber-700 dark:text-amber-300"
+                  >
+                    Live provider calls disabled
+                  </span>
+                  <button
+                    v-else-if="
+                      batch.status === 'pending' &&
+                      commercialOffering.can_execute_commission_payouts &&
+                      commercialOffering.controls.operations
+                        .live_provider_calls_enabled
+                    "
+                    type="button"
+                    class="h-9 rounded-lg border border-slate-300 px-3 text-xs font-semibold dark:border-slate-700"
+                    :disabled="operatingBatchId === batch.id"
+                    @click="reconcileCommission(batch.id)"
+                  >
+                    Check Provider
+                  </button>
+                  <template
+                    v-else-if="
+                      batch.status === 'rejected' &&
+                      commercialOffering.can_execute_commission_payouts
+                    "
+                  >
+                    <select
+                      v-model="commissionRetryDestinations[batch.id]"
+                      class="h-9 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-900"
+                    >
+                      <option :value="undefined" disabled>
+                        Approved destination
+                      </option>
+                      <option
+                        v-for="destination in commercialOffering.partners.partners.find(
+                          (partner) =>
+                            partner.id === batch.commercial_partner_id,
+                        )?.destinations ?? []"
+                        :key="destination.id"
+                        :value="destination.id"
+                      >
+                        {{ destination.summary }}
+                      </option>
+                    </select>
+                    <button
+                      type="button"
+                      class="h-9 rounded-lg border border-slate-300 px-3 text-xs font-semibold dark:border-slate-700"
+                      :disabled="operatingBatchId === batch.id"
+                      @click="retryCommission(batch.id)"
+                    >
+                      Prepare Retry
+                    </button>
+                  </template>
+                  <span v-else class="text-xs text-slate-500">
+                    {{ batch.attempt_count }} attempt{{
+                      batch.attempt_count === 1 ? "" : "s"
+                    }}
+                  </span>
+                </div>
               </div>
-              <p v-if="!commercialOffering.controls.provider_costs.recent_batches.length" class="px-4 py-8 text-center text-sm text-slate-500">
+              <p
+                v-if="
+                  !commercialOffering.controls.provider_costs.recent_batches
+                    .length
+                "
+                class="px-4 py-8 text-center text-sm text-slate-500"
+              >
                 No provider cost evidence recorded.
               </p>
             </div>
@@ -972,24 +1930,47 @@ function activate(id: number): void {
                   Aggregated by partner and period with independent approval.
                 </p>
               </div>
-              <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold dark:bg-slate-800">
-                {{ commercialOffering.can_execute_commission_payouts ? "Execution Enabled" : "Controlled" }}
+              <span
+                class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold dark:bg-slate-800"
+              >
+                {{
+                  commercialOffering.can_execute_commission_payouts
+                    ? "Execution Enabled"
+                    : "Controlled"
+                }}
               </span>
             </div>
-            <div class="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+            <div
+              class="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800"
+            >
               <div
-                v-for="batch in commercialOffering.controls.commissions.recent_batches"
+                v-for="batch in commercialOffering.controls.commissions
+                  .recent_batches"
                 :key="batch.reference"
                 class="grid gap-2 border-b border-slate-100 px-4 py-3 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center dark:border-slate-800"
               >
                 <div class="min-w-0">
-                  <p class="truncate text-sm font-semibold">{{ batch.partner_reference }}</p>
-                  <p class="text-xs text-slate-500">{{ batch.destination_summary }} · {{ batch.reference }}</p>
+                  <p class="truncate text-sm font-semibold">
+                    {{ batch.partner_reference }}
+                  </p>
+                  <p class="text-xs text-slate-500">
+                    {{ batch.destination_summary }} · {{ batch.reference }}
+                  </p>
                 </div>
-                <p class="text-sm font-semibold">{{ money(batch.amount_minor, batch.currency) }}</p>
-                <span class="w-fit rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold dark:bg-slate-800">{{ label(batch.status) }}</span>
+                <p class="text-sm font-semibold">
+                  {{ money(batch.amount_minor, batch.currency) }}
+                </p>
+                <span
+                  class="w-fit rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold dark:bg-slate-800"
+                  >{{ label(batch.status) }}</span
+                >
               </div>
-              <p v-if="!commercialOffering.controls.commissions.recent_batches.length" class="px-4 py-8 text-center text-sm text-slate-500">
+              <p
+                v-if="
+                  !commercialOffering.controls.commissions.recent_batches.length
+                "
+                class="px-4 py-8 text-center text-sm text-slate-500"
+              >
                 No commission payout requested.
               </p>
             </div>
