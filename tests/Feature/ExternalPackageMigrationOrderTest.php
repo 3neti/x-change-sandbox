@@ -11,7 +11,7 @@ it('loads emi funding evidence migrations before x-change funding tables', funct
     expect(InstalledVersions::getPrettyVersion('3neti/emi-core'))
         ->toBe('v2.0.0-beta.5')
         ->and(InstalledVersions::getPrettyVersion('3neti/x-change'))
-        ->toBe('v1.0.0-beta.113')
+        ->toBe('v1.0.0-beta.114')
         ->and($migrationNames)
         ->toContain(
             '2025_01_01_000008_create_webhook_receipts_table',
@@ -89,7 +89,7 @@ it('uses the package-owned x-change landing page and safe product presentation',
         ->toContain('Claim when you’re ready—with a participating bank or')
         ->toContain('Claim Pay Code')
         ->toContain(':href="startClaim()"')
-        ->toContain("background-image: url('/favicon.png')")
+        ->toContain("background-image: url('/vendor/x-change/favicon.png')")
         ->toContain('bg-[length:auto_100%]')
         ->toContain('opacity-[0.1]')
         ->toContain('{{ $page.props.name }}')
