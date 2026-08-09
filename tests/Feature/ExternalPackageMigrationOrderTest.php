@@ -11,7 +11,7 @@ it('loads emi funding evidence migrations before x-change funding tables', funct
     expect(InstalledVersions::getPrettyVersion('3neti/emi-core'))
         ->toBe('v2.0.0-beta.5')
         ->and(InstalledVersions::getPrettyVersion('3neti/x-change'))
-        ->toBe('v1.0.0-beta.119')
+        ->toBe('v1.0.0-beta.120')
         ->and($migrationNames)
         ->toContain(
             '2025_01_01_000008_create_webhook_receipts_table',
@@ -117,6 +117,8 @@ it('uses the package-owned x-change landing page and safe product presentation',
         ->toContain('Powered by x-change')
         ->toContain('Release {{ $page.props.version }}')
         ->toContain('© 2026 3neti R&amp;D OPC')
+        ->toContain('mx-auto flex h-24 w-full max-w-[88rem]')
+        ->toContain('mx-auto grid w-full max-w-[88rem]')
         ->toContain("import XChangeLogo from '@/components/x-change/XChangeLogo.vue'")
         ->toContain('<XChangeLogo')
         ->toContain('sm:h-14')
