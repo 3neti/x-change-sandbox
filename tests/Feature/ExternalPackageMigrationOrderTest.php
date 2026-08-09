@@ -11,7 +11,7 @@ it('loads emi funding evidence migrations before x-change funding tables', funct
     expect(InstalledVersions::getPrettyVersion('3neti/emi-core'))
         ->toBe('v2.0.0-beta.5')
         ->and(InstalledVersions::getPrettyVersion('3neti/x-change'))
-        ->toBe('v1.0.0-beta.116')
+        ->toBe('v1.0.0-beta.117')
         ->and($migrationNames)
         ->toContain(
             '2025_01_01_000008_create_webhook_receipts_table',
@@ -71,6 +71,24 @@ it('uses package-owned branding on the host authentication surface', function ()
         ->and($packageStub)->not->toBeFalse()
         ->toContain('/vendor/x-change/images/logo-orange.png')
         ->toContain('/vendor/x-change/images/logo-silver.png');
+});
+
+it('publishes canonical Pay Code vectors alongside x-change branding', function (): void {
+    $payCodeLogo = file_get_contents(
+        public_path('vendor/x-change/images/pay-code/pay-code-logo.svg'),
+    );
+    $sharedLogoComponent = file_get_contents(
+        resource_path('js/components/x-change/PayCodeLogo.vue'),
+    );
+
+    expect($payCodeLogo)->not->toBeFalse()
+        ->toContain('viewBox="0 0 1254 1254"')
+        ->toContain('id="paycode-navy"')
+        ->toContain('id="paycode-red"')
+        ->and($sharedLogoComponent)->not->toBeFalse()
+        ->toContain('/vendor/x-change/images/pay-code/pay-code-logo.svg')
+        ->toContain('/vendor/x-change/images/pay-code/pay-code-mark.svg')
+        ->and(is_file(public_path('vendor/x-change/images/logo-orange.png')))->toBeTrue();
 });
 
 it('uses the package-owned x-change landing page and safe product presentation', function (): void {
