@@ -1,7 +1,5 @@
 <?php
 
-use Composer\InstalledVersions;
-
 return [
 
     /*
@@ -16,10 +14,6 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
-
-    'version' => InstalledVersions::getPrettyVersion('3neti/x-change') ?? 'dev',
-
-    'x_change_version' => InstalledVersions::getPrettyVersion('3neti/x-change') ?? 'dev',
 
     /*
     |--------------------------------------------------------------------------
