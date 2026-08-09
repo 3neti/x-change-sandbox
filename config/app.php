@@ -19,6 +19,8 @@ return [
 
     'version' => InstalledVersions::getPrettyVersion('3neti/x-change') ?? 'dev',
 
+    'x_change_version' => InstalledVersions::getPrettyVersion('3neti/x-change') ?? 'dev',
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

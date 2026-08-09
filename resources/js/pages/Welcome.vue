@@ -202,7 +202,11 @@ withDefaults(
         <footer
             class="relative z-10 mx-auto flex w-full max-w-[88rem] flex-col items-end gap-1 px-5 pb-5 text-right text-[0.65rem] font-semibold tracking-[0.08em] text-slate-500 uppercase sm:flex-row sm:items-center sm:justify-end sm:gap-2 sm:px-8 lg:px-10 lg:pb-4"
         >
-            <span>Release {{ $page.props.version }}</span>
+            <span>App {{ $page.props.version }}</span>
+            <span aria-hidden="true" class="hidden text-slate-300 sm:inline"
+                >·</span
+            >
+            <span>3neti/x-change {{ $page.props.xChangeVersion }}</span>
             <span aria-hidden="true" class="hidden text-slate-300 sm:inline"
                 >·</span
             >
