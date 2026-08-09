@@ -308,16 +308,16 @@
         },
         {
             "name": "3neti/form-flow",
-            "version": "v1.9.1",
+            "version": "v1.9.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/form-flow.git",
-                "reference": "eecb9ff184ac94b172888bdc22590a44dedeb171"
+                "reference": "80b3653895da8c48e61ed82de58c3f4fd4dbc7dc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/form-flow/zipball/eecb9ff184ac94b172888bdc22590a44dedeb171",
-                "reference": "eecb9ff184ac94b172888bdc22590a44dedeb171",
+                "url": "https://api.github.com/repos/3neti/form-flow/zipball/80b3653895da8c48e61ed82de58c3f4fd4dbc7dc",
+                "reference": "80b3653895da8c48e61ed82de58c3f4fd4dbc7dc",
                 "shasum": ""
             },
             "require": {
@@ -375,9 +375,9 @@
             ],
             "support": {
                 "issues": "https://github.com/3neti/form-flow/issues",
-                "source": "https://github.com/3neti/form-flow/tree/v1.9.1"
+                "source": "https://github.com/3neti/form-flow/tree/v1.9.2"
             },
-            "time": "2026-08-07T11:09:03+00:00"
+            "time": "2026-08-09T08:18:07+00:00"
         },
         {
             "name": "3neti/form-handler-kyc",
@@ -1524,7 +1524,7 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.0-beta.120",
+            "version": "v1.0.0-beta.121",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
@@ -2152,16 +2152,16 @@
         },
         {
             "name": "bavix/laravel-wallet",
-            "version": "11.5.1",
+            "version": "11.5.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bavix/laravel-wallet.git",
-                "reference": "d6a25c95e14c18a6e1b8c5a16e0459de7af77e6a"
+                "reference": "adf7c9674a8297bdae33913d9193ecfc3ff9c5e8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/bavix/laravel-wallet/zipball/d6a25c95e14c18a6e1b8c5a16e0459de7af77e6a",
-                "reference": "d6a25c95e14c18a6e1b8c5a16e0459de7af77e6a",
+                "url": "https://api.github.com/repos/bavix/laravel-wallet/zipball/adf7c9674a8297bdae33913d9193ecfc3ff9c5e8",
+                "reference": "adf7c9674a8297bdae33913d9193ecfc3ff9c5e8",
                 "shasum": ""
             },
             "require": {
@@ -2230,7 +2230,7 @@
             ],
             "support": {
                 "issues": "https://github.com/bavix/laravel-wallet/issues",
-                "source": "https://github.com/bavix/laravel-wallet/tree/11.5.1"
+                "source": "https://github.com/bavix/laravel-wallet/tree/11.5.2"
             },
             "funding": [
                 {
@@ -2242,7 +2242,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2026-06-30T18:56:41+00:00"
+            "time": "2026-08-08T07:50:10+00:00"
         },
         {
             "name": "brick/math",
@@ -6619,16 +6619,16 @@
         },
         {
             "name": "nesbot/carbon",
-            "version": "3.13.1",
+            "version": "3.13.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CarbonPHP/carbon.git",
-                "reference": "2937ad3d1d2c506fd2bc97d571438a95641f44e2"
+                "reference": "a1c54919f5fff9800cd03c32bd01defd5a4061cb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CarbonPHP/carbon/zipball/2937ad3d1d2c506fd2bc97d571438a95641f44e2",
-                "reference": "2937ad3d1d2c506fd2bc97d571438a95641f44e2",
+                "url": "https://api.github.com/repos/CarbonPHP/carbon/zipball/a1c54919f5fff9800cd03c32bd01defd5a4061cb",
+                "reference": "a1c54919f5fff9800cd03c32bd01defd5a4061cb",
                 "shasum": ""
             },
             "require": {
@@ -6720,7 +6720,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-07-09T18:23:49+00:00"
+            "time": "2026-08-08T11:40:35+00:00"
         },
         {
             "name": "nette/schema",
