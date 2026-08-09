@@ -98,7 +98,7 @@ export function classifyCockpitPayee(value: string): CockpitPayeePolicy {
       `@${alias}`,
       false,
       true,
-      "The claimant must use this registered vendor alias.",
+      "The claimant must use this vendor alias.",
     );
   }
 
