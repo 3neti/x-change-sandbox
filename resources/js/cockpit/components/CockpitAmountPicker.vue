@@ -74,6 +74,7 @@ function openKeypadFromNumericKey(event: KeyboardEvent): void {
   }
 
   event.preventDefault();
+  event.stopPropagation();
   keypadInitialEntry.value = isDecimal ? "0." : event.key;
   keypadOpen.value = true;
 }
