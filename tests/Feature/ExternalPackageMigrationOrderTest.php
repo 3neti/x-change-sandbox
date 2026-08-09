@@ -11,7 +11,7 @@ it('loads emi funding evidence migrations before x-change funding tables', funct
     expect(InstalledVersions::getPrettyVersion('3neti/emi-core'))
         ->toBe('v2.0.0-beta.5')
         ->and(InstalledVersions::getPrettyVersion('3neti/x-change'))
-        ->toBe('v1.0.0-beta.117')
+        ->toBe('v1.0.0-beta.118')
         ->and($migrationNames)
         ->toContain(
             '2025_01_01_000008_create_webhook_receipts_table',
@@ -66,14 +66,15 @@ it('uses package-owned branding on the host authentication surface', function ()
     );
 
     expect($component)->not->toBeFalse()
-        ->toContain('/vendor/x-change/images/logo-orange.png')
-        ->toContain('/vendor/x-change/images/logo-silver.png')
+        ->toContain("import { xChangeBrandAssets } from '@/components/x-change/brandAssets';")
+        ->toContain('xChangeBrandAssets.logo')
+        ->toContain('xChangeBrandAssets.light')
         ->and($packageStub)->not->toBeFalse()
-        ->toContain('/vendor/x-change/images/logo-orange.png')
-        ->toContain('/vendor/x-change/images/logo-silver.png');
+        ->toContain('xChangeBrandAssets.logo')
+        ->toContain('xChangeBrandAssets.light');
 });
 
-it('publishes canonical Pay Code vectors alongside x-change branding', function (): void {
+it('publishes canonical Pay Code and x-change vectors', function (): void {
     $payCodeLogo = file_get_contents(
         public_path('vendor/x-change/images/pay-code/pay-code-logo.svg'),
     );
@@ -88,7 +89,9 @@ it('publishes canonical Pay Code vectors alongside x-change branding', function 
         ->and($sharedLogoComponent)->not->toBeFalse()
         ->toContain('/vendor/x-change/images/pay-code/pay-code-logo.svg')
         ->toContain('/vendor/x-change/images/pay-code/pay-code-mark.svg')
-        ->and(is_file(public_path('vendor/x-change/images/logo-orange.png')))->toBeTrue();
+        ->and(public_path('vendor/x-change/images/brand-library/inventory.json'))->toBeFile()
+        ->and(public_path('vendor/x-change/images/brand-library/x-change/svg/x-change-logo.svg'))->toBeFile()
+        ->and(public_path('vendor/x-change/images/brand-library/g-clef-pulley/svg/g-clef-pulley-logo.svg'))->toBeFile();
 });
 
 it('uses the package-owned x-change landing page and safe product presentation', function (): void {
@@ -107,12 +110,13 @@ it('uses the package-owned x-change landing page and safe product presentation',
         ->toContain('Claim when you’re ready—with a participating bank or')
         ->toContain('Claim Pay Code')
         ->toContain(':href="startClaim()"')
-        ->toContain("background-image: url('/vendor/x-change/favicon.png')")
+        ->toContain('gClefPulleyBrandAssets.logo')
         ->toContain('bg-[length:auto_100%]')
         ->toContain('opacity-[0.1]')
         ->toContain('{{ $page.props.name }}')
         ->toContain('Powered by x-change')
-        ->toContain('/vendor/x-change/images/logo-orange.png')
+        ->toContain("import XChangeLogo from '@/components/x-change/XChangeLogo.vue'")
+        ->toContain('<XChangeLogo')
         ->toContain('sm:h-14')
         ->toContain('amount="₱537.00"')
         ->toContain('estimated-cost="₱543.90"')
@@ -144,4 +148,16 @@ it('uses the package-owned x-change landing page and safe product presentation',
         ->not->toContain('₱500.00')
         ->and(resource_path('js/cockpit/components/CockpitQuickGenerateOrderPresentation.vue'))->toBeFile()
         ->and(resource_path('js/cockpit/components/CockpitLandingClaimExperiencePresentation.vue'))->toBeFile();
+});
+
+it('uses the canonical package favicon in the host application shell', function (): void {
+    $shell = file_get_contents(resource_path('views/app.blade.php'));
+    $favicon = file_get_contents(public_path('vendor/x-change/favicon.svg'));
+
+    expect($shell)->not->toBeFalse()
+        ->toContain('<link rel="icon" href="/vendor/x-change/favicon.svg" type="image/svg+xml">')
+        ->not->toContain('<link rel="icon" href="/favicon.svg" type="image/svg+xml">')
+        ->and($favicon)->not->toBeFalse()
+        ->toContain('<path')
+        ->not->toContain('<image');
 });
