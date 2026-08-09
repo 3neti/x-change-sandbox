@@ -9,6 +9,7 @@ Changes will be overwritten by php artisan x-change:publish --scope=build --forc
 <script setup lang="ts">
 import CockpitPayCodePayoutCorrectionController from "@/actions/LBHurtado/XChange/Http/Controllers/Web/Cockpit/CockpitPayCodePayoutCorrectionController";
 import BankEMISelect from "@/components/financial/BankEMISelect.vue";
+import CockpitPayCodeTerminalControls from "./CockpitPayCodeTerminalControls.vue";
 import { Form } from "@inertiajs/vue3";
 import {
   Activity,
@@ -42,6 +43,7 @@ import { computed, ref } from "vue";
 import type {
   CockpitDependentReadModel,
   CockpitMoneyIssuerOption,
+  CockpitPayCodeTerminalControl,
   CockpitVoucherReadModel,
 } from "../types";
 
@@ -64,6 +66,7 @@ const props = defineProps<{
   claimUrl?: string | null;
   distributionUrl: string;
   explorerUrl: string;
+  terminalControl?: CockpitPayCodeTerminalControl;
 }>();
 
 const activeTab = ref<WorkspaceTab>("overview");
@@ -628,6 +631,11 @@ function number(value: unknown): number {
             recorded separately under Claim &amp; Evidence.
           </p>
         </aside>
+        <CockpitPayCodeTerminalControls
+          v-if="terminalControl"
+          :code="code"
+          :control="terminalControl"
+        />
       </section>
 
       <section

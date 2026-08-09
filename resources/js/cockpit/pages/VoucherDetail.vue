@@ -893,6 +893,7 @@ function policyLabel(value: string): string {
                 :claim-url="beneficiaryRedeemUrl ?? beneficiaryRedeemPath"
                 :distribution-url="distributionWorkspaceHref"
                 :explorer-url="explorerHref"
+                :terminal-control="props.terminal_control"
             />
 
             <div class="hidden" aria-hidden="true" data-testid="cockpit-voucher-detail-legacy-projection">
