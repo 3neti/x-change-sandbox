@@ -308,16 +308,16 @@
         },
         {
             "name": "3neti/form-flow",
-            "version": "v1.9.12",
+            "version": "v1.9.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/form-flow.git",
-                "reference": "0ed6f119a4443d36f18c1ec755e442c9b7bb8ae4"
+                "reference": "b421964ae351deeaa4aea61eed28cb8156ef6b43"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/form-flow/zipball/0ed6f119a4443d36f18c1ec755e442c9b7bb8ae4",
-                "reference": "0ed6f119a4443d36f18c1ec755e442c9b7bb8ae4",
+                "url": "https://api.github.com/repos/3neti/form-flow/zipball/b421964ae351deeaa4aea61eed28cb8156ef6b43",
+                "reference": "b421964ae351deeaa4aea61eed28cb8156ef6b43",
                 "shasum": ""
             },
             "require": {
@@ -375,9 +375,9 @@
             ],
             "support": {
                 "issues": "https://github.com/3neti/form-flow/issues",
-                "source": "https://github.com/3neti/form-flow/tree/v1.9.12"
+                "source": "https://github.com/3neti/form-flow/tree/v1.9.13"
             },
-            "time": "2026-08-10T14:42:56+00:00"
+            "time": "2026-08-10T22:23:49+00:00"
         },
         {
             "name": "3neti/form-handler-kyc",
@@ -1524,11 +1524,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.0-beta.138",
+            "version": "v1.0.0-beta.139",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "a7e3fc79c1d1fdeae8d71fdcb3c9b71334d29f6d"
+                "reference": "7163e411be53b7f8d1520662ab26b099d020bc80"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1627,7 +1627,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-08-10T15:37:50+00:00"
+            "time": "2026-08-10T23:00:15+00:00"
         },
         {
             "name": "3neti/x-commerce",
