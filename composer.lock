@@ -308,16 +308,16 @@
         },
         {
             "name": "3neti/form-flow",
-            "version": "v1.9.9",
+            "version": "v1.9.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/form-flow.git",
-                "reference": "0cf5e7fba800cf5b4f0ffb90ee4f12c671982a7d"
+                "reference": "26ffc0ecfb29ad78ea701c159be41ad0ad51b44f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/form-flow/zipball/0cf5e7fba800cf5b4f0ffb90ee4f12c671982a7d",
-                "reference": "0cf5e7fba800cf5b4f0ffb90ee4f12c671982a7d",
+                "url": "https://api.github.com/repos/3neti/form-flow/zipball/26ffc0ecfb29ad78ea701c159be41ad0ad51b44f",
+                "reference": "26ffc0ecfb29ad78ea701c159be41ad0ad51b44f",
                 "shasum": ""
             },
             "require": {
@@ -375,9 +375,9 @@
             ],
             "support": {
                 "issues": "https://github.com/3neti/form-flow/issues",
-                "source": "https://github.com/3neti/form-flow/tree/v1.9.9"
+                "source": "https://github.com/3neti/form-flow/tree/v1.9.10"
             },
-            "time": "2026-08-09T20:15:16+00:00"
+            "time": "2026-08-10T10:05:11+00:00"
         },
         {
             "name": "3neti/form-handler-kyc",
@@ -1524,11 +1524,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.0-beta.134",
+            "version": "v1.0.0-beta.135",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "155b123e8b6ddd392271516f8f206229ef27706a"
+                "reference": "7fe063dac86aa3013ef666da2b7d4401516e3b76"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1627,7 +1627,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-08-10T05:00:15+00:00"
+            "time": "2026-08-10T10:05:32+00:00"
         },
         {
             "name": "3neti/x-commerce",
@@ -10190,16 +10190,16 @@
         },
         {
             "name": "spatie/laravel-medialibrary",
-            "version": "11.23.4",
+            "version": "11.23.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/laravel-medialibrary.git",
-                "reference": "9f28da2b45ba5330887b307140c7a00dd2b0adcf"
+                "reference": "8ca16954d607de1853c9609e88eb91eab43d67b9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/laravel-medialibrary/zipball/9f28da2b45ba5330887b307140c7a00dd2b0adcf",
-                "reference": "9f28da2b45ba5330887b307140c7a00dd2b0adcf",
+                "url": "https://api.github.com/repos/spatie/laravel-medialibrary/zipball/8ca16954d607de1853c9609e88eb91eab43d67b9",
+                "reference": "8ca16954d607de1853c9609e88eb91eab43d67b9",
                 "shasum": ""
             },
             "require": {
@@ -10284,7 +10284,7 @@
             ],
             "support": {
                 "issues": "https://github.com/spatie/laravel-medialibrary/issues",
-                "source": "https://github.com/spatie/laravel-medialibrary/tree/11.23.4"
+                "source": "https://github.com/spatie/laravel-medialibrary/tree/11.23.5"
             },
             "funding": [
                 {
@@ -10296,7 +10296,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-08-07T08:08:26+00:00"
+            "time": "2026-08-10T08:15:27+00:00"
         },
         {
             "name": "spatie/laravel-model-status",
