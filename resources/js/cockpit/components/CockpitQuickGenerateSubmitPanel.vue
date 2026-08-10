@@ -70,12 +70,15 @@ import type {
     RiderStampTheme,
 } from '../riderStampPreview';
 import type { RiderContentFormat } from '../riderContent';
+import { classifyCockpitPayee, type CockpitPayeeKind } from '../payeePolicy';
 import {
-    classifyCockpitPayee,
-    type CockpitPayeeKind,
-} from '../payeePolicy';
+    type FeedbackChannel,
+    type FeedbackDestinations,
+    normalizePhilippineFeedbackMobile,
+} from '../feedbackDestinations';
 import CockpitAmountPicker from './CockpitAmountPicker.vue';
 import CockpitClaimExperiencePreview from './CockpitClaimExperiencePreview.vue';
+import CockpitFeedbackDestinationInput from './CockpitFeedbackDestinationInput.vue';
 import CockpitIssuedPayCodeDialog from './CockpitIssuedPayCodeDialog.vue';
 import CockpitManualCopyButton from './CockpitManualCopyButton.vue';
 import CockpitPayCodeCanvas from './CockpitPayCodeCanvas.vue';
@@ -172,7 +175,6 @@ type RiderArtworkSourceOption = {
     resolving: boolean;
 };
 
-type FeedbackChannel = 'email' | 'mobile' | 'webhook';
 type SliceMode = 'whole' | 'fixed' | 'open' | 'named';
 type ClaimOutcomeMode = 'provider_disbursement' | 'account_funding';
 type RiderDesignEditor = 'appearance' | 'message' | 'link' | 'splash';
@@ -515,7 +517,7 @@ const quickGenerateTemplateDefaults: Record<
         verificationKyc: true,
         verificationOtp: true,
         verificationSelfie: false,
-        feedbackMobile: '09170000000',
+        feedbackMobile: '',
         feedbackEmail: '',
         feedbackWebhook: '',
         riderUrl: '',
@@ -674,11 +676,12 @@ const {
     message: riderUrlArtworkMessage,
 } = useRiderUrlArtworkPreview(riderUrl);
 const feedbackEmail = ref('');
-const feedbackMobile = ref(recipientReference.value);
+const feedbackMobile = ref('');
 const feedbackWebhook = ref('');
 const feedbackEmailEnabled = ref(false);
 const feedbackMobileEnabled = ref(false);
 const feedbackWebhookEnabled = ref(false);
+const feedbackTokenErrors = ref<string[]>([]);
 const autoFilledFeedback = ref<Record<FeedbackChannel, string | null>>({
     email: null,
     mobile: null,
@@ -1711,6 +1714,56 @@ const defaultFeedbackWebhook = computed<string>(
     () => stringValue(props.feedbackDefaults?.webhook)?.trim() ?? '',
 );
 
+const feedbackDestinations = computed<FeedbackDestinations>({
+    get: () => ({
+        email: feedbackEmail.value.trim().toLowerCase(),
+        mobile: normalizePhilippineMobile(feedbackMobile.value),
+        webhook: feedbackWebhook.value.trim(),
+    }),
+    set: (destinations) => {
+        feedbackEmail.value = destinations.email;
+        feedbackMobile.value = destinations.mobile;
+        feedbackWebhook.value = destinations.webhook;
+    },
+});
+
+const feedbackDestinationDefaults = computed<Partial<FeedbackDestinations>>(
+    () => ({
+        email: defaultFeedbackEmail.value,
+        mobile: defaultFeedbackMobile.value,
+        webhook: defaultFeedbackWebhook.value,
+    }),
+);
+
+const feedbackUnavailableReasons = computed<
+    Partial<Record<FeedbackChannel, string>>
+>(() => ({
+    ...(capabilityUnavailable('feedback.email')
+        ? {
+              email: capabilityReason(
+                  'feedback.email',
+                  'Email delivery is unavailable.',
+              ),
+          }
+        : {}),
+    ...(capabilityUnavailable('feedback.sms')
+        ? {
+              mobile: capabilityReason(
+                  'feedback.sms',
+                  'SMS delivery is unavailable.',
+              ),
+          }
+        : {}),
+    ...(capabilityUnavailable('feedback.webhook')
+        ? {
+              webhook: capabilityReason(
+                  'feedback.webhook',
+                  'Webhook delivery is unavailable.',
+              ),
+          }
+        : {}),
+}));
+
 const feedbackEmailError = computed<string | null>(() => {
     const email = feedbackEmail.value.trim();
 
@@ -1760,6 +1813,7 @@ const feedbackValidationErrors = computed<string[]>(() => {
         feedbackEmailError.value,
         feedbackMobileError.value,
         feedbackWebhookError.value,
+        ...feedbackTokenErrors.value,
     ].filter((error): error is string => error !== null);
 });
 
@@ -1768,15 +1822,15 @@ const feedbackValid = computed<boolean>(() => {
 });
 
 watch(feedbackEmail, (): void => {
-    feedbackEmailEnabled.value = feedbackMatchesDefault('email');
+    feedbackEmailEnabled.value = feedbackEmail.value.trim() !== '';
 });
 
 watch(feedbackMobile, (): void => {
-    feedbackMobileEnabled.value = feedbackMatchesDefault('mobile');
+    feedbackMobileEnabled.value = feedbackMobile.value.trim() !== '';
 });
 
 watch(feedbackWebhook, (): void => {
-    feedbackWebhookEnabled.value = feedbackMatchesDefault('webhook');
+    feedbackWebhookEnabled.value = feedbackWebhook.value.trim() !== '';
 });
 
 const selectedUnavailableCapabilities = computed<
@@ -1812,15 +1866,15 @@ const selectedUnavailableCapabilities = computed<
         selected.add('signature');
     }
 
-    if (feedbackMobileEnabled.value) {
+    if (normalizedFeedbackMobile.value !== '') {
         selected.add('feedback.sms');
     }
 
-    if (feedbackEmailEnabled.value) {
+    if (feedbackEmail.value.trim() !== '') {
         selected.add('feedback.email');
     }
 
-    if (feedbackWebhookEnabled.value) {
+    if (feedbackWebhook.value.trim() !== '') {
         selected.add('feedback.webhook');
     }
 
@@ -2622,10 +2676,6 @@ const selectedInputFields = computed<string[]>(() => {
         fields.add('email');
     }
 
-    if (feedbackEmail.value.trim() !== '') {
-        fields.add('email');
-    }
-
     return voucherInputFieldPayloadOrder.filter((field) => fields.has(field));
 });
 
@@ -2774,15 +2824,9 @@ const verificationSummary = computed<string[]>(() => {
 });
 
 const feedbackSummary = computed<Record<string, unknown>>(() => {
-    const mobile = feedbackMobileEnabled.value
-        ? normalizedFeedbackMobile.value
-        : '';
-    const email = feedbackEmailEnabled.value
-        ? feedbackEmail.value.trim().toLowerCase()
-        : '';
-    const webhook = feedbackWebhookEnabled.value
-        ? feedbackWebhook.value.trim()
-        : '';
+    const mobile = normalizedFeedbackMobile.value;
+    const email = feedbackEmail.value.trim().toLowerCase();
+    const webhook = feedbackWebhook.value.trim();
 
     return {
         mobile: mobile === '' ? null : mobile,
@@ -4145,25 +4189,7 @@ function isValidEmail(value: string): boolean {
 }
 
 function normalizePhilippineMobile(value: string): string {
-    const normalized = value.trim().replace(/[\s().-]+/g, '');
-
-    if (/^\+639\d{9}$/.test(normalized)) {
-        return normalized;
-    }
-
-    if (/^639\d{9}$/.test(normalized)) {
-        return `+${normalized}`;
-    }
-
-    if (/^09\d{9}$/.test(normalized)) {
-        return `+63${normalized.slice(1)}`;
-    }
-
-    if (/^9\d{9}$/.test(normalized)) {
-        return `+63${normalized}`;
-    }
-
-    return '';
+    return normalizePhilippineFeedbackMobile(value);
 }
 
 function isValidWebhookUrl(value: string): boolean {
@@ -4200,13 +4226,6 @@ function defaultFeedbackValue(channel: FeedbackChannel): string {
     return defaultFeedbackWebhook.value;
 }
 
-function feedbackMatchesDefault(channel: FeedbackChannel): boolean {
-    const current = feedbackValue(channel);
-    const fallback = defaultFeedbackValue(channel);
-
-    return current !== '' && fallback !== '' && current === fallback;
-}
-
 function setFeedbackValue(channel: FeedbackChannel, value: string): void {
     if (channel === 'email') {
         feedbackEmail.value = value;
@@ -4227,14 +4246,8 @@ function toggleFeedbackChannel(
     channel: FeedbackChannel,
     enabled: boolean,
 ): void {
-    const current = feedbackValue(channel);
-    const lastAuto = autoFilledFeedback.value[channel];
-
     if (!enabled) {
-        if (lastAuto !== null && current === lastAuto) {
-            setFeedbackValue(channel, '');
-        }
-
+        setFeedbackValue(channel, '');
         autoFilledFeedback.value[channel] = null;
 
         return;
@@ -5121,7 +5134,9 @@ function instructionRecord(
                             Set the value, payee, and purpose.
                         </p>
                     </div>
-                    <div class="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                    <div
+                        class="flex shrink-0 flex-wrap items-center justify-end gap-2"
+                    >
                         <span
                             class="inline-flex items-center rounded-full border px-2.5 py-1 text-[0.68rem] font-semibold normal-case"
                             :class="voucherKindTone"
@@ -5237,7 +5252,7 @@ function instructionRecord(
                                     ? 'password'
                                     : 'text'
                             "
-                            placeholder="Anyone, mobile, email, @vendor, or &quot;secret&quot;"
+                            placeholder='Anyone, mobile, email, @vendor, or "secret"'
                             class="h-12 w-full rounded-xl border bg-white px-3 text-sm text-slate-950 shadow-sm dark:bg-slate-900 dark:text-slate-50"
                             :class="
                                 payeePolicy.kind === 'invalid' ||
@@ -5281,6 +5296,41 @@ function instructionRecord(
                             Used as the Rider Message.
                         </span>
                     </label>
+                    <div
+                        class="grid gap-1 text-xs font-medium text-slate-700 sm:col-span-2 dark:text-slate-300"
+                        data-testid="cockpit-quick-generate-primary-feedback"
+                    >
+                        <div class="flex items-center justify-between gap-3">
+                            <span>Status Updates</span>
+                            <span
+                                v-if="
+                                    Object.values(feedbackSummary).some(
+                                        (value) => value !== null,
+                                    )
+                                "
+                                class="rounded-full bg-emerald-50 px-2 py-0.5 text-[0.65rem] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
+                            >
+                                {{
+                                    [
+                                        feedbackSummary.email ? 'Email' : null,
+                                        feedbackSummary.mobile ? 'SMS' : null,
+                                        feedbackSummary.webhook
+                                            ? 'Webhook'
+                                            : null,
+                                    ]
+                                        .filter(Boolean)
+                                        .join(' + ')
+                                }}
+                            </span>
+                        </div>
+                        <CockpitFeedbackDestinationInput
+                            v-model="feedbackDestinations"
+                            :defaults="feedbackDestinationDefaults"
+                            :unavailable="feedbackUnavailableReasons"
+                            :disabled="processing"
+                            @validation="feedbackTokenErrors = $event"
+                        />
+                    </div>
                 </div>
 
                 <section
@@ -6256,7 +6306,9 @@ function instructionRecord(
                                             null &&
                                             capabilitySelectionDisabled(
                                                 field.value,
-                                                isInputFieldSelected(field.value),
+                                                isInputFieldSelected(
+                                                    field.value,
+                                                ),
                                             ))
                                     "
                                     :data-onboarding-locked="
@@ -6278,8 +6330,9 @@ function instructionRecord(
                                         class="mt-0.5 block text-[11px] font-normal text-slate-500 dark:text-slate-400"
                                     >
                                         {{
-                                            inputFieldCapability(field.value) !==
-                                                null &&
+                                            inputFieldCapability(
+                                                field.value,
+                                            ) !== null &&
                                             capabilityUnavailable(field.value)
                                                 ? capabilityReason(
                                                       field.value,
@@ -6433,7 +6486,9 @@ function instructionRecord(
                                             class="text-[11px] leading-snug font-normal text-violet-700 dark:text-violet-300"
                                         >
                                             {{
-                                                capabilityUnavailable('location')
+                                                capabilityUnavailable(
+                                                    'location',
+                                                )
                                                     ? capabilityReason(
                                                           'location',
                                                           'Location evidence is unavailable.',
