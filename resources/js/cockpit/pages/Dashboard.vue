@@ -162,7 +162,7 @@ const controls: CockpitControl[] = [
     },
     {
         key: 'invite',
-        label: 'Invite Someone',
+        label: 'Invite',
         description: 'Issue an Account invitation',
         href: quickGenerate({ query: { intent: 'invite' } }).url,
         icon: UserPlus,
