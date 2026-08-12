@@ -24,8 +24,6 @@ import type {
 
 const defaultVisibleRecordLimit = 25;
 const visibleRecordLimitOptions = [10, 25, 50];
-const visibleInstructionBadgeLimit = 3;
-
 const props = defineProps<{
     records: CockpitPayCodeExplorerRecord[];
     actions: CockpitPayCodeRowAction[];
@@ -186,16 +184,7 @@ function actionIcon(
 }
 
 function visibleInstructionBadges(record: CockpitPayCodeExplorerRecord) {
-    return record.instructionBadges.slice(0, visibleInstructionBadgeLimit);
-}
-
-function hiddenInstructionBadgeCount(
-    record: CockpitPayCodeExplorerRecord,
-): number {
-    return Math.max(
-        record.instructionBadges.length - visibleInstructionBadgeLimit,
-        0,
-    );
+    return record.instructionBadges;
 }
 
 function capabilityBadgeClass(capabilityKey: string): string {
@@ -359,13 +348,6 @@ function capabilityBadgeClass(capabilityKey: string): string {
                         class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[0.65rem] font-medium text-slate-700 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700"
                     >
                         {{ badge.label }}
-                    </span>
-                    <span
-                        v-if="hiddenInstructionBadgeCount(record) > 0"
-                        class="inline-flex rounded-full bg-slate-50 px-2 py-0.5 text-[0.65rem] font-semibold text-slate-500 ring-1 ring-slate-200 dark:bg-slate-950 dark:text-slate-400 dark:ring-slate-700"
-                        data-testid="cockpit-pay-code-mobile-instruction-overflow"
-                    >
-                        +{{ hiddenInstructionBadgeCount(record) }}
                     </span>
                     <span
                         v-if="record.instructionBadges.length === 0"
@@ -559,15 +541,6 @@ function capabilityBadgeClass(capabilityKey: string): string {
                                     class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[0.65rem] font-medium text-slate-700 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-700"
                                 >
                                     {{ badge.label }}
-                                </span>
-                                <span
-                                    v-if="
-                                        hiddenInstructionBadgeCount(record) > 0
-                                    "
-                                    class="inline-flex rounded-full bg-slate-50 px-2 py-0.5 text-[0.65rem] font-semibold text-slate-500 ring-1 ring-slate-200 dark:bg-slate-950 dark:text-slate-400 dark:ring-slate-700"
-                                    data-testid="cockpit-pay-code-instruction-overflow"
-                                >
-                                    +{{ hiddenInstructionBadgeCount(record) }}
                                 </span>
                                 <span
                                     v-if="record.instructionBadges.length === 0"

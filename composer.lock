@@ -1259,16 +1259,16 @@
         },
         {
             "name": "3neti/voucher",
-            "version": "v1.0.0-beta.3",
+            "version": "v1.0.0-beta.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/voucher.git",
-                "reference": "448ae29c7b385b4074c28ae0ff641b8b0aa21547"
+                "reference": "7b52a2ce27923cb7b5a978e493303132a2ae3865"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/voucher/zipball/448ae29c7b385b4074c28ae0ff641b8b0aa21547",
-                "reference": "448ae29c7b385b4074c28ae0ff641b8b0aa21547",
+                "url": "https://api.github.com/repos/3neti/voucher/zipball/7b52a2ce27923cb7b5a978e493303132a2ae3865",
+                "reference": "7b52a2ce27923cb7b5a978e493303132a2ae3865",
                 "shasum": ""
             },
             "require": {
@@ -1336,7 +1336,7 @@
                 "issues": "https://github.com/3neti/voucher/issues",
                 "source": "https://github.com/3neti/voucher"
             },
-            "time": "2026-08-11T01:27:18+00:00"
+            "time": "2026-08-12T07:05:00+00:00"
         },
         {
             "name": "3neti/wallet",
@@ -1524,11 +1524,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.0-beta.154",
+            "version": "v1.0.0-beta.155",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "278c11ff777dd37b98ad4cd4e0083abc75dc82ad"
+                "reference": "5f8aaf67444ab0a133000a4ce0095f10ad87edbf"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1627,7 +1627,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-08-12T06:38:21+00:00"
+            "time": "2026-08-12T07:09:41+00:00"
         },
         {
             "name": "3neti/x-commerce",
