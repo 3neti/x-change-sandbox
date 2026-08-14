@@ -1136,7 +1136,7 @@ function stringValue(value: unknown): string | null {
                 <Link
                     :href="fundingIndex()"
                     prefetch
-                    class="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold whitespace-nowrap text-slate-600 shadow-sm transition hover:border-emerald-400 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300"
+                    class="inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-emerald-400 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300"
                     data-testid="cockpit-quick-generate-funding-link"
                 >
                     <Landmark class="size-3.5" aria-hidden="true" />
@@ -1163,6 +1163,7 @@ function stringValue(value: unknown): string | null {
                     "
                     :last-instructions="props.last_instructions"
                     :saved-templates="props.saved_templates ?? []"
+                    :rider-library="props.rider_library ?? []"
                     :instruction-capabilities="
                         props.instruction_capabilities ?? {}
                     "
