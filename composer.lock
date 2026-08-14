@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "980b259a6049f478a714d1fdeea79e10",
+    "content-hash": "daddf2d7d1a2e284161eec2dc14dd34e",
     "packages": [
         {
             "name": "3neti/cash",
@@ -308,16 +308,16 @@
         },
         {
             "name": "3neti/form-flow",
-            "version": "v1.9.21",
+            "version": "v1.9.22",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/form-flow.git",
-                "reference": "61ca4cc0fe1184986ffaa5a27c8489f0ce73c916"
+                "reference": "dac02b6ebb9c9c8fe1ac073b987d9dc3b57f6b07"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/form-flow/zipball/61ca4cc0fe1184986ffaa5a27c8489f0ce73c916",
-                "reference": "61ca4cc0fe1184986ffaa5a27c8489f0ce73c916",
+                "url": "https://api.github.com/repos/3neti/form-flow/zipball/dac02b6ebb9c9c8fe1ac073b987d9dc3b57f6b07",
+                "reference": "dac02b6ebb9c9c8fe1ac073b987d9dc3b57f6b07",
                 "shasum": ""
             },
             "require": {
@@ -375,9 +375,9 @@
             ],
             "support": {
                 "issues": "https://github.com/3neti/form-flow/issues",
-                "source": "https://github.com/3neti/form-flow/tree/v1.9.21"
+                "source": "https://github.com/3neti/form-flow/tree/v1.9.22"
             },
-            "time": "2026-08-14T11:04:22+00:00"
+            "time": "2026-08-14T11:34:33+00:00"
         },
         {
             "name": "3neti/form-handler-kyc",
@@ -1524,11 +1524,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.0-beta.170",
+            "version": "v1.0.0-beta.171",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "d11df7e79e73018c42a3cad92da7532248d9dc69"
+                "reference": "3b341c3f0238bdef2edf0ba4889421b7346a6895"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1627,7 +1627,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-08-14T05:01:58+00:00"
+            "time": "2026-08-14T11:34:33+00:00"
         },
         {
             "name": "3neti/x-commerce",
