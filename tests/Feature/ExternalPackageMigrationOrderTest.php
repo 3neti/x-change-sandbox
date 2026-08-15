@@ -5,13 +5,18 @@ declare(strict_types=1);
 use Composer\InstalledVersions;
 
 it('loads emi funding evidence migrations before x-change funding tables', function (): void {
+    $composer = json_decode(
+        file_get_contents(base_path('composer.json')),
+        true,
+        flags: JSON_THROW_ON_ERROR,
+    );
     $migrator = app('migrator');
     $migrationNames = array_keys($migrator->getMigrationFiles($migrator->paths()));
 
     expect(InstalledVersions::getPrettyVersion('3neti/emi-core'))
         ->toBe('v2.0.0-beta.5')
         ->and(InstalledVersions::getPrettyVersion('3neti/x-change'))
-        ->toBe('v1.0.0-beta.138')
+        ->toBe($composer['require']['3neti/x-change'])
         ->and($migrationNames)
         ->toContain(
             '2025_01_01_000008_create_webhook_receipts_table',
