@@ -9,8 +9,8 @@ Changes will be overwritten by php artisan x-change:publish --scope=build --forc
 <script setup lang="ts">
 import { Head, router } from "@inertiajs/vue3";
 import {
-  BanknoteArrowDown,
   Check,
+  HandCoins,
   Landmark,
   RefreshCw,
   ShieldCheck,
@@ -221,7 +221,7 @@ function submitReconciliation(): void {
     <div class="mx-auto grid w-full max-w-7xl gap-5 px-4 py-6 sm:px-6">
       <section class="rounded-2xl border border-border bg-card p-5 shadow-sm">
         <div class="flex items-start gap-3">
-          <BanknoteArrowDown class="mt-0.5 size-5 text-emerald-600" />
+          <HandCoins class="mt-0.5 size-5 text-emerald-600" />
           <div>
             <h1 class="text-xl font-semibold">Treasury Operations</h1>
             <p class="mt-1 text-sm text-muted-foreground">
@@ -654,7 +654,7 @@ function submitReconciliation(): void {
                   class="inline-flex h-9 items-center gap-1 rounded-lg bg-emerald-600 px-3 font-medium text-white"
                   @click="router.post(grant.actions.execute)"
                 >
-                  <BanknoteArrowDown class="size-4" /> Allocate Funds
+                  <HandCoins class="size-4" /> Allocate Funds
                 </button>
               </div>
             </div>
