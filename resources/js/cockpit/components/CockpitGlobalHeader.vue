@@ -7,6 +7,8 @@ Do not edit this published host copy directly.
 Changes will be overwritten by php artisan x-change:publish --scope=build --force.
 -->
 <script setup lang="ts">
+import { Eye, EyeOff } from 'lucide-vue-next';
+import { ref } from 'vue';
 import CockpitBalanceHud from './CockpitBalanceHud.vue';
 import type { CockpitBalanceMetric } from '../types';
 
@@ -43,6 +45,12 @@ withDefaults(
         ],
     },
 );
+
+const valuesVisible = ref(false);
+
+function toggleValueVisibility(): void {
+    valuesVisible.value = !valuesVisible.value;
+}
 </script>
 
 <template>
@@ -55,7 +63,7 @@ withDefaults(
         >
             <div class="min-w-0">
                 <p
-                    class="text-xs font-semibold tracking-[0.22em] text-slate-500 uppercase dark:text-slate-400"
+                    class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400"
                 >
                     Settlement Operating System
                 </p>
@@ -70,13 +78,41 @@ withDefaults(
                     >
                         {{ connectivity }}
                     </span>
+                    <button
+                        type="button"
+                        class="inline-flex size-8 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-white dark:focus-visible:outline-white"
+                        :aria-label="
+                            valuesVisible
+                                ? 'Hide balance values'
+                                : 'Show balance values'
+                        "
+                        :aria-pressed="valuesVisible"
+                        :title="
+                            valuesVisible
+                                ? 'Hide balance values'
+                                : 'Show balance values'
+                        "
+                        data-testid="cockpit-balance-visibility-toggle"
+                        @click="toggleValueVisibility"
+                    >
+                        <EyeOff
+                            v-if="valuesVisible"
+                            class="size-4"
+                            aria-hidden="true"
+                        />
+                        <Eye v-else class="size-4" aria-hidden="true" />
+                    </button>
                 </div>
                 <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">
                     Operating as: {{ operatingIdentity }}
                 </p>
             </div>
 
-            <CockpitBalanceHud :balances="balances" class="xl:min-w-[44rem]" />
+            <CockpitBalanceHud
+                :balances="balances"
+                :values-visible="valuesVisible"
+                class="xl:min-w-[44rem]"
+            />
         </div>
     </header>
 </template>
