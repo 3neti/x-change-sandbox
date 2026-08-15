@@ -7,8 +7,10 @@ import {
     FileStack,
     Landmark,
     Megaphone,
+    PlugZap,
     RadioTower,
     Scale,
+    ShieldCheck,
     UsersRound,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
@@ -32,11 +34,14 @@ import {
     quickGenerate,
 } from '@/routes/x-change/cockpit';
 import accounts from '@/routes/x-change/cockpit/accounts';
+import apiPartners from '@/routes/x-change/cockpit/api-partners';
 import campaigns from '@/routes/x-change/cockpit/campaigns';
 import commercial from '@/routes/x-change/cockpit/commercial';
 import diagnostics from '@/routes/x-change/cockpit/diagnostics';
 import funding from '@/routes/x-change/cockpit/funding';
 import payCodes from '@/routes/x-change/cockpit/pay-codes';
+import provisioning from '@/routes/x-change/cockpit/provisioning';
+import treasuryAccountGrants from '@/routes/x-change/cockpit/treasury/account-grants';
 import type { NavItem } from '@/types';
 
 // X-CHANGE HOST SHELL · package-owned navigation, account controls remain host-owned.
@@ -97,12 +102,45 @@ type XChangeSharedProps = {
         navigation?: {
             system_readiness_visible?: boolean;
             commercial_controls_visible?: boolean;
+            provisioning_controls_visible?: boolean;
+            api_partner_controls_visible?: boolean;
+            treasury_operations_visible?: boolean;
         };
     };
 };
 
 const page = usePage<XChangeSharedProps>();
 const systemItems = computed<XChangeNavigationItem[]>(() => [
+    ...(page.props.xchange?.navigation?.provisioning_controls_visible
+        ? [
+              {
+                  title: 'Provisioning',
+                  description: 'Seats, authority invitations, and activation',
+                  href: provisioning.index(),
+                  icon: ShieldCheck,
+              },
+          ]
+        : []),
+    ...(page.props.xchange?.navigation?.treasury_operations_visible
+        ? [
+              {
+                  title: 'Treasury Operations',
+                  description: 'Approve and allocate Account Grants',
+                  href: treasuryAccountGrants.index(),
+                  icon: ShieldCheck,
+              },
+          ]
+        : []),
+    ...(page.props.xchange?.navigation?.api_partner_controls_visible
+        ? [
+              {
+                  title: 'API Partners',
+                  description: 'Govern machine access and limits',
+                  href: apiPartners.index(),
+                  icon: PlugZap,
+              },
+          ]
+        : []),
     ...(page.props.xchange?.navigation?.commercial_controls_visible
         ? [
               {
