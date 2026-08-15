@@ -11,10 +11,6 @@
     "repositories": [
         {
             "type": "git",
-            "url": "https://github.com/3neti/x-mcp.git"
-        },
-        {
-            "type": "git",
             "url": "https://github.com/3neti/x-change.git"
         },
         {

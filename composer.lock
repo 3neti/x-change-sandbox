@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "97deecacf6f6a8db9d1c05e338f42589",
+    "content-hash": "fdb595d5047867a611933dde75cef240",
     "packages": [
         {
             "name": "3neti/cash",
@@ -1863,19 +1863,7 @@
                     "LBHurtado\\XMcp\\": "src/"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "LBHurtado\\XMcp\\Tests\\": "tests/"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "php -d memory_limit=2G vendor/bin/pest"
-                ],
-                "pint": [
-                    "vendor/bin/pint"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -1886,8 +1874,8 @@
             ],
             "description": "AI-native MCP adapters for the X-Change Settlement Operating System.",
             "support": {
-                "source": "https://github.com/3neti/x-mcp/tree/v0.1.0",
-                "issues": "https://github.com/3neti/x-mcp/issues"
+                "issues": "https://github.com/3neti/x-mcp/issues",
+                "source": "https://github.com/3neti/x-mcp/tree/v0.1.0"
             },
             "time": "2026-08-15T06:37:05+00:00"
         },
