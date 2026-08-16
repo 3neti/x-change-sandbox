@@ -116,6 +116,13 @@ type CommercialControls = {
     total_charged_minor: number;
     currency: string;
   };
+  billable_events: {
+    count: number;
+    posted_count: number;
+    reversed_count: number;
+    recognized_minor: number;
+    currency: string;
+  };
   allocation_totals: Array<{
     category: string;
     currency: string;
@@ -194,6 +201,13 @@ type CommercialControls = {
     currency: string;
     status: string;
     accepted_at: string | null;
+    billable_events: Array<{
+      component_reference: string;
+      event_type: string;
+      recognition_policy_reference: string;
+      amount_minor: number;
+      status: string;
+    }>;
     allocations: Array<{
       category: string;
       recipient_reference: string;
@@ -488,7 +502,7 @@ function money(
 
 function label(value: string): string {
   return value
-    .replaceAll("_", " ")
+    .replace(/[_.]/g, " ")
     .replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
@@ -1734,6 +1748,10 @@ function retryCommission(id: number): void {
                 {{ commercialOffering.controls.sales.reversed_count }}
                 reversed
               </p>
+              <p class="mt-2 text-xs text-slate-300">
+                {{ commercialOffering.controls.billable_events.posted_count }}
+                component events recognized
+              </p>
             </article>
             <article
               class="rounded-xl border border-slate-200 p-4 dark:border-slate-800"
@@ -1808,6 +1826,20 @@ function retryCommission(id: number): void {
                     >
                       {{ label(allocation.category) }} ·
                       {{ money(allocation.amount_minor, sale.currency) }}
+                    </span>
+                  </div>
+                  <div
+                    v-if="sale.billable_events.length"
+                    class="mt-2 flex flex-wrap gap-1.5"
+                  >
+                    <span
+                      v-for="event in sale.billable_events"
+                      :key="`${sale.reference}-${event.component_reference}`"
+                      class="rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-[0.68rem] font-medium text-violet-700 dark:border-violet-900 dark:bg-violet-950/40 dark:text-violet-300"
+                      :title="event.recognition_policy_reference"
+                    >
+                      {{ label(event.component_reference) }} ·
+                      {{ event.status }}
                     </span>
                   </div>
                 </div>
