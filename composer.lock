@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "daefa4d7682c39817462ab867cccd099",
+    "content-hash": "2f3eaa420a6c644f9e3756d891c85a47",
     "packages": [
         {
             "name": "3neti/cash",
@@ -1340,16 +1340,16 @@
         },
         {
             "name": "3neti/wallet",
-            "version": "v2.0.0-beta.4",
+            "version": "v2.0.0-beta.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/wallet.git",
-                "reference": "8744bd9d6fc2e15b0774db49f34265add7cb7393"
+                "reference": "49d38e022477808a122771468d60f8788cd2db35"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/wallet/zipball/8744bd9d6fc2e15b0774db49f34265add7cb7393",
-                "reference": "8744bd9d6fc2e15b0774db49f34265add7cb7393",
+                "url": "https://api.github.com/repos/3neti/wallet/zipball/49d38e022477808a122771468d60f8788cd2db35",
+                "reference": "49d38e022477808a122771468d60f8788cd2db35",
                 "shasum": ""
             },
             "require": {
@@ -1391,9 +1391,9 @@
             "description": "Custom wallet for X-Change",
             "support": {
                 "issues": "https://github.com/3neti/wallet/issues",
-                "source": "https://github.com/3neti/wallet/tree/v2.0.0-beta.4"
+                "source": "https://github.com/3neti/wallet/tree/v2.0.0-beta.5"
             },
-            "time": "2026-08-15T11:19:19+00:00"
+            "time": "2026-08-16T12:15:36+00:00"
         },
         {
             "name": "3neti/x-action",
@@ -1524,11 +1524,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.0-beta.195",
+            "version": "v1.0.0-beta.196",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "8486e5689cfed1ea7cce9d044fa6b79e5e6f05af"
+                "reference": "7f25bf529eb50c468b68950608d789daf8f24468"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1629,7 +1629,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-08-16T11:48:18+00:00"
+            "time": "2026-08-16T12:20:00+00:00"
         },
         {
             "name": "3neti/x-commerce",
@@ -1882,16 +1882,16 @@
         },
         {
             "name": "3neti/x-provisioning",
-            "version": "v1.0.0-beta.7",
+            "version": "v1.0.0-beta.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-provisioning.git",
-                "reference": "3f0a13b210d33f96a8682f5ec68a3590919b93eb"
+                "reference": "ee1732cae4a79847723d96cd9ee9c67a9fc622f7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/x-provisioning/zipball/3f0a13b210d33f96a8682f5ec68a3590919b93eb",
-                "reference": "3f0a13b210d33f96a8682f5ec68a3590919b93eb",
+                "url": "https://api.github.com/repos/3neti/x-provisioning/zipball/ee1732cae4a79847723d96cd9ee9c67a9fc622f7",
+                "reference": "ee1732cae4a79847723d96cd9ee9c67a9fc622f7",
                 "shasum": ""
             },
             "require": {
@@ -1931,9 +1931,9 @@
             "description": "Governed provisioning requests, invitations, acceptance, and authority activation for x-change.",
             "support": {
                 "issues": "https://github.com/3neti/x-provisioning/issues",
-                "source": "https://github.com/3neti/x-provisioning/tree/v1.0.0-beta.7"
+                "source": "https://github.com/3neti/x-provisioning/tree/v1.0.0-beta.8"
             },
-            "time": "2026-08-16T07:41:54+00:00"
+            "time": "2026-08-16T12:15:36+00:00"
         },
         {
             "name": "3neti/x-ray",
