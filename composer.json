@@ -53,7 +53,7 @@
         "3neti/emi-paynamics": "^2.0@beta",
         "3neti/onboarding": "^1.0",
         "3neti/wallet": "^2.0@beta",
-        "3neti/x-change": "v1.0.0-beta.193",
+        "3neti/x-change": "v1.0.0-beta.194",
         "3neti/x-mcp": "v0.1.0",
         "inertiajs/inertia-laravel": "^3.0",
         "laravel/fortify": "^1.34",
