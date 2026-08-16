@@ -84,6 +84,7 @@ import CockpitAmountPicker from './CockpitAmountPicker.vue';
 import CockpitClaimExperiencePreview from './CockpitClaimExperiencePreview.vue';
 import CockpitClaimRequirementsControl from './CockpitClaimRequirementsControl.vue';
 import type {
+    CockpitClaimRequirementCategory,
     CockpitClaimRequirementOption,
     CockpitClaimRequirementPreset,
 } from './CockpitClaimRequirementsControl.vue';
@@ -147,6 +148,20 @@ function inputFieldCapability(field: string): string | null {
     return ['location', 'kyc', 'otp', 'selfie', 'signature'].includes(field)
         ? field
         : null;
+}
+
+function claimRequirementCategory(
+    field: string,
+): CockpitClaimRequirementCategory {
+    if (['selfie', 'signature', 'location'].includes(field)) {
+        return 'evidence';
+    }
+
+    if (['kyc', 'otp'].includes(field)) {
+        return 'verification';
+    }
+
+    return 'details';
 }
 
 const emit = defineEmits<{
@@ -2607,10 +2622,7 @@ const claimRequirementOptions = computed<CockpitClaimRequirementOption[]>(
                 value: field.value,
                 label: indicator.label,
                 icon: indicator.icon,
-                category:
-                    capabilityKey !== null
-                        ? ('evidence' as const)
-                        : ('common' as const),
+                category: claimRequirementCategory(field.value),
                 helper: field.helper,
                 selected,
                 locked,
@@ -4320,8 +4332,7 @@ function buildIssuancePayload(): Record<string, unknown> {
         payload._pricing = {
             offering_reference: estimate.commercial_offering_reference,
             offering_version: estimate.commercial_offering_version,
-            offering_snapshot_hash:
-                estimate.commercial_offering_snapshot_hash,
+            offering_snapshot_hash: estimate.commercial_offering_snapshot_hash,
             ...(typeof estimate.commercial_quote_reference === 'string'
                 ? { quote_reference: estimate.commercial_quote_reference }
                 : {}),
