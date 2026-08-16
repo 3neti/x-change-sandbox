@@ -1268,6 +1268,7 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
     <CockpitLayout
         active-navigation="funding"
         :cockpit-header-read-model="cockpit_header_read_model"
+        :cockpit-entry-notice="cockpit_entry_notice"
     >
         <div
             class="mx-auto max-w-7xl space-y-5"

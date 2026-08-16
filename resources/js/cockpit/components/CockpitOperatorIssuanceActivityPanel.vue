@@ -611,7 +611,9 @@ function filterHrefWithout(filter: 'search' | 'status' | 'handoff'): string {
 
     const query = params.toString();
 
-    return query === '' ? '/x/cockpit' : `/x/cockpit?${query}`;
+    return query === ''
+        ? '/x/cockpit/overview'
+        : `/x/cockpit/overview?${query}`;
 }
 
 function stringValue(value: unknown): string | undefined {
@@ -662,7 +664,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
         <form
             class="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950"
-            action="/x/cockpit"
+            action="/x/cockpit/overview"
             method="get"
             data-testid="cockpit-operator-issuance-activity-filter-form"
         >
@@ -738,7 +740,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
                         Apply filters
                     </button>
                     <a
-                        href="/x/cockpit"
+                        href="/x/cockpit/overview"
                         class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200"
                         data-testid="cockpit-operator-issuance-activity-filter-clear"
                     >
