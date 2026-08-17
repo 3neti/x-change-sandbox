@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "67d55b170d78366f86600cbee9a900ad",
+    "content-hash": "1e68c3f508cd98ab302f84d91431177b",
     "packages": [
         {
             "name": "3neti/cash",
@@ -1524,11 +1524,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.0-beta.210",
+            "version": "v1.0.0-beta.212",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "4a6263fcda9413e67c9836f58e34a74310277cd4"
+                "reference": "7845ca2a83bef7e96f04345890bf5664cf1da6ce"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1629,7 +1629,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-08-17T06:06:45+00:00"
+            "time": "2026-08-17T08:27:25+00:00"
         },
         {
             "name": "3neti/x-commerce",
