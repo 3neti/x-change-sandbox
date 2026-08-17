@@ -23,6 +23,18 @@ class TestingUserSeeder extends Seeder
             'email' => 'geckaanais17@gmail.com',
             'pin' => '1234',
         ],
+        [
+            'name' => 'Amelia Hurtado',
+            'mobile' => '09285243656',
+            'email' => 'amelia.hurtado@example.test',
+            'pin' => '317537',
+        ],
+        [
+            'name' => 'Michael Kenneth Mauleon',
+            'mobile' => '09170008172',
+            'email' => 'michael.mauleon@example.test',
+            'pin' => '1972',
+        ],
     ];
 
     public function run(): void

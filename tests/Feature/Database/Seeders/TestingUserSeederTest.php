@@ -9,13 +9,15 @@ use Illuminate\Support\Facades\Hash;
 
 uses(RefreshDatabase::class);
 
-it('seeds the two verified testing users idempotently without Account balances', function () {
+it('seeds the four verified testing users idempotently without Account balances', function () {
     $this->seed(TestingUserSeeder::class);
 
     $lester = User::query()->where('mobile', '639173011987')->sole();
     $anais = User::query()->where('mobile', '639467438575')->sole();
+    $amelia = User::query()->where('mobile', '639285243656')->sole();
+    $michael = User::query()->where('mobile', '639170008172')->sole();
 
-    expect(User::query()->count())->toBe(2)
+    expect(User::query()->count())->toBe(4)
         ->and($lester->getKey())->toBe(1)
         ->and($lester->name)->toBe('Lester Hurtado')
         ->and($lester->email)->toBe('lbhurtado@gmail.com')
@@ -30,17 +32,27 @@ it('seeds the two verified testing users idempotently without Account balances',
         ->and($anais->email_verified_at)->not->toBeNull()
         ->and(Hash::check('1234', $anais->password))->toBeTrue()
         ->and($anais->password)->not->toBe('1234')
+        ->and($amelia->getKey())->toBe(3)
+        ->and($amelia->name)->toBe('Amelia Hurtado')
+        ->and($amelia->mobile_verified_at)->not->toBeNull()
+        ->and(Hash::check('317537', $amelia->password))->toBeTrue()
+        ->and($michael->getKey())->toBe(4)
+        ->and($michael->name)->toBe('Michael Kenneth Mauleon')
+        ->and($michael->mobile_verified_at)->not->toBeNull()
+        ->and(Hash::check('1972', $michael->password))->toBeTrue()
         ->and(Wallet::query()->count())->toBe(0);
 
     $originalUserIds = User::query()->orderBy('id')->pluck('id')->all();
 
     $this->seed(TestingUserSeeder::class);
 
-    expect(User::query()->count())->toBe(2)
+    expect(User::query()->count())->toBe(4)
         ->and(User::query()->orderBy('id')->pluck('id')->all())
         ->toBe($originalUserIds)
         ->and(Hash::check('537537', $lester->refresh()->password))->toBeTrue()
         ->and(Hash::check('1234', $anais->refresh()->password))->toBeTrue()
+        ->and(Hash::check('317537', $amelia->refresh()->password))->toBeTrue()
+        ->and(Hash::check('1972', $michael->refresh()->password))->toBeTrue()
         ->and(Wallet::query()->count())->toBe(0);
 });
 
@@ -50,6 +62,8 @@ it('uses the testing users as the default database bootstrap', function () {
     expect(User::query()->orderBy('id')->pluck('email')->all())->toBe([
         'lbhurtado@gmail.com',
         'geckaanais17@gmail.com',
+        'amelia.hurtado@example.test',
+        'michael.mauleon@example.test',
     ]);
 });
 
@@ -67,10 +81,12 @@ it('allows each seeded user to authenticate with a local mobile number and PIN',
     ]);
 
     $this->assertAuthenticatedAs($user);
-    $response->assertRedirect('/x/dashboard');
+    $response->assertRedirect('/x/cockpit');
 })->with([
     'Lester Hurtado' => ['09173011987', 'lbhurtado@gmail.com', '537537'],
     'Anaïs Santos' => ['09467438575', 'geckaanais17@gmail.com', '1234'],
+    'Amelia Hurtado' => ['09285243656', 'amelia.hurtado@example.test', '317537'],
+    'Michael Kenneth Mauleon' => ['09170008172', 'michael.mauleon@example.test', '1972'],
 ]);
 
 it('refuses to seed known testing credentials outside local and testing', function (string $environment) {
