@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9af736104c52acddda65ad4bad5e2e5a",
+    "content-hash": "08f5f1e34cc732cd4e5ce0b6b507cd51",
     "packages": [
         {
             "name": "3neti/cash",
@@ -1524,11 +1524,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.0-beta.203",
+            "version": "v1.0.0-beta.204",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "0e33446fe3595e490db5f71e8767c35068d4ebc0"
+                "reference": "e88f58d52ed49e028da810cc627771244aaeef40"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1555,7 +1555,7 @@
                 "3neti/x-commerce": "^1.2",
                 "3neti/x-feedback": "^1.0",
                 "3neti/x-journal": "^1.0",
-                "3neti/x-provisioning": "^1.0@beta",
+                "3neti/x-provisioning": "^1.0.0-beta.11",
                 "3neti/x-ray": "^1.0",
                 "3neti/x-rider": "^1.0",
                 "brick/money": "^0.10.3",
@@ -1629,7 +1629,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-08-17T02:34:43+00:00"
+            "time": "2026-08-17T03:30:59+00:00"
         },
         {
             "name": "3neti/x-commerce",
@@ -1882,16 +1882,16 @@
         },
         {
             "name": "3neti/x-provisioning",
-            "version": "v1.0.0-beta.10",
+            "version": "v1.0.0-beta.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-provisioning.git",
-                "reference": "0d3eb15b8e22193f174b4bd3580913feebfff80b"
+                "reference": "0b8d4cac60ff8b357bfa261d0cd120e3af9145b5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/x-provisioning/zipball/0d3eb15b8e22193f174b4bd3580913feebfff80b",
-                "reference": "0d3eb15b8e22193f174b4bd3580913feebfff80b",
+                "url": "https://api.github.com/repos/3neti/x-provisioning/zipball/0b8d4cac60ff8b357bfa261d0cd120e3af9145b5",
+                "reference": "0b8d4cac60ff8b357bfa261d0cd120e3af9145b5",
                 "shasum": ""
             },
             "require": {
@@ -1931,9 +1931,9 @@
             "description": "Governed provisioning requests, invitations, acceptance, and authority activation for x-change.",
             "support": {
                 "issues": "https://github.com/3neti/x-provisioning/issues",
-                "source": "https://github.com/3neti/x-provisioning/tree/v1.0.0-beta.10"
+                "source": "https://github.com/3neti/x-provisioning/tree/v1.0.0-beta.11"
             },
-            "time": "2026-08-16T14:47:36+00:00"
+            "time": "2026-08-17T03:11:31+00:00"
         },
         {
             "name": "3neti/x-ray",
