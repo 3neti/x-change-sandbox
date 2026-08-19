@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "18761d9dd76362f920c6a04306e64b96",
+    "content-hash": "ee19730924c9ba243cd760b86e662ca6",
     "packages": [
         {
             "name": "3neti/cash",
@@ -1259,16 +1259,16 @@
         },
         {
             "name": "3neti/voucher",
-            "version": "v1.0.0-beta.5",
+            "version": "v1.0.0-beta.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/voucher.git",
-                "reference": "e15549e35dfd774394cc1704db07ff31a34afe00"
+                "reference": "5a56454ebc9f629cd705b16568690360744dc931"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/voucher/zipball/e15549e35dfd774394cc1704db07ff31a34afe00",
-                "reference": "e15549e35dfd774394cc1704db07ff31a34afe00",
+                "url": "https://api.github.com/repos/3neti/voucher/zipball/5a56454ebc9f629cd705b16568690360744dc931",
+                "reference": "5a56454ebc9f629cd705b16568690360744dc931",
                 "shasum": ""
             },
             "require": {
@@ -1336,20 +1336,20 @@
                 "issues": "https://github.com/3neti/voucher/issues",
                 "source": "https://github.com/3neti/voucher"
             },
-            "time": "2026-08-17T02:31:41+00:00"
+            "time": "2026-08-19T00:11:04+00:00"
         },
         {
             "name": "3neti/wallet",
-            "version": "v2.0.0-beta.6",
+            "version": "v2.0.0-beta.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/wallet.git",
-                "reference": "901fe1f80c04c3819b0dc45fea6a11757e9b5750"
+                "reference": "afd61fe2371df4be2fc71b2ca5392350a83ebf07"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/wallet/zipball/901fe1f80c04c3819b0dc45fea6a11757e9b5750",
-                "reference": "901fe1f80c04c3819b0dc45fea6a11757e9b5750",
+                "url": "https://api.github.com/repos/3neti/wallet/zipball/afd61fe2371df4be2fc71b2ca5392350a83ebf07",
+                "reference": "afd61fe2371df4be2fc71b2ca5392350a83ebf07",
                 "shasum": ""
             },
             "require": {
@@ -1391,9 +1391,9 @@
             "description": "Custom wallet for X-Change",
             "support": {
                 "issues": "https://github.com/3neti/wallet/issues",
-                "source": "https://github.com/3neti/wallet/tree/v2.0.0-beta.6"
+                "source": "https://github.com/3neti/wallet/tree/v2.0.0-beta.8"
             },
-            "time": "2026-08-16T12:34:50+00:00"
+            "time": "2026-08-19T03:08:26+00:00"
         },
         {
             "name": "3neti/x-action",
@@ -1524,11 +1524,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.0-beta.220",
+            "version": "v1.0.0-beta.221",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "df7257b6a9685f1cb594e90f8e15e9d0c3e36b31"
+                "reference": "6a701763daeb89bfd78c0244561d781f4bb9509b"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1548,8 +1548,8 @@
                 "3neti/money-issuer": "^1.1",
                 "3neti/onboarding": "^1.0",
                 "3neti/report-registry": "^1.1",
-                "3neti/voucher": "^1.0@beta",
-                "3neti/wallet": "^2.0@beta",
+                "3neti/voucher": "^1.0.0-beta.6",
+                "3neti/wallet": "^2.0.0-beta.8",
                 "3neti/x-action": "^1.0",
                 "3neti/x-campaign": "^1.0",
                 "3neti/x-commerce": "^1.2",
@@ -1629,7 +1629,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-08-18T03:18:22+00:00"
+            "time": "2026-08-19T03:25:01+00:00"
         },
         {
             "name": "3neti/x-commerce",
