@@ -750,7 +750,7 @@ function integrationBadge(
                 data-testid="cockpit-pay-code-explorer-command-card"
             >
                 <div
-                    class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between"
+                    class="hidden flex-col gap-3 md:flex xl:flex-row xl:items-center xl:justify-between"
                     data-testid="cockpit-pay-code-explorer-shell-header"
                 >
                     <div>
@@ -761,7 +761,7 @@ function integrationBadge(
                                 Pay Code Explorer
                             </h1>
                             <span
-                                class="rounded-full bg-slate-100 px-2 py-0.5 text-[0.65rem] font-semibold tracking-wide text-slate-600 uppercase dark:bg-slate-800 dark:text-slate-300"
+                                class="rounded-full bg-slate-100 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                             >
                                 Read-only
                             </span>
@@ -769,7 +769,8 @@ function integrationBadge(
                         <p
                             class="mt-1 text-sm text-slate-600 dark:text-slate-300"
                         >
-                            Search, inspect, and apply governed lifecycle controls.
+                            Search, inspect, and apply governed lifecycle
+                            controls.
                         </p>
                     </div>
                     <a
@@ -783,7 +784,7 @@ function integrationBadge(
                 </div>
 
                 <dl
-                    class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-y border-slate-100 py-2 text-xs text-slate-600 dark:border-slate-800 dark:text-slate-300"
+                    class="flex flex-wrap items-center gap-x-4 gap-y-1 border-y border-slate-100 py-2 text-xs text-slate-600 md:mt-3 dark:border-slate-800 dark:text-slate-300"
                     data-testid="cockpit-pay-code-explorer-primary-summary"
                 >
                     <div
@@ -798,7 +799,7 @@ function integrationBadge(
                             {{ item.label }}
                         </dt>
                         <dd
-                            class="font-mono font-semibold text-slate-950 tabular-nums dark:text-slate-50"
+                            class="font-mono font-semibold tabular-nums text-slate-950 dark:text-slate-50"
                         >
                             {{ item.value }}
                         </dd>
@@ -867,11 +868,11 @@ function integrationBadge(
                             data-testid="cockpit-campaign-navigation-context-item"
                         >
                             <dt
-                                class="text-xs font-semibold tracking-wide text-sky-700 uppercase dark:text-sky-300"
+                                class="text-xs font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300"
                             >
                                 {{ item.label }}
                             </dt>
-                            <dd class="mt-1 font-semibold break-words">
+                            <dd class="mt-1 break-words font-semibold">
                                 {{ item.value }}
                             </dd>
                         </div>
@@ -935,11 +936,11 @@ function integrationBadge(
                             class="rounded-lg bg-white/80 px-3 py-2 dark:bg-emerald-950/70"
                         >
                             <dt
-                                class="text-xs font-semibold tracking-wide text-emerald-700 uppercase dark:text-emerald-300"
+                                class="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300"
                             >
                                 {{ item.label }}
                             </dt>
-                            <dd class="mt-1 font-semibold break-words">
+                            <dd class="mt-1 break-words font-semibold">
                                 {{ item.value }}
                             </dd>
                         </div>
@@ -985,8 +986,8 @@ function integrationBadge(
                     The main scan path stays focused on search and results. This
                     Explorer exposes only the existing governed expire and
                     cancel controls. It does not execute drivers, approve
-                    claims, send feedback, write journal entries directly,
-                    call providers, or move money itself.
+                    claims, send feedback, write journal entries directly, call
+                    providers, or move money itself.
                 </p>
 
                 <div class="mt-3 grid gap-3">
@@ -1010,7 +1011,7 @@ function integrationBadge(
                                 data-testid="cockpit-pay-code-explorer-current-search-item"
                             >
                                 <dt
-                                    class="text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400"
+                                    class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                                 >
                                     {{ item.label }}
                                 </dt>
@@ -1034,7 +1035,7 @@ function integrationBadge(
                                 class="rounded-full bg-slate-100 px-3 py-2 dark:bg-slate-900"
                             >
                                 <dt
-                                    class="text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400"
+                                    class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                                 >
                                     Read model
                                 </dt>
@@ -1048,7 +1049,7 @@ function integrationBadge(
                                 class="rounded-full bg-slate-100 px-3 py-2 dark:bg-slate-900"
                             >
                                 <dt
-                                    class="text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400"
+                                    class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                                 >
                                     Records
                                 </dt>
@@ -1062,7 +1063,7 @@ function integrationBadge(
                                 class="rounded-full bg-slate-100 px-3 py-2 dark:bg-slate-900"
                             >
                                 <dt
-                                    class="text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400"
+                                    class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                                 >
                                     Payload policy
                                 </dt>
@@ -1097,7 +1098,7 @@ function integrationBadge(
                         >
                             <div>
                                 <p
-                                    class="text-xs font-semibold tracking-[0.2em] text-emerald-700 uppercase dark:text-emerald-300"
+                                    class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-300"
                                 >
                                     Row action guidance
                                 </p>
@@ -1125,7 +1126,7 @@ function integrationBadge(
                                 data-testid="cockpit-pay-code-row-action-guidance-item"
                             >
                                 <dt
-                                    class="text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400"
+                                    class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                                 >
                                     {{ item.label }}
                                 </dt>
@@ -1153,7 +1154,7 @@ function integrationBadge(
                             List totals
                         </summary>
                         <p
-                            class="text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400"
+                            class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
                         >
                             Read-only totals
                         </p>
@@ -1164,7 +1165,7 @@ function integrationBadge(
                                 class="rounded-lg bg-slate-50 p-3 dark:bg-slate-900"
                             >
                                 <p
-                                    class="text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400"
+                                    class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                                 >
                                     Filtered
                                 </p>
@@ -1178,7 +1179,7 @@ function integrationBadge(
                                 class="rounded-lg bg-slate-50 p-3 dark:bg-slate-900"
                             >
                                 <p
-                                    class="text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400"
+                                    class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                                 >
                                     Total
                                 </p>
@@ -1192,7 +1193,7 @@ function integrationBadge(
                                 class="rounded-lg bg-slate-50 p-3 dark:bg-slate-900"
                             >
                                 <p
-                                    class="text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400"
+                                    class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                                 >
                                     Active
                                 </p>
@@ -1206,7 +1207,7 @@ function integrationBadge(
                                 class="rounded-lg bg-slate-50 p-3 dark:bg-slate-900"
                             >
                                 <p
-                                    class="text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400"
+                                    class="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                                 >
                                     Needs attention
                                 </p>
@@ -1235,7 +1236,7 @@ function integrationBadge(
                             Technical details
                         </summary>
                         <p
-                            class="text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase dark:text-slate-400"
+                            class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400"
                         >
                             Connected services
                         </p>
