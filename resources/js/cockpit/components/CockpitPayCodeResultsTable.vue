@@ -17,6 +17,13 @@ import {
     Share2,
 } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
+import CockpitPayCodeCopyButton from './CockpitPayCodeCopyButton.vue';
+import CockpitPayCodeQuickTerminalAction from './CockpitPayCodeQuickTerminalAction.vue';
+import { usePayCodeExplorerClock } from '../composables/usePayCodeExplorerClock';
+import {
+    formatPayCodeAbsoluteTime,
+    formatPayCodeRelativeTime,
+} from '../utils/payCodeRelativeTime';
 import type {
     CockpitPayCodeExplorerRecord,
     CockpitPayCodeRowAction,
@@ -61,6 +68,15 @@ const visibleRecords = computed(() =>
         lastVisibleRecordNumber.value,
     ),
 );
+
+const hasLiveExpiry = computed(() =>
+    visibleRecords.value.some(
+        (record) =>
+            !record.operationalStatus.isTerminal &&
+            record.timing.expiresAt !== null,
+    ),
+);
+const explorerNow = usePayCodeExplorerClock(hasLiveExpiry);
 
 const hiddenRecordCount = computed(() =>
     Math.max(props.records.length - visibleRecords.value.length, 0),
@@ -197,6 +213,34 @@ function capabilityBadgeClass(capabilityKey: string): string {
     }
 
     return 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950 dark:text-emerald-200 dark:ring-emerald-800';
+}
+
+function timingFacts(record: CockpitPayCodeExplorerRecord) {
+    const terminalLabel = record.status.toLowerCase().includes('cancel')
+        ? 'Cancelled'
+        : record.status.toLowerCase().includes('expir')
+          ? 'Expired'
+          : 'Closed';
+    const facts = [
+        { label: 'Created', value: record.timing.createdAt },
+        { label: 'Claimed', value: record.timing.redeemedAt },
+        {
+            label: record.operationalStatus.isTerminal
+                ? terminalLabel
+                : 'Expires',
+            value: record.operationalStatus.isTerminal
+                ? record.timing.terminalAt
+                : record.timing.expiresAt,
+        },
+    ];
+
+    return facts
+        .filter((fact): fact is { label: string; value: string } => !!fact.value)
+        .map((fact) => ({
+            ...fact,
+            relative: formatPayCodeRelativeTime(fact.value, explorerNow.value),
+            absolute: formatPayCodeAbsoluteTime(fact.value),
+        }));
 }
 </script>
 
@@ -357,6 +401,26 @@ function capabilityBadgeClass(capabilityKey: string): string {
                     </span>
                 </div>
 
+                <p
+                    v-if="record.purpose"
+                    class="truncate text-xs text-slate-600 dark:text-slate-300"
+                    :title="record.purpose"
+                    data-testid="cockpit-pay-code-mobile-purpose"
+                >
+                    {{ record.purpose }}
+                </p>
+
+                <div
+                    class="flex flex-wrap gap-x-3 gap-y-1 text-[0.7rem] text-slate-500 dark:text-slate-400"
+                    data-testid="cockpit-pay-code-mobile-timing"
+                >
+                    <span
+                        v-for="fact in timingFacts(record)"
+                        :key="`${record.code}-${fact.label}`"
+                        :title="fact.absolute"
+                    >{{ fact.label }} {{ fact.relative }}</span>
+                </div>
+
                 <dl
                     class="rounded-lg bg-slate-50 px-3 py-2 text-xs dark:bg-slate-950"
                     data-testid="cockpit-pay-code-mobile-party"
@@ -379,7 +443,20 @@ function capabilityBadgeClass(capabilityKey: string): string {
                     </dd>
                 </dl>
 
-                <div class="grid gap-2 sm:grid-cols-2">
+                <div class="flex flex-wrap items-center gap-2">
+                    <CockpitPayCodeCopyButton :code="record.code" />
+                    <CockpitPayCodeQuickTerminalAction
+                        :code="record.code"
+                        action="expire"
+                        :enabled="record.terminalControl.canExpire"
+                        :blocked-reason="record.terminalControl.blockedReason"
+                    />
+                    <CockpitPayCodeQuickTerminalAction
+                        :code="record.code"
+                        action="cancel"
+                        :enabled="record.terminalControl.canCancel"
+                        :blocked-reason="record.terminalControl.blockedReason"
+                    />
                     <Link
                         v-for="action in enabledActions(record)"
                         :key="action.key"
@@ -391,7 +468,7 @@ function capabilityBadgeClass(capabilityKey: string): string {
                         {{ action.label }}
                     </Link>
                     <details
-                        class="group sm:col-span-2"
+                        class="group w-full"
                         data-testid="cockpit-pay-code-mobile-row-unavailable-actions"
                     >
                         <summary
@@ -517,6 +594,24 @@ function capabilityBadgeClass(capabilityKey: string): string {
                             >
                                 {{ record.template }}
                             </p>
+                            <p
+                                v-if="record.purpose"
+                                class="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400"
+                                :title="record.purpose"
+                                data-testid="cockpit-pay-code-purpose"
+                            >
+                                {{ record.purpose }}
+                            </p>
+                            <div
+                                class="mt-1 flex flex-wrap gap-x-2 gap-y-0.5 text-[0.65rem] text-slate-400 dark:text-slate-500"
+                                data-testid="cockpit-pay-code-timing"
+                            >
+                                <span
+                                    v-for="fact in timingFacts(record)"
+                                    :key="`${record.code}-${fact.label}`"
+                                    :title="fact.absolute"
+                                >{{ fact.label }} {{ fact.relative }}</span>
+                            </div>
                             <span
                                 :class="
                                     capabilityBadgeClass(record.capability.key)
@@ -604,6 +699,19 @@ function capabilityBadgeClass(capabilityKey: string): string {
                         </td>
                         <td class="px-4 py-2.5">
                             <div class="flex justify-end gap-1.5">
+                                <CockpitPayCodeCopyButton :code="record.code" compact />
+                                <CockpitPayCodeQuickTerminalAction
+                                    :code="record.code"
+                                    action="expire"
+                                    :enabled="record.terminalControl.canExpire"
+                                    :blocked-reason="record.terminalControl.blockedReason"
+                                />
+                                <CockpitPayCodeQuickTerminalAction
+                                    :code="record.code"
+                                    action="cancel"
+                                    :enabled="record.terminalControl.canCancel"
+                                    :blocked-reason="record.terminalControl.blockedReason"
+                                />
                                 <div class="flex gap-1.5">
                                     <Link
                                         v-for="action in enabledActions(record)"

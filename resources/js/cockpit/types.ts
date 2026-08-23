@@ -1734,6 +1734,7 @@ export type CockpitPayCodeExplorerStats = {
 export type CockpitPayCodeExplorerRecord = {
     code: string;
     template: string;
+    purpose: string | null;
     capability: {
         key: string;
         label: string;
@@ -1769,6 +1770,13 @@ export type CockpitPayCodeExplorerRecord = {
         startsAt: string | null;
         expiresAt: string | null;
         redeemedAt: string | null;
+        terminalAt: string | null;
+    };
+    terminalControl: {
+        canExpire: boolean;
+        canCancel: boolean;
+        blockedReason: string | null;
+        status: string;
     };
     owner: string;
     lastActivity: string;
@@ -1947,6 +1955,7 @@ export type CockpitMoneyIssuerOption = {
 export type CockpitPayCodeExplorerReadModelRecord = {
     code?: string | null;
     template?: string | null;
+    purpose?: string | null;
     amount?: string | number | null;
     currency?: string | null;
     status?: string | null;
@@ -1988,6 +1997,14 @@ export type CockpitPayCodeExplorerReadModelRecord = {
         starts_at?: string | null;
         expires_at?: string | null;
         redeemed_at?: string | null;
+        terminal_at?: string | null;
+        [key: string]: unknown;
+    };
+    terminal_control?: {
+        can_expire?: boolean;
+        can_cancel?: boolean;
+        blocked_reason?: string | null;
+        status?: string | null;
         [key: string]: unknown;
     };
     owner?: string | null;

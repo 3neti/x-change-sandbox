@@ -37,6 +37,7 @@ export const cockpitPayCodeExplorerRecords: CockpitPayCodeExplorerRecord[] = [
     {
         code: 'PC-READY-001',
         template: 'Money Changer',
+        purpose: null,
         capability: {
             key: 'disbursement',
             label: 'Disbursement',
@@ -72,13 +73,16 @@ export const cockpitPayCodeExplorerRecords: CockpitPayCodeExplorerRecord[] = [
             startsAt: null,
             expiresAt: null,
             redeemedAt: null,
+            terminalAt: null,
         },
+        terminalControl: { canExpire: false, canCancel: false, blockedReason: 'Read model unavailable.', status: 'blocked' },
         owner: 'Branch Operations',
         lastActivity: 'Read model placeholder',
     },
     {
         code: 'PC-PENDING-002',
         template: 'OFW Remittance',
+        purpose: null,
         capability: {
             key: 'collection',
             label: 'Collection',
@@ -111,13 +115,16 @@ export const cockpitPayCodeExplorerRecords: CockpitPayCodeExplorerRecord[] = [
             startsAt: null,
             expiresAt: null,
             redeemedAt: null,
+            terminalAt: null,
         },
+        terminalControl: { canExpire: false, canCancel: false, blockedReason: 'Read model unavailable.', status: 'blocked' },
         owner: 'Treasury Operations',
         lastActivity: 'Journal redaction pending',
     },
     {
         code: 'PC-SETTLE-003',
         template: 'Settlement Envelope',
+        purpose: null,
         capability: {
             key: 'settlement',
             label: 'Settlement',
@@ -153,7 +160,9 @@ export const cockpitPayCodeExplorerRecords: CockpitPayCodeExplorerRecord[] = [
             startsAt: null,
             expiresAt: null,
             redeemedAt: null,
+            terminalAt: null,
         },
+        terminalControl: { canExpire: false, canCancel: false, blockedReason: 'Read model unavailable.', status: 'blocked' },
         owner: 'Settlement Desk',
         lastActivity: 'Gateway binding deferred',
     },
