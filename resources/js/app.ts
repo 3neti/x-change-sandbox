@@ -1,6 +1,7 @@
 import { createInertiaApp } from '@inertiajs/vue3';
 import { initializeTheme } from '@/composables/useAppearance';
 import AppLayout from '@/layouts/AppLayout.vue';
+import AppSidebarLayoutCockpit from '@/layouts/app/AppSidebarLayoutCockpit.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { configureEcho } from '@laravel/echo-vue';
@@ -21,6 +22,8 @@ createInertiaApp({
                 return AuthLayout;
             case name.startsWith('settings/'):
                 return [AppLayout, SettingsLayout];
+            case name.startsWith('x-change/cockpit/'):
+                return AppSidebarLayoutCockpit;
             case name.startsWith('x-change/claim/'):
                 return null;
             case name.startsWith('form-flow/'):
