@@ -21,9 +21,9 @@ import CockpitPayCodeCopyButton from './CockpitPayCodeCopyButton.vue';
 import CockpitPayCodeQuickTerminalAction from './CockpitPayCodeQuickTerminalAction.vue';
 import { usePayCodeExplorerClock } from '../composables/usePayCodeExplorerClock';
 import {
-    formatPayCodeAbsoluteTime,
-    formatPayCodeRelativeTime,
-} from '../utils/payCodeRelativeTime';
+    formatAbsoluteTime,
+    formatRelativeTime,
+} from '../utils/dateTime';
 import type {
     CockpitPayCodeExplorerRecord,
     CockpitPayCodeRowAction,
@@ -238,8 +238,8 @@ function timingFacts(record: CockpitPayCodeExplorerRecord) {
         .filter((fact): fact is { label: string; value: string } => !!fact.value)
         .map((fact) => ({
             ...fact,
-            relative: formatPayCodeRelativeTime(fact.value, explorerNow.value),
-            absolute: formatPayCodeAbsoluteTime(fact.value),
+            relative: formatRelativeTime(fact.value, explorerNow.value),
+            absolute: formatAbsoluteTime(fact.value),
         }));
 }
 </script>
