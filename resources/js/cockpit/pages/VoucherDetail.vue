@@ -22,6 +22,9 @@ const voucher = computed(() => props.read_model?.voucher);
 const summary = computed<Record<string, unknown>>(
   () => voucher.value?.summary ?? {},
 );
+const collection = computed<Record<string, unknown>>(
+  () => voucher.value?.collection ?? {},
+);
 const code = computed(
   () =>
     stringValue(summary.value.code) ??
@@ -32,6 +35,7 @@ const code = computed(
 );
 const status = computed(
   () =>
+    stringValue(collection.value.consumer_status) ??
     stringValue(summary.value.display_status) ??
     stringValue(summary.value.status) ??
     voucher.value?.status ??
