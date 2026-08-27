@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
+import CockpitLandingClaimExperiencePresentation from '@/cockpit/components/CockpitLandingClaimExperiencePresentation.vue';
+import CockpitQuickGenerateOrderPresentation from '@/cockpit/components/CockpitQuickGenerateOrderPresentation.vue';
+import { gClefPulleyBrandAssets } from '@/components/x-change/brandAssets';
+import XChangeLogo from '@/components/x-change/XChangeLogo.vue';
 import { login } from '@/routes';
 import { start as startClaim } from '@/routes/x-change/claim';
 import { dashboard } from '@/routes/x-change/cockpit';
-import CockpitLandingClaimExperiencePresentation from '@/cockpit/components/CockpitLandingClaimExperiencePresentation.vue';
-import CockpitQuickGenerateOrderPresentation from '@/cockpit/components/CockpitQuickGenerateOrderPresentation.vue';
-import XChangeLogo from '@/components/x-change/XChangeLogo.vue';
-import { gClefPulleyBrandAssets } from '@/components/x-change/brandAssets';
 
 const page = usePage<{
     xchange: {
@@ -37,7 +37,7 @@ withDefaults(
     >
         <div
             aria-hidden="true"
-            class="bg-top-left pointer-events-none absolute inset-y-0 left-0 h-screen w-full bg-contain bg-no-repeat opacity-[0.1] lg:bg-[length:auto_100%] lg:bg-left"
+            class="pointer-events-none absolute inset-y-0 left-0 h-screen w-full bg-contain bg-top-left bg-no-repeat opacity-[0.1] lg:bg-[length:auto_100%] lg:bg-left"
             :style="{
                 backgroundImage: `url('${gClefPulleyBrandAssets.logo}')`,
             }"
@@ -50,12 +50,12 @@ withDefaults(
                 <XChangeLogo class-name="h-12 shrink-0 sm:h-14" />
                 <span class="shrink-0 border-l border-slate-300 pl-3">
                     <span
-                        class="block max-w-28 truncate text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-slate-700 sm:max-w-44 sm:text-xs"
+                        class="block max-w-28 truncate text-[0.68rem] font-semibold tracking-[0.12em] text-slate-700 uppercase sm:max-w-44 sm:text-xs"
                     >
                         {{ $page.props.name }}
                     </span>
                     <span
-                        class="mt-1 block whitespace-nowrap text-[0.5rem] font-semibold uppercase tracking-[0.12em] text-slate-500 sm:text-[0.58rem]"
+                        class="mt-1 block text-[0.5rem] font-semibold tracking-[0.12em] whitespace-nowrap text-slate-500 uppercase sm:text-[0.58rem]"
                     >
                         Powered by x-change
                     </span>
@@ -66,14 +66,14 @@ withDefaults(
                 <Link
                     v-if="$page.props.auth.user"
                     :href="dashboard()"
-                    class="whitespace-nowrap rounded-full px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-white hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950 sm:px-4"
+                    class="rounded-full px-3 py-2.5 text-sm font-semibold whitespace-nowrap text-slate-700 transition hover:bg-white hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950 sm:px-4"
                 >
                     Open Cockpit
                 </Link>
                 <Link
                     v-else
                     :href="login()"
-                    class="whitespace-nowrap rounded-full px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-white hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950 sm:px-4"
+                    class="rounded-full px-3 py-2.5 text-sm font-semibold whitespace-nowrap text-slate-700 transition hover:bg-white hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-950 sm:px-4"
                 >
                     Sign in
                 </Link>
@@ -85,12 +85,12 @@ withDefaults(
         >
             <div class="max-w-xl">
                 <p
-                    class="text-xs font-semibold uppercase tracking-[0.2em] text-[#d85f15]"
+                    class="text-xs font-semibold tracking-[0.2em] text-[#d85f15] uppercase"
                 >
                     Cashless disbursements
                 </p>
                 <h1
-                    class="mt-5 text-balance text-[clamp(3rem,5.2vw,5.4rem)] font-semibold leading-[0.94] tracking-[-0.065em]"
+                    class="mt-5 text-[clamp(3rem,5.2vw,5.4rem)] leading-[0.94] font-semibold tracking-[-0.065em] text-balance"
                 >
                     Money should adapt to people.
                     <span class="text-slate-400"
@@ -206,7 +206,7 @@ withDefaults(
         </section>
 
         <footer
-            class="relative z-10 mx-auto flex w-full max-w-[88rem] flex-col items-end gap-1 px-5 pb-5 text-right text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-slate-500 sm:flex-row sm:items-center sm:justify-end sm:gap-2 sm:px-8 lg:px-10 lg:pb-4"
+            class="relative z-10 mx-auto flex w-full max-w-[88rem] flex-col items-end gap-1 px-5 pb-5 text-right text-[0.65rem] font-semibold tracking-[0.08em] text-slate-500 uppercase sm:flex-row sm:items-center sm:justify-end sm:gap-2 sm:px-8 lg:px-10 lg:pb-4"
         >
             <span>3neti/x-change {{ page.props.xchange.version }}</span>
             <span aria-hidden="true" class="hidden text-slate-300 sm:inline"

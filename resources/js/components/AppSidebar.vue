@@ -14,13 +14,11 @@ import {
     UsersRound,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
+import CockpitWorkspaceNavigationItem from '@/cockpit/components/CockpitWorkspaceNavigationItem.vue';
+import { cockpitWorkspaceGuides } from '@/cockpit/workspaceNavigationGuides';
+import type { CockpitWorkspaceGuide } from '@/cockpit/workspaceNavigationGuides';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import NavUser from '@/components/NavUser.vue';
-import CockpitWorkspaceNavigationItem from '@/cockpit/components/CockpitWorkspaceNavigationItem.vue';
-import {
-    cockpitWorkspaceGuides,
-    type CockpitWorkspaceGuide,
-} from '@/cockpit/workspaceNavigationGuides';
 import {
     Sidebar,
     SidebarContent,

@@ -1,5 +1,8 @@
 <?php
 
+use LBHurtado\EmiPaynamicsConstellation\Support\InteractiveOtpResolver;
+use LBHurtado\EmiPaynamicsConstellation\Support\NullOtpResolver;
+
 return [
     'base_url' => env('CONSTELLATION_BASE_URL', 'https://asterism.payserv.net/v1'),
     'username' => env('CONSTELLATION_USERNAME'),
@@ -57,8 +60,8 @@ return [
         'resolver' => env('CONSTELLATION_OTP_RESOLVER', 'interactive'),
 
         'resolvers' => [
-            'interactive' => \LBHurtado\EmiPaynamicsConstellation\Support\InteractiveOtpResolver::class,
-            'null' => \LBHurtado\EmiPaynamicsConstellation\Support\NullOtpResolver::class,
+            'interactive' => InteractiveOtpResolver::class,
+            'null' => NullOtpResolver::class,
         ],
     ],
 ];

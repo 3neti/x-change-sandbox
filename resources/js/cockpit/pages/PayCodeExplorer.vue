@@ -455,6 +455,9 @@ function sanitizeRecord(
         return null;
     }
 
+    const operationalStatus = sanitizeOperationalStatus(record);
+    const consumerStatus = stringValue(record.consumer_status);
+
     return {
         code,
         template: stringValue(record.template) ?? 'Template pending',
@@ -462,9 +465,11 @@ function sanitizeRecord(
         capability: sanitizeCapability(record.capability),
         instructionBadges: sanitizeInstructionBadges(record.instruction_badges),
         amount: moneyValue(record.amount, stringValue(record.currency)),
-        status: sanitizeOperationalStatus(record).key,
+        status: consumerStatus ?? operationalStatus.key,
+        consumerStatus,
+        collection: objectValue(record.collection),
         voucherStatus: stringValue(record.voucher_status),
-        operationalStatus: sanitizeOperationalStatus(record),
+        operationalStatus,
         party: sanitizeParty(record.party),
         timing: sanitizeTiming(record),
         terminalControl: sanitizeTerminalControl(record),

@@ -1617,6 +1617,7 @@ export type CockpitQuickGeneratePageProps = CockpitHeaderPageProps & {
     rider_library?: CockpitRiderLibraryEntry[];
     instruction_capabilities?: CockpitInstructionCapabilityReadinessMap;
     settlement_rail_capabilities?: CockpitSettlementRailCapabilities;
+    pos_voucher?: CockpitVoucherReadModel | null;
 };
 
 export type CockpitFundingRealtime = {
@@ -1754,6 +1755,8 @@ export type CockpitPayCodeExplorerRecord = {
     }>;
     amount: string;
     status: string;
+    consumerStatus: string | null;
+    collection: Record<string, unknown>;
     voucherStatus: string | null;
     operationalStatus: {
         key: string;
@@ -1878,10 +1881,39 @@ export type CockpitVoucherReadModel = {
     slices?: Record<string, unknown>;
     settlement?: Record<string, unknown>;
     treasury?: Record<string, unknown>;
+    collection?: CockpitVoucherCollectionReadModel;
     evidence_summary?: CockpitVoucherEvidenceSummary[];
     distribution_links?: Record<string, unknown>;
     redactions?: CockpitReadModelRedactions;
     authorized?: boolean;
+};
+
+export type CockpitVoucherCollectionReadModel = {
+    schema?: string;
+    consumer_status?: string | null;
+    currency?: string;
+    target_amount_minor?: number;
+    collected_total_minor?: number;
+    remaining_to_collect_minor?: number;
+    is_fully_collected?: boolean;
+    is_overpaid?: boolean;
+    overpaid_amount_minor?: number;
+};
+
+export type CockpitPosPaymentAttempt = {
+    reference: string;
+    status: string;
+    provider: string;
+    amount_minor: number;
+    currency: string;
+    expires_at: string | null;
+    qr_code: {
+        mime_type: string | null;
+        base64_payload: string | null;
+        qr_mode: string | null;
+        transaction_type: string | null;
+        embedded_amount: boolean;
+    } | null;
 };
 
 export type CockpitDependentReadModel = {
@@ -1969,6 +2001,8 @@ export type CockpitPayCodeExplorerReadModelRecord = {
     status?: string | null;
     display_status?: string | null;
     voucher_status?: string | null;
+    consumer_status?: string | null;
+    collection?: Record<string, unknown>;
     operational_status?: {
         key?: string | null;
         label?: string | null;

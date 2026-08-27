@@ -120,10 +120,12 @@
     "include": [
         "vite.config.ts",
         "vitest.config.ts",
+        "playwright.config.ts",
         "resources/js/**/*.ts",
         "resources/js/**/*.d.ts",
         "resources/js/**/*.tsx",
         "resources/js/**/*.vue",
-        "tests/frontend/**/*.ts"
+        "tests/frontend/**/*.ts",
+        "tests/playwright/**/*.ts"
     ]
 }

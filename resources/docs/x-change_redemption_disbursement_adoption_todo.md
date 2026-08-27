@@ -13,6 +13,7 @@ voucher  = container / claimable instrument
 # ✅ CURRENT STATUS
 
 ### ✔ Validation (financial)
+
 - [x] Eligibility (withdrawable, active, not expired)
 - [x] Amount bounds (min, >0, <= balance)
 - [x] Min withdrawal → moved to cash
@@ -21,6 +22,7 @@ voucher  = container / claimable instrument
 - [x] x-change delegates correctly
 
 ### ✔ Pipeline Architecture
+
 - [x] WithdrawalPipeline
 - [x] Step grouping + tagging
 - [x] `shouldRun()` filtering
@@ -28,6 +30,7 @@ voucher  = container / claimable instrument
 - [x] Thin processor
 
 ### ✔ Execution Flow
+
 - [x] Disbursement step
 - [x] Pending recorder
 - [x] Wallet settlement
@@ -38,6 +41,7 @@ voucher  = container / claimable instrument
 # 🚧 NEXT: AUTHORIZATION POLICY (HIGH PRIORITY)
 
 ## Goal
+
 Move **“who is allowed to approve withdrawal”** into structured, pluggable policy.
 
 ## Tasks
@@ -59,16 +63,19 @@ interface WithdrawalAuthorizationPolicyContract
 ### 2. Implement baseline policies
 
 #### OTP to Owner
+
 - [ ] Send OTP
 - [ ] Validate OTP
 - [ ] Enforce ownership
 
 #### Trusted Vendor Mandate
+
 - [ ] Allow vendor to debit within limits
 - [ ] Store mandate in voucher/cash metadata
 - [ ] Validate vendor identity
 
 #### Threshold Rules
+
 - [ ] Define threshold amount
 - [ ] Require additional approval above threshold
 
@@ -101,6 +108,7 @@ AuthorizeWithdrawalClaimantStep
 # 🚧 NEXT: VALIDATION POLICY (NON-FINANCIAL)
 
 ## Goal
+
 Separate **input requirements** from financial rules.
 
 ### Tasks
@@ -191,6 +199,7 @@ config('x-change.withdrawal.open_slice_min_interval_seconds')
 ## 2. Ensure adapters are thin
 
 Adapters should only:
+
 - map Voucher → Instrument
 - fetch external data (claims, contacts)
 
@@ -261,6 +270,7 @@ Remaining work is:
 👉 **Start with Authorization Policy**
 
 Because:
+
 - it completes the control model (who can withdraw)
 - it unlocks real-world deployment scenarios (banks, vendors)
 - it naturally fits your pipeline architecture

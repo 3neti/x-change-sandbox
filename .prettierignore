@@ -1,2 +1,33 @@
 resources/js/components/ui/*
 resources/views/mail/*
+
+# Package-owned generated build projections. Their source packages own
+# formatting; x-change:doctor verifies the published copies byte-for-byte.
+resources/js/cockpit/**
+resources/js/pages/x-change/**
+resources/js/components/x-change/**
+resources/js/components/x-rider/**
+resources/js/layouts/x-change/**
+resources/js/experience/**
+resources/js/pages/form-flow/**
+resources/js/pages/x-rider/**
+resources/js/vendor/x-ray/**
+resources/js/components/financial/**
+resources/js/components/ui/alert-dialog/**
+resources/js/components/ui/phone-input/**
+resources/js/components/ui/tabs/**
+resources/js/components/ui/textarea/**
+resources/js/config/**
+resources/js/data/**
+resources/js/components/NumberInputWithKeypad.vue
+resources/js/components/NumericKeypad.vue
+resources/js/layouts/PublicLayout.vue
+resources/js/composables/useClipboard.ts
+resources/js/composables/useFormFlowSummary.ts
+resources/js/composables/usePayCodeApi.ts
+resources/js/composables/usePayCodeCostEstimate.ts
+resources/js/composables/usePayCodeForm.ts
+resources/js/composables/useTheme.ts
+resources/js/composables/useVoucherPreview.ts
+resources/js/composables/useXChangeDashboardApi.ts
+resources/js/composables/useXChangeRoutes.ts

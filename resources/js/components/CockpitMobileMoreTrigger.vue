@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3';
+import { Ellipsis } from 'lucide-vue-next';
 import { cockpitSecondaryNavigation } from '@/cockpit/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,8 +12,6 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
-import { Link } from '@inertiajs/vue3';
-import { Ellipsis } from 'lucide-vue-next';
 </script>
 
 <template>

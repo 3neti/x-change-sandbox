@@ -12,7 +12,8 @@
         "lint:check": "eslint .",
         "test:browser": "playwright test",
         "test:browser:cockpit": "playwright test tests/playwright/cockpit-pay-code-explorer.spec.ts",
-        "types:check": "vue-tsc --noEmit"
+        "types:check": "vue-tsc --noEmit --project tsconfig.host.json",
+        "verify:generated": "php artisan x-change:doctor --assets --strict --no-interaction"
     },
     "devDependencies": {
         "@eslint/js": "^9.19.0",
