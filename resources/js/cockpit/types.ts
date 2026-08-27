@@ -1757,6 +1757,7 @@ export type CockpitPayCodeExplorerRecord = {
     status: string;
     consumerStatus: string | null;
     collection: Record<string, unknown>;
+    posReference?: CockpitPosSaleReferenceReadModel;
     voucherStatus: string | null;
     operationalStatus: {
         key: string;
@@ -1882,10 +1883,20 @@ export type CockpitVoucherReadModel = {
     settlement?: Record<string, unknown>;
     treasury?: Record<string, unknown>;
     collection?: CockpitVoucherCollectionReadModel;
+    pos_reference?: CockpitPosSaleReferenceReadModel;
     evidence_summary?: CockpitVoucherEvidenceSummary[];
     distribution_links?: Record<string, unknown>;
     redactions?: CockpitReadModelRedactions;
     authorized?: boolean;
+};
+
+export type CockpitPosSaleReferenceReadModel = {
+    schema?: string;
+    sale_reference?: string | null;
+    order_reference?: string | null;
+    purpose?: string | null;
+    legacy_reference?: string | null;
+    reference_kind?: 'canonical' | 'legacy' | 'none' | string;
 };
 
 export type CockpitVoucherCollectionReadModel = {
@@ -2003,6 +2014,7 @@ export type CockpitPayCodeExplorerReadModelRecord = {
     voucher_status?: string | null;
     consumer_status?: string | null;
     collection?: Record<string, unknown>;
+    pos_reference?: CockpitPosSaleReferenceReadModel;
     operational_status?: {
         key?: string | null;
         label?: string | null;
