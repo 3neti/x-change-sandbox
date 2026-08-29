@@ -6104,7 +6104,7 @@ function instructionRecord(
                     />
                 </div>
                 <div
-                    class="mt-4 grid items-start gap-3 sm:grid-cols-2"
+                    class="mt-4 grid min-w-0 items-start gap-3 sm:grid-cols-[minmax(0,18rem)_minmax(0,22rem)]"
                     data-testid="cockpit-quick-generate-order-fields"
                 >
                     <div
@@ -6390,7 +6390,7 @@ function instructionRecord(
                     </div>
                     <label
                         v-if="isSettlementVoucher"
-                        class="grid min-w-0 gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300"
+                        class="grid min-w-0 max-w-72 gap-1.5 text-xs font-medium text-slate-700 sm:col-span-2 dark:text-slate-300"
                         data-testid="cockpit-quick-generate-target-amount-field"
                     >
                         <span class="flex items-center gap-1">
@@ -6424,7 +6424,7 @@ function instructionRecord(
                         </span>
                     </label>
                     <label
-                        class="grid gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300"
+                        class="grid min-w-0 max-w-72 gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300"
                         data-testid="cockpit-quick-generate-recipient-field"
                     >
                         <span class="flex items-center gap-1">
@@ -6468,7 +6468,8 @@ function instructionRecord(
                         </span>
                     </label>
                     <label
-                        class="grid gap-1 text-xs font-medium text-slate-700 sm:col-span-2 dark:text-slate-300"
+                        class="grid min-w-0 gap-1 text-xs font-medium text-slate-700 dark:text-slate-300"
+                        data-testid="cockpit-quick-generate-purpose-field"
                     >
                         <span class="flex items-center gap-1">
                             Purpose
@@ -6538,10 +6539,10 @@ function instructionRecord(
                         @click="orderOptionsOpen = !orderOptionsOpen"
                     >
                         <span class="flex min-w-0 items-center gap-2">
-                            <span class="min-w-0 truncate">Order options</span>
+                            <span class="min-w-0 truncate">Options</span>
                             <span
                                 class="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[0.68rem] font-bold tabular-nums text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"
-                                aria-label="Configured order options"
+                                aria-label="Configured options"
                             >
                                 {{ orderOptionsActiveCount }}
                             </span>
@@ -6558,7 +6559,7 @@ function instructionRecord(
                         id="cockpit-quick-generate-order-options-panel"
                         class="mt-3 grid min-w-0 gap-4 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950"
                         role="region"
-                        aria-label="Order options"
+                        aria-label="Options"
                         data-testid="cockpit-quick-generate-order-options-panel"
                     >
                         <div class="min-w-0">
