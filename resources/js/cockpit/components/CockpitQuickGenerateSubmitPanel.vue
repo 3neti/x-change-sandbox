@@ -28,7 +28,7 @@ import {
     Type,
     X,
 } from 'lucide-vue-next';
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeMount, onMounted, ref, watch } from 'vue';
 import type {
     CockpitQuickGenerateCampaignAttribution,
     CockpitQuickGenerateCampaignContext,
@@ -118,6 +118,7 @@ const props = withDefaults(
         feedbackDefaults?: CockpitQuickGenerateFeedbackDefaults;
         onboardingOtpRequired?: boolean;
         onboardingPreset?: boolean;
+        startupMode?: 'blank' | 'repeat_last';
         lastInstructions?: CockpitQuickGenerateLastInstructions | null;
         savedTemplates?: CockpitSavedPayCodeTemplate[];
         riderLibrary?: CockpitRiderLibraryEntry[];
@@ -128,6 +129,7 @@ const props = withDefaults(
     {
         onboardingOtpRequired: true,
         onboardingPreset: false,
+        startupMode: 'blank',
         instructionCapabilities: () => ({}),
         riderLibrary: () => [],
     },
@@ -794,9 +796,7 @@ const amountCalculatorEstimatePending = ref(false);
 const riderDesignEditor = ref<RiderDesignEditor>('appearance');
 const riderDesignTeleportReady = ref(false);
 const riderDesignTeleportTarget = ref<HTMLElement | null>(null);
-const startingPoint = ref<'blank' | 'last' | 'template'>(
-    props.lastInstructions ? 'last' : 'template',
-);
+const startingPoint = ref<'blank' | 'last' | 'template'>('blank');
 const templatePickerOpen = ref(false);
 const saveTemplateOpen = ref(false);
 const orderOptionsOpen = ref(false);
@@ -820,7 +820,9 @@ const collectionDestinationError = computed<string | null>(() => {
     );
 });
 
-hydrateLastInstructions();
+onBeforeMount((): void => {
+    initializeStartingPoint();
+});
 
 onMounted((): void => {
     riderDesignTeleportReady.value = true;
@@ -1035,6 +1037,21 @@ function startBlank(): void {
     void focusAmountEditor();
 }
 
+function initializeStartingPoint(): void {
+    if (props.campaignContext?.status === 'available') {
+        startingPoint.value =
+            selectedTemplate.value === 'blank-pay-code' ? 'blank' : 'template';
+
+        return;
+    }
+
+    if (props.startupMode === 'repeat_last' && hydrateLastInstructions()) {
+        return;
+    }
+
+    startBlank();
+}
+
 function markRiderStampArtworkSourceSelection(): void {
     riderStampArtworkSourceWasExplicitlySelected.value = true;
 }
@@ -1054,11 +1071,11 @@ async function openDesignEditor(): Promise<void> {
     });
 }
 
-function hydrateLastInstructions(): void {
+function hydrateLastInstructions(): boolean {
     const instructions = props.lastInstructions?.instructions;
 
     if (!instructions || props.campaignContext?.status === 'available') {
-        return;
+        return false;
     }
 
     applyInstructionBlueprint(instructions, true);
@@ -1068,6 +1085,8 @@ function hydrateLastInstructions(): void {
     lastStatus.value = 'ready';
     lastMessage.value =
         'Your last successful Pay Code is ready to review or change.';
+
+    return true;
 }
 
 function repeatLastDesign(): void {
@@ -2070,7 +2089,8 @@ const canSubmit = computed<boolean>(() => {
     const normalizedTargetAmount = Number(targetAmount.value);
     const settlementTargetIsValid =
         voucherType.value !== 'settlement' ||
-        (Number.isFinite(normalizedTargetAmount) && normalizedTargetAmount > 0);
+        (Number.isFinite(normalizedTargetAmount) &&
+            normalizedTargetAmount > 0);
 
     return (
         props.mutationContract?.runtime_enabled === true &&
@@ -5747,7 +5767,7 @@ function instructionRecord(
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         <p
-                            class="text-xs font-semibold tracking-[0.18em] text-emerald-700 uppercase dark:text-emerald-300"
+                            class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300"
                         >
                             Recommended
                         </p>
@@ -5803,7 +5823,7 @@ function instructionRecord(
                     <div class="flex items-center justify-between gap-3">
                         <div>
                             <p
-                                class="text-xs font-semibold tracking-[0.18em] text-sky-700 uppercase dark:text-sky-300"
+                                class="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-300"
                             >
                                 My Templates
                             </p>
@@ -5844,7 +5864,7 @@ function instructionRecord(
                                 {{ template.description }}
                             </p>
                             <p
-                                class="mt-3 text-[0.68rem] font-semibold tracking-wide text-slate-400 uppercase"
+                                class="mt-3 text-[0.68rem] font-semibold uppercase tracking-wide text-slate-400"
                             >
                                 {{ template.base_template_key }}
                             </p>
@@ -5875,7 +5895,7 @@ function instructionRecord(
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         <p
-                            class="text-xs font-semibold tracking-[0.18em] text-emerald-700 uppercase dark:text-emerald-300"
+                            class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300"
                         >
                             My Templates
                         </p>
@@ -5942,7 +5962,7 @@ function instructionRecord(
                             type="text"
                             maxlength="80"
                             placeholder="e.g. Weekly Allowance"
-                            class="min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-slate-950 ring-emerald-500 outline-none focus:ring-2 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50"
+                            class="min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-slate-950 outline-none ring-emerald-500 focus:ring-2 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50"
                             data-testid="cockpit-quick-generate-template-name"
                         />
                     </label>
@@ -5955,7 +5975,7 @@ function instructionRecord(
                             rows="2"
                             maxlength="240"
                             placeholder="Optional note for future you"
-                            class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-950 ring-emerald-500 outline-none focus:ring-2 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50"
+                            class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-950 outline-none ring-emerald-500 focus:ring-2 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50"
                             data-testid="cockpit-quick-generate-template-description"
                         />
                     </label>
@@ -6043,7 +6063,7 @@ function instructionRecord(
                     </div>
                     <button
                         type="submit"
-                        class="inline-flex min-h-10 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold whitespace-nowrap text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600 sm:w-auto dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
+                        class="inline-flex min-h-10 w-full shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600 sm:w-auto dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
                         data-testid="cockpit-quick-generate-submit-button"
                         :disabled="!canSubmit || processing"
                     >
@@ -6260,9 +6280,7 @@ function instructionRecord(
                             "
                             data-testid="cockpit-quick-generate-target-amount"
                             :disabled="processing"
-                            :aria-invalid="
-                                targetAmountError ? 'true' : undefined
-                            "
+                            :aria-invalid="targetAmountError ? 'true' : undefined"
                         />
                         <span
                             v-if="targetAmountError"
@@ -6304,7 +6322,7 @@ function instructionRecord(
                         />
                         <span
                             v-if="payeeType !== 'anyone'"
-                            class="min-h-5 px-0.5 text-[0.7rem] leading-5 font-normal"
+                            class="min-h-5 px-0.5 text-[0.7rem] font-normal leading-5"
                             :class="
                                 payeePolicy.kind === 'invalid' ||
                                 payeePolicy.kind === 'email'
@@ -6340,23 +6358,15 @@ function instructionRecord(
                         data-testid="cockpit-quick-generate-collection-destination"
                         aria-label="Collection destination"
                     >
-                        <div
-                            class="flex min-w-0 items-center justify-between gap-3"
-                        >
-                            <span
-                                class="flex min-w-0 items-center gap-1 text-xs font-medium text-slate-700 dark:text-slate-300"
-                            >
-                                <span class="truncate"
-                                    >Collection destination</span
-                                >
+                        <div class="flex min-w-0 items-center justify-between gap-3">
+                            <span class="flex min-w-0 items-center gap-1 text-xs font-medium text-slate-700 dark:text-slate-300">
+                                <span class="truncate">Collection destination</span>
                                 <CockpitFieldHelp
                                     label="About Collection destination"
                                     tooltip="Payments are credited automatically to the collection account authorized for the signed-in operator."
                                 />
                             </span>
-                            <span
-                                class="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-[0.68rem] font-semibold text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100"
-                            >
+                            <span class="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-[0.68rem] font-semibold text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100">
                                 <Check class="size-3" aria-hidden="true" />
                                 Automatic
                             </span>
@@ -6365,14 +6375,9 @@ function instructionRecord(
                             class="truncate text-sm font-semibold text-slate-950 dark:text-slate-50"
                             data-testid="cockpit-quick-generate-collection-destination-label"
                         >
-                            {{
-                                collectionDestination?.label ??
-                                'Your Client Funds'
-                            }}
+                            {{ collectionDestination?.label ?? 'Your Client Funds' }}
                         </p>
-                        <p
-                            class="text-xs leading-5 text-slate-600 dark:text-slate-400"
-                        >
+                        <p class="text-xs leading-5 text-slate-600 dark:text-slate-400">
                             {{
                                 collectionDestination?.description ??
                                 'Payments are credited to the collection account authorized for the signed-in operator.'
@@ -6402,7 +6407,7 @@ function instructionRecord(
                         <span class="flex min-w-0 items-center gap-2">
                             <span class="min-w-0 truncate">Order options</span>
                             <span
-                                class="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[0.68rem] font-bold text-emerald-800 tabular-nums dark:bg-emerald-950 dark:text-emerald-200"
+                                class="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[0.68rem] font-bold tabular-nums text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"
                                 aria-label="Configured order options"
                             >
                                 {{ orderOptionsActiveCount }}
@@ -6595,7 +6600,7 @@ function instructionRecord(
                 >
                     <div class="flex items-center justify-between gap-2">
                         <p
-                            class="text-xs font-semibold tracking-[0.16em] text-emerald-700 uppercase dark:text-emerald-300"
+                            class="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-300"
                         >
                             Templates
                         </p>
@@ -6615,7 +6620,7 @@ function instructionRecord(
                             type="button"
                             :aria-pressed="startingPoint === 'blank'"
                             :class="[
-                                'inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold whitespace-nowrap transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:w-auto sm:shrink-0',
+                                'inline-flex h-9 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border px-2.5 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:w-auto sm:shrink-0',
                                 startingPoint === 'blank'
                                     ? 'border-emerald-400 bg-emerald-50 text-emerald-900 ring-1 ring-emerald-200 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100 dark:ring-emerald-900'
                                     : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-slate-700 dark:hover:bg-slate-900',
@@ -6641,7 +6646,7 @@ function instructionRecord(
                             :disabled="!lastInstructions"
                             :aria-pressed="startingPoint === 'last'"
                             :class="[
-                                'inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold whitespace-nowrap transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:cursor-not-allowed disabled:opacity-45 sm:w-auto sm:shrink-0',
+                                'inline-flex h-9 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border px-2.5 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:cursor-not-allowed disabled:opacity-45 sm:w-auto sm:shrink-0',
                                 startingPoint === 'last'
                                     ? 'border-emerald-400 bg-emerald-50 text-emerald-900 ring-1 ring-emerald-200 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100 dark:ring-emerald-900'
                                     : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-slate-700 dark:hover:bg-slate-900',
@@ -6664,7 +6669,7 @@ function instructionRecord(
                         </button>
                         <button
                             type="button"
-                            class="inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold whitespace-nowrap text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:w-auto sm:shrink-0 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-slate-700 dark:hover:bg-slate-900"
+                            class="inline-flex h-9 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:w-auto sm:shrink-0 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-slate-700 dark:hover:bg-slate-900"
                             data-testid="cockpit-quick-generate-choose-template"
                             @click="templatePickerOpen = true"
                         >
@@ -6676,7 +6681,7 @@ function instructionRecord(
                         </button>
                         <button
                             type="button"
-                            class="inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold whitespace-nowrap text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:w-auto sm:shrink-0 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-slate-700 dark:hover:bg-slate-900"
+                            class="inline-flex h-9 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:w-auto sm:shrink-0 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:hover:border-slate-700 dark:hover:bg-slate-900"
                             data-testid="cockpit-quick-generate-save-template"
                             @click="openSaveTemplateDialog"
                         >
@@ -6935,7 +6940,7 @@ function instructionRecord(
                                 <input
                                     v-model="currency"
                                     type="text"
-                                    class="w-24 min-w-0 rounded-r-xl border border-l-0 border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 uppercase dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                                    class="w-24 min-w-0 rounded-r-xl border border-l-0 border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold uppercase text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
                                     data-testid="cockpit-quick-generate-submit-currency"
                                     :disabled="processing"
                                 />
@@ -7151,7 +7156,7 @@ function instructionRecord(
                                     :disabled="processing"
                                 />
                                 <span
-                                    class="min-h-8 text-[11px] leading-snug font-normal text-slate-500 dark:text-slate-400"
+                                    class="min-h-8 text-[11px] font-normal leading-snug text-slate-500 dark:text-slate-400"
                                 >
                                     Optional characters shown before the
                                     generated code.
@@ -7170,7 +7175,7 @@ function instructionRecord(
                                     :disabled="processing"
                                 />
                                 <span
-                                    class="min-h-8 text-[11px] leading-snug font-normal text-slate-500 dark:text-slate-400"
+                                    class="min-h-8 text-[11px] font-normal leading-snug text-slate-500 dark:text-slate-400"
                                 >
                                     Optional pattern for generated codes.
                                 </span>
@@ -7190,7 +7195,7 @@ function instructionRecord(
                                     :disabled="processing"
                                 />
                                 <span
-                                    class="min-h-8 text-[11px] leading-snug font-normal text-slate-500 dark:text-slate-400"
+                                    class="min-h-8 text-[11px] font-normal leading-snug text-slate-500 dark:text-slate-400"
                                 >
                                     Use an ISO-8601 duration, such as P1D or
                                     PT12H.
@@ -7208,7 +7213,7 @@ function instructionRecord(
                                     :disabled="processing"
                                 />
                                 <span
-                                    class="min-h-8 text-[11px] leading-snug font-normal text-slate-500 dark:text-slate-400"
+                                    class="min-h-8 text-[11px] font-normal leading-snug text-slate-500 dark:text-slate-400"
                                 >
                                     Optional date and time when claims begin.
                                 </span>
@@ -7225,7 +7230,7 @@ function instructionRecord(
                                     :disabled="processing"
                                 />
                                 <span
-                                    class="min-h-8 text-[11px] leading-snug font-normal text-slate-500 dark:text-slate-400"
+                                    class="min-h-8 text-[11px] font-normal leading-snug text-slate-500 dark:text-slate-400"
                                 >
                                     Exact date and time when claims end.
                                 </span>
@@ -7253,7 +7258,7 @@ function instructionRecord(
                                     </option>
                                 </select>
                                 <span
-                                    class="min-h-8 text-[11px] leading-snug font-normal text-slate-500 dark:text-slate-400"
+                                    class="min-h-8 text-[11px] font-normal leading-snug text-slate-500 dark:text-slate-400"
                                 >
                                     Preview how the configured provider transfer
                                     cost affects the recipient and issuer.
@@ -7278,7 +7283,7 @@ function instructionRecord(
                                 <div class="grid gap-2 sm:grid-cols-3">
                                     <div>
                                         <p
-                                            class="text-[11px] tracking-wide text-emerald-700 uppercase dark:text-emerald-300"
+                                            class="text-[11px] uppercase tracking-wide text-emerald-700 dark:text-emerald-300"
                                         >
                                             Provider Transfer Cost
                                         </p>
@@ -7288,7 +7293,7 @@ function instructionRecord(
                                     </div>
                                     <div>
                                         <p
-                                            class="text-[11px] tracking-wide text-emerald-700 uppercase dark:text-emerald-300"
+                                            class="text-[11px] uppercase tracking-wide text-emerald-700 dark:text-emerald-300"
                                         >
                                             Recipient Amount
                                         </p>
@@ -7300,7 +7305,7 @@ function instructionRecord(
                                     </div>
                                     <div>
                                         <p
-                                            class="text-[11px] tracking-wide text-emerald-700 uppercase dark:text-emerald-300"
+                                            class="text-[11px] uppercase tracking-wide text-emerald-700 dark:text-emerald-300"
                                         >
                                             Issuer Cost
                                         </p>
@@ -7338,7 +7343,7 @@ function instructionRecord(
                                     </option>
                                 </select>
                                 <span
-                                    class="min-h-8 text-[11px] leading-snug font-normal text-slate-500 dark:text-slate-400"
+                                    class="min-h-8 text-[11px] font-normal leading-snug text-slate-500 dark:text-slate-400"
                                     data-testid="cockpit-quick-generate-cash-type-helper"
                                 >
                                     {{ cashTypeHelper }}
@@ -7360,7 +7365,7 @@ function instructionRecord(
                                     :disabled="processing"
                                 />
                                 <span
-                                    class="min-h-8 text-[11px] leading-snug font-normal text-slate-500 dark:text-slate-400"
+                                    class="min-h-8 text-[11px] font-normal leading-snug text-slate-500 dark:text-slate-400"
                                 >
                                     Use the key supplied by the approved
                                     integration.
@@ -7372,7 +7377,7 @@ function instructionRecord(
                             >
                                 <div>
                                     <p
-                                        class="leading-none font-semibold text-slate-800 dark:text-slate-100"
+                                        class="font-semibold leading-none text-slate-800 dark:text-slate-100"
                                     >
                                         Required Conditions
                                     </p>
@@ -7404,7 +7409,7 @@ function instructionRecord(
                                                 {{ option.label }}
                                             </span>
                                             <span
-                                                class="text-[11px] leading-snug font-normal text-slate-500 dark:text-slate-400"
+                                                class="text-[11px] font-normal leading-snug text-slate-500 dark:text-slate-400"
                                             >
                                                 {{ option.helper }}
                                             </span>
@@ -7426,7 +7431,7 @@ function instructionRecord(
                                         :disabled="processing"
                                     />
                                     <span
-                                        class="min-h-8 text-[11px] leading-snug font-normal text-slate-500 dark:text-slate-400"
+                                        class="min-h-8 text-[11px] font-normal leading-snug text-slate-500 dark:text-slate-400"
                                     >
                                         Add approved condition keys that are not
                                         listed above.
@@ -7449,7 +7454,7 @@ function instructionRecord(
                                             be included with this Pay Code.
                                         </p>
                                         <div
-                                            class="rounded-lg border border-slate-200 bg-white p-3 font-mono text-xs break-words text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                                            class="break-words rounded-lg border border-slate-200 bg-white p-3 font-mono text-xs text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
                                             data-testid="cockpit-quick-generate-mandates-preview-value"
                                         >
                                             {{ effectiveMandatesDisplay }}
@@ -7628,7 +7633,7 @@ function instructionRecord(
                                     <span class="grid gap-0.5">
                                         <span>Match Mobile Number</span>
                                         <span
-                                            class="text-[11px] leading-snug font-normal text-violet-700 dark:text-violet-300"
+                                            class="text-[11px] font-normal leading-snug text-violet-700 dark:text-violet-300"
                                         >
                                             Require the claimant’s mobile number
                                             to match the recipient.
@@ -7647,7 +7652,7 @@ function instructionRecord(
                                     <span class="grid gap-0.5">
                                         <span>Require Vendor Alias</span>
                                         <span
-                                            class="text-[11px] leading-snug font-normal text-violet-700 dark:text-violet-300"
+                                            class="text-[11px] font-normal leading-snug text-violet-700 dark:text-violet-300"
                                         >
                                             Require a payable vendor alias when
                                             one is expected.
@@ -7666,7 +7671,7 @@ function instructionRecord(
                                     <span class="grid gap-0.5">
                                         <span>Restrict To The Philippines</span>
                                         <span
-                                            class="text-[11px] leading-snug font-normal text-violet-700 dark:text-violet-300"
+                                            class="text-[11px] font-normal leading-snug text-violet-700 dark:text-violet-300"
                                         >
                                             Accept claims only from the
                                             Philippines.
@@ -7690,7 +7695,7 @@ function instructionRecord(
                                     <span class="grid gap-0.5">
                                         <span>Require Location Radius</span>
                                         <span
-                                            class="text-[11px] leading-snug font-normal text-violet-700 dark:text-violet-300"
+                                            class="text-[11px] font-normal leading-snug text-violet-700 dark:text-violet-300"
                                         >
                                             {{
                                                 capabilityUnavailable(
@@ -7723,7 +7728,7 @@ function instructionRecord(
                                     :disabled="processing"
                                 />
                                 <span
-                                    class="text-[11px] leading-snug font-normal text-slate-500 dark:text-slate-400"
+                                    class="text-[11px] font-normal leading-snug text-slate-500 dark:text-slate-400"
                                 >
                                     Use a private code when staff must verify
                                     the recipient before release.
@@ -7759,7 +7764,7 @@ function instructionRecord(
                                     <span class="grid gap-0.5">
                                         <span>KYC</span>
                                         <span
-                                            class="text-[11px] leading-snug font-normal text-sky-700 dark:text-sky-300"
+                                            class="text-[11px] font-normal leading-snug text-sky-700 dark:text-sky-300"
                                         >
                                             {{
                                                 capabilityUnavailable('kyc')
@@ -7792,7 +7797,7 @@ function instructionRecord(
                                     <span class="grid gap-0.5">
                                         <span>OTP</span>
                                         <span
-                                            class="text-[11px] leading-snug font-normal text-sky-700 dark:text-sky-300"
+                                            class="text-[11px] font-normal leading-snug text-sky-700 dark:text-sky-300"
                                         >
                                             {{
                                                 capabilityUnavailable('otp')
@@ -7822,7 +7827,7 @@ function instructionRecord(
                                     <span class="grid gap-0.5">
                                         <span>Selfie</span>
                                         <span
-                                            class="text-[11px] leading-snug font-normal text-sky-700 dark:text-sky-300"
+                                            class="text-[11px] font-normal leading-snug text-sky-700 dark:text-sky-300"
                                         >
                                             Capture a recipient selfie.
                                         </span>
@@ -7846,7 +7851,7 @@ function instructionRecord(
                                     <span class="grid gap-0.5">
                                         <span>Require Signature</span>
                                         <span
-                                            class="text-[11px] leading-snug font-normal text-sky-700 dark:text-sky-300"
+                                            class="text-[11px] font-normal leading-snug text-sky-700 dark:text-sky-300"
                                         >
                                             Capture the recipient’s signature.
                                         </span>
@@ -8068,12 +8073,12 @@ function instructionRecord(
                                     class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950"
                                 >
                                     <p
-                                        class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400"
+                                        class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                                     >
                                         Recipient Rules
                                     </p>
                                     <p
-                                        class="mt-1 font-mono text-xs break-words text-slate-800 dark:text-slate-100"
+                                        class="mt-1 break-words font-mono text-xs text-slate-800 dark:text-slate-100"
                                         data-testid="cockpit-quick-generate-cash-validation-preview-value"
                                     >
                                         {{ validationPreviewDisplay }}
@@ -8083,12 +8088,12 @@ function instructionRecord(
                                     class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-950"
                                 >
                                     <p
-                                        class="text-[11px] font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400"
+                                        class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                                     >
                                         Additional Checks
                                     </p>
                                     <p
-                                        class="mt-1 font-mono text-xs break-words text-slate-800 dark:text-slate-100"
+                                        class="mt-1 break-words font-mono text-xs text-slate-800 dark:text-slate-100"
                                         data-testid="cockpit-quick-generate-structured-validation-preview-value"
                                     >
                                         {{ structuredValidationPreviewDisplay }}
@@ -8165,7 +8170,7 @@ function instructionRecord(
                                 <button
                                     type="button"
                                     role="tab"
-                                    class="inline-flex min-w-0 items-center justify-center gap-1 rounded-lg px-0.5 py-2 text-[0.68rem] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:text-xs @sm:gap-1.5 @sm:px-2"
+                                    class="inline-flex min-w-0 items-center justify-center gap-1 rounded-lg px-0.5 py-2 text-[0.68rem] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 @sm:gap-1.5 @sm:px-2 sm:text-xs"
                                     :class="
                                         riderDesignEditor === 'appearance'
                                             ? 'bg-slate-950 text-white shadow-sm dark:bg-white dark:text-slate-950'
@@ -8183,14 +8188,12 @@ function instructionRecord(
                                         class="size-3.5 shrink-0"
                                         aria-hidden="true"
                                     />
-                                    <span class="whitespace-nowrap"
-                                        >Appearance</span
-                                    >
+                                    <span class="whitespace-nowrap">Appearance</span>
                                 </button>
                                 <button
                                     type="button"
                                     role="tab"
-                                    class="inline-flex min-w-0 items-center justify-center gap-1 rounded-lg px-0.5 py-2 text-[0.68rem] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:text-xs @sm:gap-1.5 @sm:px-2"
+                                    class="inline-flex min-w-0 items-center justify-center gap-1 rounded-lg px-0.5 py-2 text-[0.68rem] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 @sm:gap-1.5 @sm:px-2 sm:text-xs"
                                     :class="
                                         riderDesignEditor === 'message'
                                             ? 'bg-slate-950 text-white shadow-sm dark:bg-white dark:text-slate-950'
@@ -8206,14 +8209,12 @@ function instructionRecord(
                                         class="size-3.5 shrink-0"
                                         aria-hidden="true"
                                     />
-                                    <span class="whitespace-nowrap"
-                                        >Message</span
-                                    >
+                                    <span class="whitespace-nowrap">Message</span>
                                 </button>
                                 <button
                                     type="button"
                                     role="tab"
-                                    class="inline-flex min-w-0 items-center justify-center gap-1 rounded-lg px-0.5 py-2 text-[0.68rem] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:text-xs @sm:gap-1.5 @sm:px-2"
+                                    class="inline-flex min-w-0 items-center justify-center gap-1 rounded-lg px-0.5 py-2 text-[0.68rem] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 @sm:gap-1.5 @sm:px-2 sm:text-xs"
                                     :class="
                                         riderDesignEditor === 'link'
                                             ? 'bg-slate-950 text-white shadow-sm dark:bg-white dark:text-slate-950'
@@ -8234,7 +8235,7 @@ function instructionRecord(
                                 <button
                                     type="button"
                                     role="tab"
-                                    class="inline-flex min-w-0 items-center justify-center gap-1 rounded-lg px-0.5 py-2 text-[0.68rem] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:text-xs @sm:gap-1.5 @sm:px-2"
+                                    class="inline-flex min-w-0 items-center justify-center gap-1 rounded-lg px-0.5 py-2 text-[0.68rem] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 @sm:gap-1.5 @sm:px-2 sm:text-xs"
                                     :class="
                                         riderDesignEditor === 'splash'
                                             ? 'bg-slate-950 text-white shadow-sm dark:bg-white dark:text-slate-950'
@@ -8250,9 +8251,7 @@ function instructionRecord(
                                         class="size-3.5 shrink-0"
                                         aria-hidden="true"
                                     />
-                                    <span class="whitespace-nowrap"
-                                        >Splash</span
-                                    >
+                                    <span class="whitespace-nowrap">Splash</span>
                                 </button>
                             </div>
                             <CockpitRiderEditorDisclosure
@@ -8319,7 +8318,7 @@ function instructionRecord(
                                         class="flex flex-wrap items-center justify-between gap-2"
                                     >
                                         <p
-                                            class="text-[11px] font-semibold tracking-wide text-sky-700 uppercase dark:text-sky-300"
+                                            class="text-[11px] font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300"
                                         >
                                             Rider URL Preview
                                         </p>
@@ -8428,7 +8427,7 @@ function instructionRecord(
                                         data-testid="cockpit-quick-generate-rider-splash-preview"
                                     >
                                         <p
-                                            class="text-[11px] font-semibold tracking-wide text-orange-700 uppercase dark:text-orange-300"
+                                            class="text-[11px] font-semibold uppercase tracking-wide text-orange-700 dark:text-orange-300"
                                         >
                                             Claim Splash Preview
                                         </p>
@@ -8569,7 +8568,7 @@ function instructionRecord(
                                                                 riderStampArtworkSource ===
                                                                 option.value
                                                             "
-                                                            class="absolute top-1.5 right-1.5 grid size-4 place-items-center rounded-full bg-sky-600 text-[9px] font-black text-white shadow-sm dark:bg-sky-400 dark:text-slate-950"
+                                                            class="absolute right-1.5 top-1.5 grid size-4 place-items-center rounded-full bg-sky-600 text-[9px] font-black text-white shadow-sm dark:bg-sky-400 dark:text-slate-950"
                                                             aria-hidden="true"
                                                             data-testid="cockpit-quick-generate-rider-artwork-selected"
                                                         >
@@ -8578,7 +8577,7 @@ function instructionRecord(
                                                         <span
                                                             :id="`rider-stamp-artwork-tooltip-${option.value}`"
                                                             role="tooltip"
-                                                            class="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 -translate-x-1/2 rounded-md bg-slate-950 px-2 py-1 text-[10px] font-semibold whitespace-nowrap text-white opacity-0 shadow-lg transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 dark:bg-white dark:text-slate-950"
+                                                            class="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-950 px-2 py-1 text-[10px] font-semibold text-white opacity-0 shadow-lg transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 dark:bg-white dark:text-slate-950"
                                                         >
                                                             {{ option.label }}
                                                         </span>
@@ -9188,7 +9187,7 @@ function instructionRecord(
                                     </option>
                                 </select>
                                 <span
-                                    class="text-[11px] leading-snug font-normal text-slate-500 dark:text-slate-400"
+                                    class="text-[11px] font-normal leading-snug text-slate-500 dark:text-slate-400"
                                     data-testid="cockpit-quick-generate-rider-url-preset-helper"
                                 >
                                     {{ selectedRiderUrlPreset.helper }}
@@ -9422,7 +9421,7 @@ function instructionRecord(
                                             >Use My Webhook</span
                                         >
                                         <span
-                                            class="block text-[11px] break-all text-violet-700 dark:text-violet-200"
+                                            class="block break-all text-[11px] text-violet-700 dark:text-violet-200"
                                         >
                                             {{
                                                 defaultFeedbackWebhook ||
@@ -9620,7 +9619,7 @@ function instructionRecord(
                                         "
                                     />
                                     <span
-                                        class="text-[11px] leading-snug font-normal text-slate-500 dark:text-slate-400"
+                                        class="text-[11px] font-normal leading-snug text-slate-500 dark:text-slate-400"
                                     >
                                         Number of equal claims.
                                     </span>
@@ -9643,7 +9642,7 @@ function instructionRecord(
                                         "
                                     />
                                     <span
-                                        class="text-[11px] leading-snug font-normal text-slate-500 dark:text-slate-400"
+                                        class="text-[11px] font-normal leading-snug text-slate-500 dark:text-slate-400"
                                     >
                                         Available only for Flexible Amounts.
                                     </span>
@@ -9674,14 +9673,14 @@ function instructionRecord(
                                             "
                                         />
                                         <span
-                                            class="inline-flex w-24 min-w-0 items-center justify-center rounded-r-xl border border-l-0 border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 uppercase dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                                            class="inline-flex w-24 min-w-0 items-center justify-center rounded-r-xl border border-l-0 border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold uppercase text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
                                             data-testid="cockpit-quick-generate-min-withdrawal-currency"
                                         >
                                             {{ currency || 'PHP' }}
                                         </span>
                                     </div>
                                     <span
-                                        class="text-[11px] leading-snug font-normal text-slate-500 dark:text-slate-400"
+                                        class="text-[11px] font-normal leading-snug text-slate-500 dark:text-slate-400"
                                     >
                                         Smallest permitted claim amount, shown
                                         in
@@ -10380,7 +10379,7 @@ function instructionRecord(
                 >
                     <div>
                         <p
-                            class="text-xs font-semibold tracking-[0.22em] text-emerald-700 uppercase dark:text-emerald-300"
+                            class="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700 dark:text-emerald-300"
                         >
                             {{ generationStatusLabel }}
                         </p>
@@ -10420,12 +10419,12 @@ function instructionRecord(
                         class="rounded-xl border border-emerald-200 bg-white/80 p-3 dark:border-emerald-900/70 dark:bg-slate-950/60"
                     >
                         <dt
-                            class="text-[11px] font-semibold tracking-[0.18em] text-emerald-700 uppercase dark:text-emerald-300"
+                            class="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300"
                         >
                             {{ item.label }}
                         </dt>
                         <dd
-                            class="mt-1 font-semibold break-words text-emerald-950 dark:text-emerald-50"
+                            class="mt-1 break-words font-semibold text-emerald-950 dark:text-emerald-50"
                         >
                             {{ item.value }}
                         </dd>
@@ -10443,7 +10442,7 @@ function instructionRecord(
                 >
                     <div class="min-w-0">
                         <p
-                            class="text-[11px] font-semibold tracking-[0.18em] text-emerald-700 uppercase dark:text-emerald-300"
+                            class="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300"
                         >
                             Primary next step
                         </p>
@@ -10460,7 +10459,7 @@ function instructionRecord(
                             v-if="
                                 !isAccountFundingResult && beneficiaryClaimUrl
                             "
-                            class="mt-1 font-mono text-[11px] break-all text-emerald-800 dark:text-emerald-200"
+                            class="mt-1 break-all font-mono text-[11px] text-emerald-800 dark:text-emerald-200"
                         >
                             {{ beneficiaryClaimUrl }}
                         </p>
@@ -10544,7 +10543,7 @@ function instructionRecord(
                         <div class="flex items-start justify-between gap-3">
                             <div>
                                 <p
-                                    class="text-[11px] font-semibold tracking-[0.18em] text-emerald-700 uppercase dark:text-emerald-300"
+                                    class="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300"
                                 >
                                     Pricing summary
                                 </p>
@@ -10592,7 +10591,7 @@ function instructionRecord(
                         <div class="flex items-start justify-between gap-3">
                             <div>
                                 <p
-                                    class="text-[11px] font-semibold tracking-[0.18em] text-emerald-700 uppercase dark:text-emerald-300"
+                                    class="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300"
                                 >
                                     Funding summary
                                 </p>
@@ -10642,7 +10641,7 @@ function instructionRecord(
                     >
                         <div>
                             <p
-                                class="text-[11px] font-semibold tracking-[0.18em] text-emerald-700 uppercase dark:text-emerald-300"
+                                class="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-300"
                             >
                                 Downstream handoff status
                             </p>
@@ -10763,12 +10762,12 @@ function instructionRecord(
                     <dl class="mt-3 grid gap-2">
                         <div v-if="beneficiaryClaimUrl">
                             <dt
-                                class="text-[11px] font-medium tracking-[0.18em] text-emerald-700/80 uppercase dark:text-emerald-200/80"
+                                class="text-[11px] font-medium uppercase tracking-[0.18em] text-emerald-700/80 dark:text-emerald-200/80"
                             >
                                 Full URL
                             </dt>
                             <dd
-                                class="mt-1 font-mono text-[12px] font-semibold break-all text-emerald-950 dark:text-emerald-50"
+                                class="mt-1 break-all font-mono text-[12px] font-semibold text-emerald-950 dark:text-emerald-50"
                             >
                                 <a
                                     :href="beneficiaryClaimUrl"
@@ -10783,12 +10782,12 @@ function instructionRecord(
                         </div>
                         <div v-if="beneficiaryRedeemPath">
                             <dt
-                                class="text-[11px] font-medium tracking-[0.18em] text-emerald-700/80 uppercase dark:text-emerald-200/80"
+                                class="text-[11px] font-medium uppercase tracking-[0.18em] text-emerald-700/80 dark:text-emerald-200/80"
                             >
                                 Path
                             </dt>
                             <dd
-                                class="mt-1 font-mono text-[12px] font-semibold break-all text-emerald-950 dark:text-emerald-50"
+                                class="mt-1 break-all font-mono text-[12px] font-semibold text-emerald-950 dark:text-emerald-50"
                             >
                                 {{ beneficiaryRedeemPath }}
                             </dd>
