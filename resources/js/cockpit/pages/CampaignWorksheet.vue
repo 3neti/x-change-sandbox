@@ -163,6 +163,17 @@ const representativeRow = computed(() => props.worksheet.rows[0]);
 const worksheetTotalMinor = computed(() =>
     props.worksheet.rows.reduce((total, row) => total + row.amount_minor, 0),
 );
+const isPayroll = computed(() => props.worksheet.profile === 'payroll');
+const profileLabel = computed(() => (isPayroll.value ? 'Payroll' : 'Ayuda'));
+const peopleLabel = computed(() =>
+    isPayroll.value ? 'Employees' : 'Beneficiaries',
+);
+const personLabel = computed(() =>
+    isPayroll.value ? 'employee' : 'beneficiary',
+);
+const valueLabel = computed(() =>
+    isPayroll.value ? 'Net Payroll' : 'Assistance Total',
+);
 const requestedRelativeTime = (value: string | null): string =>
     formatRelativeTime(value, Date.now()) ?? 'Time unavailable';
 const fulfillmentReadinessDescription = (): string => {
@@ -170,8 +181,8 @@ const fulfillmentReadinessDescription = (): string => {
 
     if (isCampaignComplete.value) {
         return completedCount() === 1
-            ? 'The recipient payment is complete.'
-            : `All ${completedCount()} recipient payments are complete.`;
+            ? `The ${personLabel.value} payment is complete.`
+            : `All ${completedCount()} ${personLabel.value} payments are complete.`;
     }
 
     if (count === 0 && issuedCount() > 0) {
@@ -179,13 +190,15 @@ const fulfillmentReadinessDescription = (): string => {
     }
 
     if (count === 0) {
-        return 'Preparing the approved recipient list.';
+        return `Preparing the approved ${personLabel.value} list.`;
     }
 
     return (
         count +
         ' ' +
-        (count === 1 ? 'recipient is' : 'recipients are') +
+        (count === 1
+            ? `${personLabel.value} is`
+            : `${personLabel.value}s are`) +
         ' ready for Pay Code issuance.'
     );
 };
@@ -296,7 +309,7 @@ const sendApproval = (): void => {
                                 <span
                                     class="rounded-full bg-slate-100 px-2 py-0.5 text-[0.65rem] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300"
                                 >
-                                    {{ readableLabel(props.worksheet.profile) }}
+                                    {{ profileLabel }}
                                 </span>
                                 <span
                                     :class="
@@ -325,7 +338,7 @@ const sendApproval = (): void => {
                                 <dt
                                     class="text-[0.65rem] font-medium text-slate-500 dark:text-slate-400"
                                 >
-                                    Recipients
+                                    {{ peopleLabel }}
                                 </dt>
                                 <dd
                                     class="mt-0.5 text-sm font-semibold text-slate-950 dark:text-slate-50"
@@ -339,7 +352,7 @@ const sendApproval = (): void => {
                                 <dt
                                     class="text-[0.65rem] font-medium text-slate-500 dark:text-slate-400"
                                 >
-                                    Total
+                                    {{ valueLabel }}
                                 </dt>
                                 <dd
                                     class="mt-0.5 whitespace-nowrap text-sm font-semibold text-slate-950 dark:text-slate-50"
@@ -407,7 +420,7 @@ const sendApproval = (): void => {
                                 <h2
                                     class="font-semibold text-slate-950 dark:text-slate-50"
                                 >
-                                    Recipients
+                                    {{ peopleLabel }}
                                 </h2>
                                 <span
                                     class="rounded-full bg-slate-100 px-2 py-0.5 text-[0.65rem] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300"
@@ -421,10 +434,10 @@ const sendApproval = (): void => {
                             >
                                 {{
                                     props.worksheet.rows.length === 0
-                                        ? 'Add at least one recipient.'
+                                        ? `Add at least one ${personLabel}.`
                                         : hasPendingImportRows
                                           ? 'Finish or discard the pending import.'
-                                          : `${props.worksheet.rows.length} ${props.worksheet.rows.length === 1 ? 'recipient' : 'recipients'} ready for approval.`
+                                          : `${props.worksheet.rows.length} ${props.worksheet.rows.length === 1 ? personLabel : `${personLabel}s`} ready for approval.`
                                 }}
                             </p>
                         </div>
@@ -459,8 +472,8 @@ const sendApproval = (): void => {
                         class="border-b border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-950 dark:border-amber-900/70 dark:bg-amber-950/30 dark:text-amber-100"
                         data-testid="campaign-approval-capability-warning"
                     >
-                        Update the Recipient Experience before requesting
-                        approval:
+                        Update the {{ profileLabel }} experience before
+                        requesting approval:
                         {{ props.instruction_capability_blockers?.join(' ') }}
                     </div>
                     <CockpitCampaignWorksheetBeneficiaries
@@ -481,7 +494,7 @@ const sendApproval = (): void => {
                             <h2
                                 class="font-semibold text-slate-950 dark:text-slate-50"
                             >
-                                Add Recipient
+                                Add {{ isPayroll ? 'Employee' : 'Beneficiary' }}
                             </h2>
                         </div>
                     </div>
@@ -547,7 +560,11 @@ const sendApproval = (): void => {
                         :disabled="form.processing"
                         class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-3 py-2.5 text-sm font-semibold text-white disabled:opacity-60 dark:bg-slate-100 dark:text-slate-950"
                     >
-                        {{ form.processing ? 'Adding…' : 'Add Recipient' }}
+                        {{
+                            form.processing
+                                ? 'Adding…'
+                                : `Add ${isPayroll ? 'Employee' : 'Beneficiary'}`
+                        }}
                     </button>
                     <p
                         class="mt-2 text-center text-xs text-slate-500 dark:text-slate-400"
@@ -588,7 +605,7 @@ const sendApproval = (): void => {
                                 isCampaignComplete
                                     ? 'Campaign Complete'
                                     : plannedCount() > 0
-                                      ? 'Recipients Ready'
+                                      ? `${peopleLabel} Ready`
                                       : issuedCount() > 0
                                         ? 'Pay Codes Issued'
                                         : 'Preparing Pay Codes'
@@ -945,8 +962,12 @@ const sendApproval = (): void => {
                             <span class="font-semibold">{{
                                 props.authorization.approval_pay_code
                             }}</span>
-                            · {{ props.worksheet.rows.length }} recipients. The
-                            officer must sign in to approve this batch.
+                            · {{ props.worksheet.rows.length }}
+                            {{
+                                props.worksheet.rows.length === 1
+                                    ? personLabel
+                                    : `${personLabel}s`
+                            }}. The officer must sign in to approve this batch.
                         </p>
                     </div>
                     <Link
@@ -1068,7 +1089,11 @@ const sendApproval = (): void => {
                         <h2
                             class="mt-0.5 font-semibold text-slate-950 dark:text-slate-50"
                         >
-                            Recipient Results
+                            {{
+                                isPayroll
+                                    ? 'Employee Results'
+                                    : 'Beneficiary Results'
+                            }}
                         </h2>
                     </div>
                     <a
