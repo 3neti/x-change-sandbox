@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f5219e5b3eec40833c75d6e618009e56",
+    "content-hash": "bc26069146ac2d98fa4678f451af7124",
     "packages": [
         {
             "name": "3neti/cash",
@@ -1524,11 +1524,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.0-beta.305",
+            "version": "v1.0.0-beta.308",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "3cca3f714c334a796c1af43b6bc96af9157c0e83"
+                "reference": "26b0fc676b525d172938d8b0a5907d93022e5b2a"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1629,7 +1629,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-09-01T00:54:37+00:00"
+            "time": "2026-09-02T00:19:11+00:00"
         },
         {
             "name": "3neti/x-commerce",
@@ -1937,11 +1937,11 @@
         },
         {
             "name": "3neti/x-ray",
-            "version": "v1.0.1",
+            "version": "v1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-ray.git",
-                "reference": "179d80ee067d619fdaa72de5f5131d1f881c3b46"
+                "reference": "df83888dcba49cec0dba1d8c14bde7f64475818b"
             },
             "require": {
                 "illuminate/http": "^12.0 || ^13.0",
@@ -1995,7 +1995,7 @@
                 }
             ],
             "description": "Permissioned pre-claim inspection and disclosure runtime for Pay Codes.",
-            "time": "2026-08-19T22:26:04+00:00"
+            "time": "2026-09-02T00:19:01+00:00"
         },
         {
             "name": "3neti/x-rider",
