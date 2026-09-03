@@ -455,16 +455,29 @@ function sanitizeRecord(
         return null;
     }
 
+    const operationalStatus = sanitizeOperationalStatus(record);
+    const consumerStatus = stringValue(record.consumer_status);
+    const posReference = objectValue(record.pos_reference);
+
     return {
         code,
         template: stringValue(record.template) ?? 'Template pending',
-        purpose: stringValue(record.purpose),
+        purpose:
+            stringValue(posReference.purpose) ?? stringValue(record.purpose),
         capability: sanitizeCapability(record.capability),
         instructionBadges: sanitizeInstructionBadges(record.instruction_badges),
         amount: moneyValue(record.amount, stringValue(record.currency)),
-        status: sanitizeOperationalStatus(record).key,
+        amountPresentation: sanitizeAmountPresentation(
+            record.amount_presentation,
+            record.amount,
+            stringValue(record.currency),
+        ),
+        status: consumerStatus ?? operationalStatus.key,
+        consumerStatus,
+        collection: objectValue(record.collection),
+        posReference,
         voucherStatus: stringValue(record.voucher_status),
-        operationalStatus: sanitizeOperationalStatus(record),
+        operationalStatus,
         party: sanitizeParty(record.party),
         timing: sanitizeTiming(record),
         terminalControl: sanitizeTerminalControl(record),
@@ -551,6 +564,48 @@ function sanitizeCapability(
         key: stringValue(value.key) ?? 'disbursement',
         label: stringValue(value.label) ?? 'Disbursement',
         voucherTypeLabel: stringValue(value.voucher_type_label) ?? 'Redeemable',
+    };
+}
+
+function sanitizeAmountPresentation(
+    presentation: CockpitPayCodeExplorerReadModelRecord['amount_presentation'],
+    fallbackAmount: unknown,
+    fallbackCurrency: string | null,
+): CockpitPayCodeExplorerRecord['amountPresentation'] {
+    const value = objectValue(presentation);
+    const flowType = stringValue(value.flow_type);
+
+    if (
+        flowType !== 'disbursable' &&
+        flowType !== 'payable' &&
+        flowType !== 'settlement'
+    ) {
+        return null;
+    }
+
+    const amountMinor = numberOrNull(value.amount_minor);
+    const targetAmountMinor = numberOrNull(value.target_amount_minor);
+    const amount = stringValue(value.amount)
+        ?? (amountMinor !== null
+            ? moneyValue(amountMinor / 100, fallbackCurrency)
+            : null);
+    const targetAmount = stringValue(value.target_amount)
+        ?? (targetAmountMinor !== null
+            ? moneyValue(targetAmountMinor / 100, fallbackCurrency)
+            : null);
+
+    return {
+        schema: stringValue(value.schema) ?? undefined,
+        flowType,
+        label: stringValue(value.label) ?? displayValue(flowType),
+        amountMinor,
+        targetAmountMinor,
+        amount:
+            amount ??
+            (flowType === 'disbursable'
+                ? moneyValue(fallbackAmount, fallbackCurrency)
+                : null),
+        targetAmount,
     };
 }
 
@@ -694,6 +749,10 @@ function objectValue(value: unknown): Record<string, unknown> {
 
 function numberValue(value: unknown): number {
     return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+}
+
+function numberOrNull(value: unknown): number | null {
+    return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
 function moneyValue(value: unknown, currency: string | null = 'PHP'): string {

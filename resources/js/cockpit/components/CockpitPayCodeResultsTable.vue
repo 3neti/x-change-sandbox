@@ -152,7 +152,9 @@ function displayStatus(status: string): string {
 }
 
 function statusLabel(record: CockpitPayCodeExplorerRecord): string {
-    return record.operationalStatus.label || displayStatus(record.status);
+    return record.consumerStatus
+        ? displayStatus(record.consumerStatus)
+        : record.operationalStatus.label || displayStatus(record.status);
 }
 
 function statusBadgeClass(status: string): string {
@@ -213,6 +215,38 @@ function capabilityBadgeClass(capabilityKey: string): string {
     }
 
     return 'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950 dark:text-emerald-200 dark:ring-emerald-800';
+}
+
+function amountPresentationLabel(
+    record: CockpitPayCodeExplorerRecord,
+): string | null {
+    return record.amountPresentation?.label ?? null;
+}
+
+function amountPresentationValue(record: CockpitPayCodeExplorerRecord): string {
+    const presentation = record.amountPresentation;
+
+    if (!presentation) {
+        return record.amount;
+    }
+
+    if (presentation.flowType === 'settlement') {
+        if (presentation.amount && presentation.targetAmount) {
+            return `${presentation.amount} → ${presentation.targetAmount}`;
+        }
+
+        return presentation.amount ?? presentation.targetAmount ?? record.amount;
+    }
+
+    if (presentation.flowType === 'payable') {
+        return presentation.targetAmount ?? presentation.amount ?? record.amount;
+    }
+
+    return presentation.amount ?? record.amount;
+}
+
+function showsPayableTargetSuffix(record: CockpitPayCodeExplorerRecord): boolean {
+    return record.amountPresentation?.flowType === 'payable';
 }
 
 function timingFacts(record: CockpitPayCodeExplorerRecord) {
@@ -355,10 +389,23 @@ function timingFacts(record: CockpitPayCodeExplorerRecord) {
                             {{ statusLabel(record) }}
                         </span>
                         <p
-                            class="mt-1.5 text-right font-mono text-sm font-semibold text-slate-950 tabular-nums dark:text-slate-50"
+                            v-if="amountPresentationLabel(record)"
+                            class="mt-1.5 text-[0.65rem] font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400"
+                            data-testid="cockpit-pay-code-mobile-amount-flow"
+                        >
+                            {{ amountPresentationLabel(record) }}
+                        </p>
+                        <p
+                            class="text-right font-mono text-sm font-semibold text-slate-950 tabular-nums dark:text-slate-50"
                             data-testid="cockpit-pay-code-mobile-amount"
                         >
-                            {{ record.amount }}
+                            {{ amountPresentationValue(record) }}
+                            <span
+                                v-if="showsPayableTargetSuffix(record)"
+                                class="font-sans text-[0.65rem] font-semibold tracking-normal text-slate-500 dark:text-slate-400"
+                            >
+                                target
+                            </span>
                         </p>
                     </div>
                 </div>
@@ -400,6 +447,15 @@ function timingFacts(record: CockpitPayCodeExplorerRecord) {
                         Standard instructions
                     </span>
                 </div>
+
+                <p
+                    v-if="record.posReference?.sale_reference"
+                    class="truncate font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-300"
+                    :title="String(record.posReference?.sale_reference)"
+                    data-testid="cockpit-pay-code-mobile-sale-reference"
+                >
+                    {{ record.posReference?.sale_reference }}
+                </p>
 
                 <p
                     v-if="record.purpose"
@@ -585,6 +641,14 @@ function timingFacts(record: CockpitPayCodeExplorerRecord) {
                             data-testid="cockpit-pay-code-row-identity"
                         >
                             <p
+                                v-if="record.posReference?.sale_reference"
+                                class="mt-0.5 truncate font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-300"
+                                :title="String(record.posReference?.sale_reference)"
+                                data-testid="cockpit-pay-code-sale-reference"
+                            >
+                                {{ record.posReference?.sale_reference }}
+                            </p>
+                            <p
                                 class="truncate font-mono font-semibold text-slate-950 dark:text-slate-50"
                             >
                                 {{ record.code }}
@@ -649,7 +713,22 @@ function timingFacts(record: CockpitPayCodeExplorerRecord) {
                             class="px-4 py-2.5 text-right font-mono text-slate-700 tabular-nums dark:text-slate-200"
                             data-testid="cockpit-pay-code-amount"
                         >
-                            {{ record.amount }}
+                            <p
+                                v-if="amountPresentationLabel(record)"
+                                class="font-sans text-[0.65rem] font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400"
+                                data-testid="cockpit-pay-code-amount-flow"
+                            >
+                                {{ amountPresentationLabel(record) }}
+                            </p>
+                            <p class="font-mono">
+                                {{ amountPresentationValue(record) }}
+                                <span
+                                    v-if="showsPayableTargetSuffix(record)"
+                                    class="font-sans text-[0.65rem] font-semibold tracking-normal text-slate-500 dark:text-slate-400"
+                                >
+                                    target
+                                </span>
+                            </p>
                         </td>
                         <td class="px-4 py-2.5">
                             <span

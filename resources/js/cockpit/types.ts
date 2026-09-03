@@ -1617,6 +1617,7 @@ export type CockpitQuickGeneratePageProps = CockpitHeaderPageProps & {
     rider_library?: CockpitRiderLibraryEntry[];
     instruction_capabilities?: CockpitInstructionCapabilityReadinessMap;
     settlement_rail_capabilities?: CockpitSettlementRailCapabilities;
+    pos_voucher?: CockpitVoucherReadModel | null;
 };
 
 export type CockpitFundingRealtime = {
@@ -1753,7 +1754,11 @@ export type CockpitPayCodeExplorerRecord = {
         label: string;
     }>;
     amount: string;
+    amountPresentation: CockpitPayCodeAmountPresentation | null;
     status: string;
+    consumerStatus: string | null;
+    collection: Record<string, unknown>;
+    posReference?: CockpitPosSaleReferenceReadModel;
     voucherStatus: string | null;
     operationalStatus: {
         key: string;
@@ -1795,6 +1800,16 @@ export type CockpitPayCodeExplorerRecord = {
         tone: 'warning' | 'critical';
     } | null;
     actions?: CockpitPayCodeRowAction[];
+};
+
+export type CockpitPayCodeAmountPresentation = {
+    schema?: string;
+    flowType: 'disbursable' | 'payable' | 'settlement';
+    label: string;
+    amountMinor: number | null;
+    targetAmountMinor: number | null;
+    amount: string | null;
+    targetAmount: string | null;
 };
 
 export type CockpitPayCodeRowAction = {
@@ -1878,10 +1893,49 @@ export type CockpitVoucherReadModel = {
     slices?: Record<string, unknown>;
     settlement?: Record<string, unknown>;
     treasury?: Record<string, unknown>;
+    collection?: CockpitVoucherCollectionReadModel;
+    pos_reference?: CockpitPosSaleReferenceReadModel;
     evidence_summary?: CockpitVoucherEvidenceSummary[];
     distribution_links?: Record<string, unknown>;
     redactions?: CockpitReadModelRedactions;
     authorized?: boolean;
+};
+
+export type CockpitPosSaleReferenceReadModel = {
+    schema?: string;
+    sale_reference?: string | null;
+    order_reference?: string | null;
+    purpose?: string | null;
+    legacy_reference?: string | null;
+    reference_kind?: 'canonical' | 'legacy' | 'none' | string;
+};
+
+export type CockpitVoucherCollectionReadModel = {
+    schema?: string;
+    consumer_status?: string | null;
+    currency?: string;
+    target_amount_minor?: number;
+    collected_total_minor?: number;
+    remaining_to_collect_minor?: number;
+    is_fully_collected?: boolean;
+    is_overpaid?: boolean;
+    overpaid_amount_minor?: number;
+};
+
+export type CockpitPosPaymentAttempt = {
+    reference: string;
+    status: string;
+    provider: string;
+    amount_minor: number;
+    currency: string;
+    expires_at: string | null;
+    qr_code: {
+        mime_type: string | null;
+        base64_payload: string | null;
+        qr_mode: string | null;
+        transaction_type: string | null;
+        embedded_amount: boolean;
+    } | null;
 };
 
 export type CockpitDependentReadModel = {
@@ -1965,10 +2019,23 @@ export type CockpitPayCodeExplorerReadModelRecord = {
     template?: string | null;
     purpose?: string | null;
     amount?: string | number | null;
+    amount_presentation?: {
+        schema?: string | null;
+        flow_type?: string | null;
+        label?: string | null;
+        amount_minor?: number | null;
+        target_amount_minor?: number | null;
+        amount?: string | null;
+        target_amount?: string | null;
+        [key: string]: unknown;
+    } | null;
     currency?: string | null;
     status?: string | null;
     display_status?: string | null;
     voucher_status?: string | null;
+    consumer_status?: string | null;
+    collection?: Record<string, unknown>;
+    pos_reference?: CockpitPosSaleReferenceReadModel;
     operational_status?: {
         key?: string | null;
         label?: string | null;

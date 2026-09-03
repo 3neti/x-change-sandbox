@@ -48,6 +48,14 @@ export const cockpitPayCodeExplorerRecords: CockpitPayCodeExplorerRecord[] = [
             { key: 'settlement_rail', label: 'InstaPay' },
         ],
         amount: '₱5,000.00',
+        amountPresentation: {
+            flowType: 'disbursable',
+            label: 'Disbursable',
+            amountMinor: 500000,
+            targetAmountMinor: null,
+            amount: '₱5,000.00',
+            targetAmount: null,
+        },
         status: 'Issued',
         voucherStatus: 'issued',
         operationalStatus: {
@@ -90,6 +98,14 @@ export const cockpitPayCodeExplorerRecords: CockpitPayCodeExplorerRecord[] = [
         },
         instructionBadges: [{ key: 'vendor_bound', label: 'Vendor-bound' }],
         amount: '₱12,500.00',
+        amountPresentation: {
+            flowType: 'payable',
+            label: 'Payable',
+            amountMinor: null,
+            targetAmountMinor: 1250000,
+            amount: null,
+            targetAmount: '₱12,500.00',
+        },
         status: 'Awaiting Claim',
         voucherStatus: 'issued',
         operationalStatus: {
@@ -135,6 +151,14 @@ export const cockpitPayCodeExplorerRecords: CockpitPayCodeExplorerRecord[] = [
             { key: 'signature', label: 'Signature' },
         ],
         amount: 'Pending',
+        amountPresentation: {
+            flowType: 'settlement',
+            label: 'Settlement',
+            amountMinor: null,
+            targetAmountMinor: null,
+            amount: null,
+            targetAmount: null,
+        },
         status: 'Readiness Pending',
         voucherStatus: 'pending',
         operationalStatus: {
