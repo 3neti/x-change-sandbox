@@ -221,6 +221,7 @@ const fundingActivityFilter = computed(() => {
 const processedFundingEvents = new Set<string>();
 let realtimeRefreshTimer: ReturnType<typeof setTimeout> | null = null;
 let standingHistoryCooldownTimer: ReturnType<typeof setInterval> | null = null;
+let fundingProjectionRefreshInFlight = false;
 let lastProjectionRefreshAt = 0;
 const activeSimulationStepIndex = ref(0);
 const activeSimulationStep = computed(
@@ -308,6 +309,16 @@ const { start: startFundingPoll, stop: stopFundingPoll } = usePoll(
             'funding_activity',
             'funding_notice',
         ],
+        onBefore: () => {
+            if (fundingProjectionRefreshInFlight) {
+                return false;
+            }
+
+            fundingProjectionRefreshInFlight = true;
+        },
+        onFinish: () => {
+            fundingProjectionRefreshInFlight = false;
+        },
     },
     {
         autoStart: hasOpenFundingWork.value,
@@ -1245,11 +1256,15 @@ async function approveStandingFundingReceipt(
 function refreshFundingProjections(): void {
     const refreshedAt = Date.now();
 
-    if (refreshedAt - lastProjectionRefreshAt < 750) {
+    if (
+        fundingProjectionRefreshInFlight ||
+        refreshedAt - lastProjectionRefreshAt < 750
+    ) {
         return;
     }
 
     lastProjectionRefreshAt = refreshedAt;
+    fundingProjectionRefreshInFlight = true;
     router.reload({
         only: [
             'cockpit_header_read_model',
@@ -1259,6 +1274,9 @@ function refreshFundingProjections(): void {
         ],
         preserveScroll: true,
         preserveState: true,
+        onFinish: () => {
+            fundingProjectionRefreshInFlight = false;
+        },
     });
 }
 
