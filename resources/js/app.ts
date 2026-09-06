@@ -1,33 +1,24 @@
 import { createInertiaApp } from '@inertiajs/vue3';
 import { initializeTheme } from '@/composables/useAppearance';
 import AppLayout from '@/layouts/AppLayout.vue';
-import AppSidebarLayoutCockpit from '@/layouts/app/AppSidebarLayoutCockpit.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
-import { configureEcho } from '@laravel/echo-vue';
-
-configureEcho({
-    broadcaster: 'reverb',
-});
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
-createInertiaApp({
+void createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
         switch (true) {
             case name === 'Welcome':
                 return null;
+            case name.startsWith('x-change/claim/'):
+            case name.startsWith('form-flow/'):
+                return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
             case name.startsWith('settings/'):
                 return [AppLayout, SettingsLayout];
-            case name.startsWith('x-change/cockpit/'):
-                return AppSidebarLayoutCockpit;
-            case name.startsWith('x-change/claim/'):
-                return null;
-            case name.startsWith('form-flow/'):
-                return null;
             default:
                 return AppLayout;
         }
