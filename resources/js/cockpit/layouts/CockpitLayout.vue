@@ -27,11 +27,13 @@ const props = withDefaults(
         balances?: CockpitBalanceMetric[];
         cockpitHeaderReadModel?: CockpitHeaderReadModel;
         cockpitEntryNotice?: CockpitEntryNotice | null;
+        mobilePresentation?: 'contained' | 'edge';
     }>(),
     {
         activeNavigation: 'dashboard',
         institution: 'x-change Cockpit',
         connectivity: 'Online',
+        mobilePresentation: 'contained',
     },
 );
 
@@ -62,6 +64,7 @@ type FundingProjectionChangedPayload = {
 
 const processedFundingEvents = new Set<string>();
 let balanceRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+let balanceRefreshInFlight = false;
 const fundingRealtime = props.cockpitHeaderReadModel?.funding_realtime;
 
 if (fundingRealtime?.enabled === true) {
@@ -87,7 +90,16 @@ if (fundingRealtime?.enabled === true) {
             }
 
             balanceRefreshTimer = setTimeout(() => {
-                router.reload({ only: ['cockpit_header_read_model'] });
+                if (! balanceRefreshInFlight) {
+                    balanceRefreshInFlight = true;
+                    router.reload({
+                        only: ['cockpit_header_read_model'],
+                        onFinish: () => {
+                            balanceRefreshInFlight = false;
+                        },
+                    });
+                }
+
                 balanceRefreshTimer = null;
             }, 150);
         },
@@ -135,8 +147,12 @@ onUnmounted(() => {
             </div>
 
             <main
-                class="flex-1 overflow-y-auto p-4 pb-24 md:pb-4 lg:p-6"
+                :class="[
+                    'flex-1 overflow-y-auto pb-24 md:p-4 md:pb-4 lg:p-6',
+                    mobilePresentation === 'edge' ? 'p-0' : 'p-4',
+                ]"
                 data-testid="cockpit-workspace"
+                :data-mobile-presentation="mobilePresentation"
             >
                 <slot />
             </main>

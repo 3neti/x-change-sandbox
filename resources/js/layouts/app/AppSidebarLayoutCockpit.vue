@@ -3,7 +3,6 @@ import AppContent from '@/components/AppContent.vue';
 import AppShell from '@/components/AppShell.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
 import AppSidebarHeader from '@/components/AppSidebarHeader.vue';
-import CockpitMobileMoreTrigger from '@/components/CockpitMobileMoreTrigger.vue';
 import type { BreadcrumbItem } from '@/types';
 
 type Props = {
@@ -22,7 +21,6 @@ withDefaults(defineProps<Props>(), {
             <div class="hidden md:block">
                 <AppSidebarHeader :breadcrumbs="breadcrumbs" />
             </div>
-            <CockpitMobileMoreTrigger />
             <slot />
         </AppContent>
     </AppShell>
