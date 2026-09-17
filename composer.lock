@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "85afd62ac44535022262e9625c5fce62",
+    "content-hash": "58fdb5687b911d47f8fad9fc5a4d865a",
     "packages": [
         {
             "name": "3neti/cash",
@@ -1524,11 +1524,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.14",
+            "version": "v1.0.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "5d4eb2adbca7b32b8ca903cfcec7c4d189f7ced6"
+                "reference": "74c4aa425cb776b7b9d6682b13917d555f038595"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1554,7 +1554,7 @@
                 "3neti/x-campaign": "^1.0",
                 "3neti/x-commerce": "^1.2",
                 "3neti/x-feedback": "^1.0",
-                "3neti/x-journal": "^1.0",
+                "3neti/x-journal": "^1.1",
                 "3neti/x-provisioning": "^1.0",
                 "3neti/x-ray": "^1.0.1",
                 "3neti/x-rider": "^1.0",
@@ -1633,7 +1633,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-09-16T14:06:28+00:00"
+            "time": "2026-09-17T03:14:12+00:00"
         },
         {
             "name": "3neti/x-commerce",
@@ -1763,11 +1763,11 @@
         },
         {
             "name": "3neti/x-journal",
-            "version": "v1.0.0",
+            "version": "v1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-journal.git",
-                "reference": "5cdebe0bc02d02cd7994b50bf2049fe9539e4a5a"
+                "reference": "02803bebeb78fbfbad21e0391fccbbe414f11d71"
             },
             "require": {
                 "illuminate/support": "^12.0 || ^13.0",
@@ -1822,7 +1822,7 @@
                 }
             ],
             "description": "Evidentiary journal package for the x-change Settlement Operating System",
-            "time": "2026-07-31T08:47:42+00:00"
+            "time": "2026-09-17T01:55:10+00:00"
         },
         {
             "name": "3neti/x-mcp",
