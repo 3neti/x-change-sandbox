@@ -15,6 +15,7 @@ import {
     FileSpreadsheet,
     Globe2,
     HandCoins,
+    HeartPulse,
     Link2,
     LockKeyhole,
     PauseCircle,
@@ -37,11 +38,13 @@ import {
     watch,
 } from 'vue';
 import { show as showScenarioRunner } from '@/actions/LBHurtado/XChange/Http/Controllers/Web/Cockpit/CockpitLeadCampaignScenarioRunnerController';
+import showPolicyLifecycle from '@/actions/LBHurtado/XChange/Http/Controllers/Web/Cockpit/CockpitCampaignPolicyLifecyclePageController';
 import { destroy, show, store } from '@/routes/x-change/cockpit/campaigns';
 import authorizations from '@/routes/x-change/cockpit/campaigns/authorizations';
 import { store as storeIntake } from '@/routes/x-change/cockpit/campaigns/intakes';
 import CockpitCampaignIntakeDialog from '../components/CockpitCampaignIntakeDialog.vue';
 import CockpitCampaignEndpointStamp from '../components/CockpitCampaignEndpointStamp.vue';
+import CockpitCampaignPaymentQrStamp from '../components/CockpitCampaignPaymentQrStamp.vue';
 import CockpitLayout from '../layouts/CockpitLayout.vue';
 import { formatAbsoluteTime, formatRelativeTime } from '../utils/dateTime';
 import type { CockpitHeaderPageProps } from '../types';
@@ -121,10 +124,27 @@ type EndpointCampaign = {
         in_progress: number;
         source: string;
     };
+    payment_attention?: {
+        count: number;
+        status: 'needs_attention';
+        label: string;
+        latest_reason: string | null;
+        latest_opened_at: string | null;
+    } | null;
+    entry_mode: 'pay_code_on_open' | 'reusable_payment_qr';
+    payment_qr?: {
+        reference: string;
+        amount_mode: 'fixed' | 'open';
+        fixed_amount_minor: number | null;
+        currency: string;
+        qr_data_uri: string | null;
+        generated_at: string | null;
+    } | null;
     actions?: {
         template_update_url: string;
         pause_url: string;
         resume_url: string;
+        payment_qr_provision_url: string;
     };
     template: {
         id: number;
@@ -288,6 +308,7 @@ const endpointStatusForm = useForm({});
 const endpointTemplateForm = useForm({
     pay_code_template_id: null as number | null,
 });
+const endpointPaymentQrForm = useForm({});
 const authorizingWorksheet = ref<string | null>(null);
 const intakeForm = useForm<{ file: File | null }>({ file: null });
 const intakeFileInput = ref<HTMLInputElement | null>(null);
@@ -295,6 +316,7 @@ const intakeDragDepth = ref(0);
 const isDraggingIntake = ref(false);
 const intakeFileError = ref<string | null>(null);
 const selectedEndpointStamp = ref<EndpointCampaign | null>(null);
+const selectedPaymentQrStamp = ref<EndpointCampaign | null>(null);
 const endpointTemplateSelections = ref<Record<string, number | null>>({});
 const endpointDialog = ref<HTMLElement | null>(null);
 let endpointReturnFocus: HTMLElement | null = null;
@@ -721,6 +743,21 @@ function openEndpointStamp(campaign: EndpointCampaign): void {
             : null;
     selectedEndpointStamp.value = campaign;
     nextTick(() => endpointDialog.value?.focus());
+}
+
+function provisionPaymentQr(campaign: EndpointCampaign): void {
+    const url = campaign.actions?.payment_qr_provision_url;
+    if (!url) return;
+
+    endpointPaymentQrForm.post(url, { preserveScroll: true });
+}
+
+function openPaymentQrStamp(campaign: EndpointCampaign): void {
+    selectedPaymentQrStamp.value = campaign;
+}
+
+function closePaymentQrStamp(): void {
+    selectedPaymentQrStamp.value = null;
 }
 
 function closeEndpointStamp(): void {
@@ -1347,6 +1384,17 @@ const updatedRelativeTime = (value: string | null): string =>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <Link
+                                :href="showPolicyLifecycle()"
+                                class="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700 dark:border-slate-700 dark:text-slate-200 dark:hover:border-indigo-700 dark:hover:text-indigo-300"
+                                data-testid="campaign-policy-lifecycle-link"
+                            >
+                                <HeartPulse
+                                    class="size-3.5"
+                                    aria-hidden="true"
+                                />
+                                Policy lifecycle
+                            </Link>
+                            <Link
                                 :href="showScenarioRunner.url()"
                                 class="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:text-slate-200 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
                                 data-testid="campaign-endpoint-scenario-runner-link"
@@ -1454,6 +1502,14 @@ const updatedRelativeTime = (value: string | null): string =>
                                     {{ campaignProgress(campaign) }}
                                 </p>
                                 <p
+                                    v-if="campaign.payment_attention"
+                                    class="mt-1 inline-flex rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-900 dark:bg-amber-950 dark:text-amber-200"
+                                    data-testid="campaign-payment-evidence-attention"
+                                >
+                                    {{ campaign.payment_attention.label }} ·
+                                    {{ campaign.payment_attention.count }}
+                                </p>
+                                <p
                                     v-if="campaign.starts_limit"
                                     class="mt-1 text-xs text-slate-500 dark:text-slate-400"
                                 >
@@ -1517,6 +1573,35 @@ const updatedRelativeTime = (value: string | null): string =>
                                     @click="updateEndpointTemplate(campaign)"
                                 >
                                     Update future starts
+                                </button>
+                                <button
+                                    v-if="
+                                        campaign.entry_mode ===
+                                            'reusable_payment_qr' &&
+                                        !campaign.payment_qr
+                                    "
+                                    type="button"
+                                    class="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-cyan-700 px-3 py-2 text-xs font-semibold text-white hover:bg-cyan-600 disabled:opacity-60"
+                                    :disabled="endpointPaymentQrForm.processing"
+                                    :data-testid="`campaign-payment-qr-provision-${campaign.reference}`"
+                                    @click="provisionPaymentQr(campaign)"
+                                >
+                                    <QrCode
+                                        class="size-3.5"
+                                        aria-hidden="true"
+                                    />Create QR Ph
+                                </button>
+                                <button
+                                    v-else-if="campaign.payment_qr"
+                                    type="button"
+                                    class="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-cyan-700 px-3 py-2 text-xs font-semibold text-white hover:bg-cyan-600"
+                                    :data-testid="`campaign-payment-qr-show-${campaign.reference}`"
+                                    @click="openPaymentQrStamp(campaign)"
+                                >
+                                    <QrCode
+                                        class="size-3.5"
+                                        aria-hidden="true"
+                                    />Show QR Ph
                                 </button>
                                 <p class="text-xs leading-4 text-slate-500 dark:text-slate-400">
                                     Same public link. Existing Pay Codes do not
@@ -1926,6 +2011,36 @@ const updatedRelativeTime = (value: string | null): string =>
                         Open endpoint
                     </a>
                 </div>
+            </section>
+        </div>
+
+        <div
+            v-if="selectedPaymentQrStamp?.payment_qr"
+            class="fixed inset-0 z-[110] flex items-end justify-center bg-slate-950/70 p-3 backdrop-blur-sm sm:items-center"
+            role="presentation"
+            data-testid="campaign-payment-qr-overlay"
+            @click.self="closePaymentQrStamp"
+        >
+            <section
+                role="dialog"
+                aria-modal="true"
+                aria-label="Campaign payment QR Ph"
+                class="max-h-[94vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-4 shadow-2xl dark:bg-slate-950"
+                @keydown.esc="closePaymentQrStamp"
+            >
+                <div class="flex justify-end print:hidden">
+                    <button
+                        type="button"
+                        class="inline-flex size-9 items-center justify-center rounded-full border border-slate-200 dark:border-slate-800"
+                        aria-label="Close payment QR Ph"
+                        @click="closePaymentQrStamp"
+                    >
+                        <X class="size-4" aria-hidden="true" />
+                    </button>
+                </div>
+                <CockpitCampaignPaymentQrStamp
+                    :campaign="selectedPaymentQrStamp"
+                />
             </section>
         </div>
     </CockpitLayout>
