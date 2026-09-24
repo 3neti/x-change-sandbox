@@ -26,6 +26,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (config('campaign-policy.enabled', false)) {
+            config()->set('services.pipedream.policy_completion_token', config('campaign-policy.token'));
+            $transports = (array) config('x-change.settlement.policy_completion.transports', []);
+            $transports['aui.personal-accident.provisional-cover@1.0.0'] = config('campaign-policy.disposition');
+            config()->set('x-change.settlement.policy_completion.transports', $transports);
+        }
         $this->configureApiDocumentation();
         $this->configureDefaults();
     }
