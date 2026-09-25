@@ -31,9 +31,32 @@ class AppServiceProvider extends ServiceProvider
             $transports = (array) config('x-change.settlement.policy_completion.transports', []);
             $transports['aui.personal-accident.provisional-cover@1.0.0'] = config('campaign-policy.disposition');
             config()->set('x-change.settlement.policy_completion.transports', $transports);
+            $this->configureAuiDemoConnection();
         }
         $this->configureApiDocumentation();
         $this->configureDefaults();
+    }
+
+    protected function configureAuiDemoConnection(): void
+    {
+        $connections = config('settlement-envelope.connections', []);
+
+        if (! is_array($connections) || array_key_exists('aui-demo', $connections)) {
+            return;
+        }
+
+        $connections['aui-demo'] = [
+            'driver' => 'http',
+            'base_url' => config('campaign-policy.disposition.submission_endpoint'),
+            'auth' => [
+                'type' => 'bearer',
+                'token' => config('campaign-policy.token'),
+            ],
+            'connect_timeout' => config('campaign-policy.disposition.connect_timeout_seconds'),
+            'timeout' => config('campaign-policy.disposition.response_timeout_seconds'),
+        ];
+
+        config()->set('settlement-envelope.connections', $connections);
     }
 
     /**
