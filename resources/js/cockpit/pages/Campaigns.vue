@@ -15,6 +15,7 @@ import {
     FileSpreadsheet,
     Globe2,
     HandCoins,
+    HeartPulse,
     Link2,
     LockKeyhole,
     PauseCircle,
@@ -37,11 +38,13 @@ import {
     watch,
 } from 'vue';
 import { show as showScenarioRunner } from '@/actions/LBHurtado/XChange/Http/Controllers/Web/Cockpit/CockpitLeadCampaignScenarioRunnerController';
+import showPolicyLifecycle from '@/actions/LBHurtado/XChange/Http/Controllers/Web/Cockpit/CockpitCampaignPolicyLifecyclePageController';
 import { destroy, show, store } from '@/routes/x-change/cockpit/campaigns';
 import authorizations from '@/routes/x-change/cockpit/campaigns/authorizations';
 import { store as storeIntake } from '@/routes/x-change/cockpit/campaigns/intakes';
 import CockpitCampaignIntakeDialog from '../components/CockpitCampaignIntakeDialog.vue';
 import CockpitCampaignEndpointStamp from '../components/CockpitCampaignEndpointStamp.vue';
+import CockpitCampaignPaymentQrStamp from '../components/CockpitCampaignPaymentQrStamp.vue';
 import CockpitLayout from '../layouts/CockpitLayout.vue';
 import { formatAbsoluteTime, formatRelativeTime } from '../utils/dateTime';
 import type { CockpitHeaderPageProps } from '../types';
@@ -121,10 +124,35 @@ type EndpointCampaign = {
         in_progress: number;
         source: string;
     };
+    payment_progress?: {
+        payments_received: number;
+        received_amounts: { currency: string; amount_minor: number }[];
+        details_submitted: number;
+        demo_summaries_ready: number;
+        awaiting_claim: number;
+        awaiting_invitation: number;
+    } | null;
+    payment_attention?: {
+        count: number;
+        status: 'needs_attention';
+        label: string;
+        latest_reason: string | null;
+        latest_opened_at: string | null;
+    } | null;
+    entry_mode: 'pay_code_on_open' | 'reusable_payment_qr';
+    payment_qr?: {
+        reference: string;
+        amount_mode: 'fixed' | 'open';
+        fixed_amount_minor: number | null;
+        currency: string;
+        qr_data_uri: string | null;
+        generated_at: string | null;
+    } | null;
     actions?: {
         template_update_url: string;
         pause_url: string;
         resume_url: string;
+        payment_qr_provision_url: string;
     };
     template: {
         id: number;
@@ -288,6 +316,7 @@ const endpointStatusForm = useForm({});
 const endpointTemplateForm = useForm({
     pay_code_template_id: null as number | null,
 });
+const endpointPaymentQrForm = useForm({});
 const authorizingWorksheet = ref<string | null>(null);
 const intakeForm = useForm<{ file: File | null }>({ file: null });
 const intakeFileInput = ref<HTMLInputElement | null>(null);
@@ -295,6 +324,7 @@ const intakeDragDepth = ref(0);
 const isDraggingIntake = ref(false);
 const intakeFileError = ref<string | null>(null);
 const selectedEndpointStamp = ref<EndpointCampaign | null>(null);
+const selectedPaymentQrStamp = ref<EndpointCampaign | null>(null);
 const endpointTemplateSelections = ref<Record<string, number | null>>({});
 const endpointDialog = ref<HTMLElement | null>(null);
 let endpointReturnFocus: HTMLElement | null = null;
@@ -569,7 +599,10 @@ function endpointTemplateChanged(campaign: EndpointCampaign): boolean {
     return selected !== null && selected !== (campaign.template?.id ?? null);
 }
 
-function selectEndpointTemplate(campaign: EndpointCampaign, event: Event): void {
+function selectEndpointTemplate(
+    campaign: EndpointCampaign,
+    event: Event,
+): void {
     const target = event.target as HTMLSelectElement | null;
 
     endpointTemplateSelections.value[campaign.reference] = target?.value
@@ -649,6 +682,13 @@ function templateSummary(template: CampaignPayCodeTemplate | null): string {
 }
 
 function campaignExposure(campaign: EndpointCampaign): string {
+    if (campaign.entry_mode === 'reusable_payment_qr') {
+        const qr = campaign.payment_qr;
+        if (!qr) return 'Payment QR Ph not created';
+        return qr.amount_mode === 'fixed' && qr.fixed_amount_minor !== null
+            ? `${campaignMoney(qr.fixed_amount_minor, qr.currency)} per payment`
+            : 'Payer enters amount';
+    }
     const amount = campaign.template?.amount_minor ?? 0;
     const maxStarts = campaign.starts_limit ?? null;
 
@@ -657,6 +697,13 @@ function campaignExposure(campaign: EndpointCampaign): string {
     }
 
     return `${peso(amount * maxStarts)} cap`;
+}
+
+function campaignMoney(minor: number, currency: string): string {
+    return new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency,
+    }).format(minor / 100);
 }
 
 function campaignEndpointPath(campaign: EndpointCampaign): string {
@@ -721,6 +768,21 @@ function openEndpointStamp(campaign: EndpointCampaign): void {
             : null;
     selectedEndpointStamp.value = campaign;
     nextTick(() => endpointDialog.value?.focus());
+}
+
+function provisionPaymentQr(campaign: EndpointCampaign): void {
+    const url = campaign.actions?.payment_qr_provision_url;
+    if (!url) return;
+
+    endpointPaymentQrForm.post(url, { preserveScroll: true });
+}
+
+function openPaymentQrStamp(campaign: EndpointCampaign): void {
+    selectedPaymentQrStamp.value = campaign;
+}
+
+function closePaymentQrStamp(): void {
+    selectedPaymentQrStamp.value = null;
 }
 
 function closeEndpointStamp(): void {
@@ -1347,6 +1409,17 @@ const updatedRelativeTime = (value: string | null): string =>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <Link
+                                :href="showPolicyLifecycle()"
+                                class="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700 dark:border-slate-700 dark:text-slate-200 dark:hover:border-indigo-700 dark:hover:text-indigo-300"
+                                data-testid="campaign-policy-lifecycle-link"
+                            >
+                                <HeartPulse
+                                    class="size-3.5"
+                                    aria-hidden="true"
+                                />
+                                Policy lifecycle
+                            </Link>
+                            <Link
                                 :href="showScenarioRunner.url()"
                                 class="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:text-slate-200 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
                                 data-testid="campaign-endpoint-scenario-runner-link"
@@ -1402,7 +1475,7 @@ const updatedRelativeTime = (value: string | null): string =>
                             class="hidden gap-4 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-500 dark:bg-slate-950 dark:text-slate-400 xl:grid xl:grid-cols-[minmax(0,2.2fr)_8rem_minmax(0,1.5fr)_minmax(0,1.4fr)_13rem]"
                         >
                             <span>Endpoint</span><span>Availability</span
-                            ><span>Progress</span><span>Exposure</span
+                            ><span>Activity</span><span>Amount / exposure</span
                             ><span>Actions</span>
                         </div>
                         <article
@@ -1446,15 +1519,94 @@ const updatedRelativeTime = (value: string | null): string =>
                                     }}</span
                                 >
                             </div>
-                            <div>
+                            <div class="min-w-0">
+                                <div
+                                    v-if="
+                                        campaign.entry_mode ===
+                                        'reusable_payment_qr'
+                                    "
+                                    data-testid="campaign-payment-progress"
+                                    class="space-y-1 text-sm"
+                                >
+                                    <template v-if="campaign.payment_progress">
+                                        <p
+                                            class="font-semibold text-slate-950 dark:text-slate-50"
+                                        >
+                                            {{
+                                                campaign.payment_progress
+                                                    .payments_received
+                                            }}
+                                            payments received
+                                        </p>
+                                        <p
+                                            v-for="amount in campaign
+                                                .payment_progress
+                                                .received_amounts"
+                                            :key="amount.currency"
+                                        >
+                                            {{
+                                                campaignMoney(
+                                                    amount.amount_minor,
+                                                    amount.currency,
+                                                )
+                                            }}
+                                            received
+                                        </p>
+                                        <p>
+                                            {{
+                                                campaign.payment_progress
+                                                    .details_submitted
+                                            }}
+                                            details submitted ·
+                                            {{
+                                                campaign.payment_progress
+                                                    .demo_summaries_ready
+                                            }}
+                                            demo summaries ready
+                                        </p>
+                                        <p>
+                                            {{
+                                                campaign.payment_progress
+                                                    .awaiting_claim
+                                            }}
+                                            awaiting claim
+                                        </p>
+                                        <p
+                                            v-if="
+                                                campaign.payment_progress
+                                                    .awaiting_invitation
+                                            "
+                                        >
+                                            {{
+                                                campaign.payment_progress
+                                                    .awaiting_invitation
+                                            }}
+                                            awaiting invitation
+                                        </p>
+                                    </template>
+                                    <p v-else>Payment activity unavailable</p>
+                                </div>
                                 <p
+                                    v-else
                                     class="text-sm font-semibold text-slate-950 dark:text-slate-50"
                                     data-testid="campaign-endpoint-progress"
                                 >
                                     {{ campaignProgress(campaign) }}
                                 </p>
                                 <p
-                                    v-if="campaign.starts_limit"
+                                    v-if="campaign.payment_attention"
+                                    class="mt-1 inline-flex rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-900 dark:bg-amber-950 dark:text-amber-200"
+                                    data-testid="campaign-payment-evidence-attention"
+                                >
+                                    {{ campaign.payment_attention.label }} ·
+                                    {{ campaign.payment_attention.count }}
+                                </p>
+                                <p
+                                    v-if="
+                                        campaign.starts_limit &&
+                                        campaign.entry_mode !==
+                                            'reusable_payment_qr'
+                                    "
                                     class="mt-1 text-xs text-slate-500 dark:text-slate-400"
                                 >
                                     Limit:
@@ -1465,7 +1617,9 @@ const updatedRelativeTime = (value: string | null): string =>
                             <div
                                 class="text-xs text-slate-600 dark:text-slate-300"
                             >
-                                <p class="font-semibold text-slate-800 dark:text-slate-100">
+                                <p
+                                    class="font-semibold text-slate-800 dark:text-slate-100"
+                                >
                                     {{ campaignExposure(campaign) }}
                                 </p>
                                 <p>
@@ -1476,10 +1630,60 @@ const updatedRelativeTime = (value: string | null): string =>
                                     }}
                                 </p>
                                 <p class="mt-1">
-                                    {{ campaign.usage_label }}
+                                    {{
+                                        campaign.entry_mode ===
+                                        'reusable_payment_qr'
+                                            ? 'Payment QR Ph'
+                                            : campaign.usage_label
+                                    }}
                                 </p>
                             </div>
                             <div class="flex flex-wrap gap-2 xl:grid">
+                                <button
+                                    v-if="
+                                        campaign.entry_mode ===
+                                            'reusable_payment_qr' &&
+                                        !campaign.payment_qr
+                                    "
+                                    type="button"
+                                    class="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-cyan-700 px-3 py-2 text-xs font-semibold text-white hover:bg-cyan-600 disabled:opacity-60"
+                                    :disabled="endpointPaymentQrForm.processing"
+                                    :data-testid="`campaign-payment-qr-provision-${campaign.reference}`"
+                                    @click="provisionPaymentQr(campaign)"
+                                >
+                                    <QrCode
+                                        class="size-3.5"
+                                        aria-hidden="true"
+                                    />Create QR Ph
+                                </button>
+                                <button
+                                    v-else-if="campaign.payment_qr"
+                                    type="button"
+                                    class="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-cyan-700 px-3 py-2 text-xs font-semibold text-white hover:bg-cyan-600"
+                                    :data-testid="`campaign-payment-qr-show-${campaign.reference}`"
+                                    @click="openPaymentQrStamp(campaign)"
+                                >
+                                    <QrCode
+                                        class="size-3.5"
+                                        aria-hidden="true"
+                                    />Show Payment QR Ph
+                                </button>
+                                <Link
+                                    v-if="
+                                        campaign.entry_mode ===
+                                        'reusable_payment_qr'
+                                    "
+                                    :href="
+                                        showPolicyLifecycle.url({
+                                            query: {
+                                                campaign: campaign.reference,
+                                            },
+                                        })
+                                    "
+                                    :data-testid="`campaign-payment-activity-${campaign.reference}`"
+                                    class="inline-flex min-h-10 items-center justify-center rounded-xl border border-cyan-200 px-3 py-2 text-xs font-semibold text-cyan-800 dark:border-cyan-900 dark:text-cyan-200"
+                                    >View Activity</Link
+                                >
                                 <label
                                     class="grid gap-1 text-xs font-semibold text-slate-600 dark:text-slate-300"
                                 >
@@ -1518,13 +1722,21 @@ const updatedRelativeTime = (value: string | null): string =>
                                 >
                                     Update future starts
                                 </button>
-                                <p class="text-xs leading-4 text-slate-500 dark:text-slate-400">
+                                <p
+                                    class="text-xs leading-4 text-slate-500 dark:text-slate-400"
+                                >
                                     Same public link. Existing Pay Codes do not
                                     change.
                                 </p>
                                 <button
                                     type="button"
-                                    class="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200"
+                                    class="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold"
+                                    :class="
+                                        campaign.entry_mode ===
+                                        'reusable_payment_qr'
+                                            ? 'border-slate-200 text-slate-700 dark:border-slate-700 dark:text-slate-200'
+                                            : 'border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200'
+                                    "
                                     :aria-label="`Show QR & Share ${campaign.title} — ${campaign.endpoint_slug}`"
                                     :data-testid="`campaign-endpoint-share-stamp-${campaign.reference}`"
                                     @click="openEndpointStamp(campaign)"
@@ -1532,7 +1744,12 @@ const updatedRelativeTime = (value: string | null): string =>
                                     <QrCode
                                         class="size-4 shrink-0"
                                         aria-hidden="true"
-                                    />Show QR &amp; Share
+                                    />{{
+                                        campaign.entry_mode ===
+                                        'reusable_payment_qr'
+                                            ? 'Public Link QR & Share'
+                                            : 'Show QR & Share'
+                                    }}
                                 </button>
                                 <button
                                     type="button"
@@ -1926,6 +2143,36 @@ const updatedRelativeTime = (value: string | null): string =>
                         Open endpoint
                     </a>
                 </div>
+            </section>
+        </div>
+
+        <div
+            v-if="selectedPaymentQrStamp?.payment_qr"
+            class="fixed inset-0 z-[110] flex items-end justify-center bg-slate-950/70 p-3 backdrop-blur-sm sm:items-center"
+            role="presentation"
+            data-testid="campaign-payment-qr-overlay"
+            @click.self="closePaymentQrStamp"
+        >
+            <section
+                role="dialog"
+                aria-modal="true"
+                aria-label="Campaign payment QR Ph"
+                class="max-h-[94vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-4 shadow-2xl dark:bg-slate-950"
+                @keydown.esc="closePaymentQrStamp"
+            >
+                <div class="flex justify-end print:hidden">
+                    <button
+                        type="button"
+                        class="inline-flex size-9 items-center justify-center rounded-full border border-slate-200 dark:border-slate-800"
+                        aria-label="Close payment QR Ph"
+                        @click="closePaymentQrStamp"
+                    >
+                        <X class="size-4" aria-hidden="true" />
+                    </button>
+                </div>
+                <CockpitCampaignPaymentQrStamp
+                    :campaign="selectedPaymentQrStamp"
+                />
             </section>
         </div>
     </CockpitLayout>
