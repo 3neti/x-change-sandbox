@@ -803,6 +803,7 @@ const previewMessage = ref(
 );
 const previewResult = ref<CockpitClaimExperiencePreviewManifest | null>(null);
 const previewDraftSnapshot = ref<string | null>(null);
+const previewSimulationState = ref('current');
 const issuedPayCodeDialogOpen = ref(false);
 const instructionBuilderElement = ref<HTMLDetailsElement | null>(null);
 const canvasSectionElement = ref<HTMLElement | null>(null);
@@ -4315,11 +4316,18 @@ const sanitizedInstructionPayloadJson = computed<string>(() => {
     return JSON.stringify(sanitizedInstructionPayload.value, null, 2);
 });
 
+const previewDraftFingerprint = computed<string>(() => {
+    return JSON.stringify({
+        instructions: sanitizedInstructionPayload.value,
+        preview_state: previewSimulationState.value,
+    });
+});
+
 const previewStale = computed<boolean>(() => {
     return (
         previewStatus.value === 'ready' &&
         previewDraftSnapshot.value !== null &&
-        previewDraftSnapshot.value !== sanitizedInstructionPayloadJson.value
+        previewDraftSnapshot.value !== previewDraftFingerprint.value
     );
 });
 
@@ -4602,6 +4610,7 @@ async function generateClaimPreview(refreshPreview = false): Promise<void> {
                 ...buildPayload(),
                 refresh_preview: refreshPreview,
                 preview_profile: 'issuer',
+                preview_state: previewSimulationState.value,
             }),
         });
         const body = await safeJson(response);
@@ -4624,7 +4633,7 @@ async function generateClaimPreview(refreshPreview = false): Promise<void> {
                 : 'Claim walkthrough preview is ready.';
         previewResult.value =
             body as unknown as CockpitClaimExperiencePreviewManifest;
-        previewDraftSnapshot.value = sanitizedInstructionPayloadJson.value;
+        previewDraftSnapshot.value = previewDraftFingerprint.value;
     } catch (error) {
         previewStatus.value = 'failed';
         previewMessage.value =
@@ -4636,6 +4645,15 @@ async function generateClaimPreview(refreshPreview = false): Promise<void> {
     } finally {
         previewProcessing.value = false;
     }
+}
+
+function selectClaimPreviewSimulationState(state: string): void {
+    if (state === previewSimulationState.value) {
+        return;
+    }
+
+    previewSimulationState.value = state;
+    void generateClaimPreview(true);
 }
 
 function normalizeSubmissionErrors(
@@ -6866,8 +6884,10 @@ function instructionRecord(
                             :manifest="previewResult"
                             :stale="previewStale"
                             :can-generate="canGenerateClaimPreview"
+                            :simulation-state="previewSimulationState"
                             @generate="generateClaimPreview(false)"
                             @refresh="generateClaimPreview(true)"
+                            @simulation-state-change="selectClaimPreviewSimulationState"
                         />
                     </template>
                 </CockpitPayCodeCanvas>

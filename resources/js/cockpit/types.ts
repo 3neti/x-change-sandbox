@@ -1552,6 +1552,26 @@ export type CockpitClaimExperiencePreviewStep = {
         } | null;
         component?: string | null;
         props?: Record<string, unknown> | null;
+        progress_state?: string | null;
+        simulated?: boolean | null;
+    } | null;
+};
+
+export type CockpitClaimPreviewSimulation = {
+    schema: string;
+    mode: 'simulated';
+    state: string;
+    verified_live_outcome: false;
+    source: 'issuer_selected_preview';
+    workflow_state: 'resolved' | 'needs_attention';
+    workflow_key?: string | null;
+    allowed_states: string[];
+    attention_source?: 'workflow_interpretation' | 'simulated_progress' | null;
+    presentation?: {
+        state: string;
+        title_template: string;
+        body: string;
+        suppress_legacy_rider: boolean;
     } | null;
 };
 
@@ -1577,6 +1597,7 @@ export type CockpitClaimExperiencePreviewManifest = {
         };
         step_count: number;
         steps: CockpitClaimExperiencePreviewStep[];
+        simulation?: CockpitClaimPreviewSimulation | null;
     };
     exports: {
         pdf_url?: string | null;
