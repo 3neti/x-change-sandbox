@@ -182,16 +182,16 @@
         },
         {
             "name": "3neti/emi-netbank",
-            "version": "v2.3.9",
+            "version": "v2.3.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/emi-netbank.git",
-                "reference": "546c6e1e6a85ce19b9fecab346b46c508af9edf4"
+                "reference": "5e0a920f7cbd55370bc4f1b2b4ea6bc7245f519d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/emi-netbank/zipball/546c6e1e6a85ce19b9fecab346b46c508af9edf4",
-                "reference": "546c6e1e6a85ce19b9fecab346b46c508af9edf4",
+                "url": "https://api.github.com/repos/3neti/emi-netbank/zipball/5e0a920f7cbd55370bc4f1b2b4ea6bc7245f519d",
+                "reference": "5e0a920f7cbd55370bc4f1b2b4ea6bc7245f519d",
                 "shasum": ""
             },
             "require": {
@@ -244,9 +244,9 @@
             "description": "NetBank EMI provider adapter for emi-core",
             "support": {
                 "issues": "https://github.com/3neti/emi-netbank/issues",
-                "source": "https://github.com/3neti/emi-netbank/tree/v2.3.9"
+                "source": "https://github.com/3neti/emi-netbank/tree/v2.3.10"
             },
-            "time": "2026-09-24T05:38:56+00:00"
+            "time": "2026-09-29T05:29:34+00:00"
         },
         {
             "name": "3neti/emi-paynamics",
