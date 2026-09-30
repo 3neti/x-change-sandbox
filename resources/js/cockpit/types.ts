@@ -810,6 +810,152 @@ export type CockpitFundingRequestReadModel = {
     redactions: Record<string, boolean>;
 };
 
+export type CockpitFundingMethodKey = 'qr_ph' | 'bank_transfer' | 'pay_code';
+
+export type CockpitPrimaryFundingWorkspaceMode =
+    | 'self_top_up'
+    | 'bank_transfer'
+    | 'pay_code';
+
+export type CockpitFundingMethodSelectorReadModel = {
+    schema: 'x-change.cockpit.funding-method-selector.v1';
+    context: 'account_funding' | 'pay_code_issuance';
+    intent_reference: string | null;
+    order_reference?: string;
+    amount: {
+        currency: string;
+        principal_minor: number;
+        fee_minor: number;
+        required_minor: number;
+        principal: string;
+        fee: string;
+        required: string;
+    } | null;
+    expires_at: string | null;
+    status:
+        | 'ready'
+        | 'awaiting_funds'
+        | 'detected'
+        | 'reconciled'
+        | 'expired'
+        | 'failed'
+        | 'awaiting_payment'
+        | 'payer_acknowledged'
+        | 'verifying'
+        | 'funded'
+        | 'issuing'
+        | 'issued'
+        | 'underfunded'
+        | 'payment_ambiguous'
+        | 'cancelled'
+        | 'issuance_attention';
+    default_mode?: CockpitPrimaryFundingWorkspaceMode;
+    notice: string;
+    methods: Array<{
+        key: CockpitFundingMethodKey;
+        workspace_mode: CockpitPrimaryFundingWorkspaceMode;
+        label: string;
+        description: string;
+        available: boolean;
+        selectable: boolean;
+        unavailable_reason: string | null;
+    }>;
+    bank_transfer: {
+        instructions?: Record<string, unknown>;
+        reconciliation_reference: {
+            mode: 'required' | 'optional' | 'disabled';
+            value: string | null;
+            label: string;
+            instructions: string;
+        };
+        matching_strategies: Array<
+            | 'reserved_exact_amount'
+            | 'destination_account'
+            | 'currency'
+            | 'observation_window'
+            | 'manual_review'
+        >;
+    };
+    qr_ph?: {
+        fixed_amount: boolean;
+        amount_minor: number | null;
+        currency: string | null;
+        image: string | null;
+        qr_mode: string | null;
+        transaction_type: string | null;
+        provider_generated: boolean;
+        notice: string | null;
+    };
+};
+
+export type CockpitOnDemandIssuanceFundingProjection = {
+    schema: 'x-change.cockpit.on-demand-issuance-funding.v1';
+    status: string;
+    funding_required: boolean;
+    lifecycle: {
+        current:
+            | 'awaiting_payment'
+            | 'checking_payment'
+            | 'payment_verified'
+            | 'issuing_pay_code'
+            | 'pay_code_ready'
+            | 'cancelled'
+            | 'expired'
+            | 'attention';
+        verification_unavailable: boolean;
+        message: string;
+        steps: Array<{
+            key: string;
+            label: string;
+            state: 'complete' | 'current' | 'pending';
+        }>;
+    };
+    actions: {
+        show: string;
+        acknowledge: string;
+        verify: string;
+        cancel: string;
+    };
+    monitor: {
+        enabled: boolean;
+        eligible: boolean;
+        interval_milliseconds: number;
+        last_checked_at: string | null;
+    };
+    order: {
+        reference: string;
+        funding_basis: 'full_amount' | 'shortfall';
+        required_amount_minor: number;
+        reserved_client_funds_minor: number;
+        on_demand_amount_minor: number;
+        reconciliation_adjustment_minor: number;
+        expected_payment_minor: number;
+        currency: string;
+        status: string;
+        expires_at: string | null;
+        can_cancel: boolean;
+        late_payment_disposition: string | null;
+        late_payment_detected_at: string | null;
+        voucher: {
+            code: string;
+            claim_url: string;
+            claim_qr: string;
+            share_card_url: string;
+            detail_url: string | null;
+        } | null;
+        receipt: {
+            order_reference: string;
+            expected_payment_minor: number;
+            currency: string;
+            provider_transaction_id: string | null;
+            verified_at: string | null;
+            settled_at: string | null;
+            issued_at: string | null;
+        };
+    };
+    funding_selector: CockpitFundingMethodSelectorReadModel;
+};
+
 export type CockpitFundingActivityItem = {
     key: string;
     source:
@@ -883,6 +1029,7 @@ export type CockpitPayCodeFundingPreview = {
 export type CockpitFundingPageProps = CockpitHeaderPageProps & {
     funding_read_model: CockpitFundingReadModel;
     funding_requests?: CockpitFundingRequestReadModel;
+    funding_method_selector?: CockpitFundingMethodSelectorReadModel;
     funding_activity?: CockpitFundingActivityReadModel;
     funding_instruction?: CockpitFundingInstruction | null;
     funding_notice?: string | null;
@@ -993,27 +1140,31 @@ export type CockpitQrPhFundingSimulationStep = {
 };
 
 export type CockpitQrPhFundingSimulationResult = {
-    schema: 'x-change.lifecycle.qrph-funding-simulation.v1';
+    schema:
+        | 'x-change.lifecycle.qrph-funding-simulation.v1'
+        | 'x-change.lifecycle.on-demand-fixed-qr-ph.v1';
     scenario: string;
     label: string;
-    mode: 'qrph_funding_simulation';
+    mode: 'qrph_funding_simulation' | 'on_demand_issuance_funding';
     success: boolean;
     message: string;
     rollback_completed: boolean;
     simulation: {
         rollback_only: true;
         provider_calls: 0;
-        simulated_provider_ledger: true;
-        signed_webhook: true;
-        authoritative_verification: true;
+        simulated_provider_ledger?: true;
+        signed_webhook?: true;
+        authoritative_verification?: true;
+        monetary_value?: false;
         persisted: false;
     };
-    balance: {
+    balance?: {
         before_minor: number;
         after_minor: number;
         credited_minor: number;
         after_replay_minor: number;
     };
+    artifacts?: Record<string, unknown>;
     steps: CockpitQrPhFundingSimulationStep[];
 };
 
@@ -1658,6 +1809,11 @@ export type CockpitQuickGeneratePageProps = CockpitHeaderPageProps & {
     instruction_capabilities?: CockpitInstructionCapabilityReadinessMap;
     settlement_rail_capabilities?: CockpitSettlementRailCapabilities;
     pos_voucher?: CockpitVoucherReadModel | null;
+    active_on_demand_funding_order?: CockpitOnDemandIssuanceFundingProjection | null;
+    on_demand_issuance_policy?: {
+        enabled: boolean;
+        basis: 'full_amount' | 'shortfall';
+    };
 };
 
 export type CockpitFundingRealtime = {
