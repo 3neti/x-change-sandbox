@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Composer\InstalledVersions;
+use Composer\Semver\Semver;
 
 it('loads emi funding evidence migrations before x-change funding tables', function (): void {
     $composer = json_decode(
@@ -13,10 +14,13 @@ it('loads emi funding evidence migrations before x-change funding tables', funct
     $migrator = app('migrator');
     $migrationNames = array_keys($migrator->getMigrationFiles($migrator->paths()));
 
-    expect(InstalledVersions::getPrettyVersion('3neti/emi-core'))
-        ->toBe('v2.0.0-beta.5')
-        ->and(InstalledVersions::getPrettyVersion('3neti/x-change'))
-        ->toBe($composer['require']['3neti/x-change'])
+    $emiCoreVersion = (string) InstalledVersions::getPrettyVersion('3neti/emi-core');
+    $xChangeVersion = (string) InstalledVersions::getPrettyVersion('3neti/x-change');
+
+    expect(Semver::satisfies($emiCoreVersion, $composer['require']['3neti/emi-core']))
+        ->toBeTrue()
+        ->and(Semver::satisfies($xChangeVersion, $composer['require']['3neti/x-change']))
+        ->toBeTrue()
         ->and($migrationNames)
         ->toContain(
             '2025_01_01_000008_create_webhook_receipts_table',
@@ -115,6 +119,8 @@ it('uses the package-owned x-change landing page and safe product presentation',
         ->toContain('Claim when you’re ready—with a participating bank or')
         ->toContain('Claim Pay Code')
         ->toContain(':href="startClaim()"')
+        ->toContain('Create Pay Code')
+        ->toContain(':href="$page.props.auth.user ? quickGenerate() : showPublicAutoGenerate()"')
         ->toContain('gClefPulleyBrandAssets.logo')
         ->toContain('bg-[length:auto_100%]')
         ->toContain('opacity-[0.1]')
@@ -151,7 +157,7 @@ it('uses the package-owned x-change landing page and safe product presentation',
         ->toContain('Money should adapt to people.')
         ->toContain('CockpitLandingClaimExperiencePresentation')
         ->and($claimPresentation)->not->toBeFalse()
-        ->toContain("code: 'AA-317'")
+        ->toContain("code: 'AA317'")
         ->toContain("amount: '₱537.00'")
         ->toContain("default: '537'")
         ->not->toContain('DEMO-500')

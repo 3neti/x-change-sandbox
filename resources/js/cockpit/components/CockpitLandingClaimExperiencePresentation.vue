@@ -60,7 +60,7 @@ const manifest: CockpitClaimExperiencePreviewManifest = {
                 frame: null,
                 screen: {
                     kind: 'claim_entry',
-                    code: 'AA-317',
+                    code: 'AA317',
                     amount: '₱537.00',
                     title: 'Claim Pay Code',
                     description: 'Enter the Pay Code shared with you.',
@@ -68,7 +68,7 @@ const manifest: CockpitClaimExperiencePreviewManifest = {
                         {
                             key: 'code',
                             label: 'Pay Code',
-                            value: 'AA-317',
+                            value: 'AA317',
                         },
                     ],
                     message: 'Your field allowance is ready.',
@@ -97,7 +97,7 @@ const manifest: CockpitClaimExperiencePreviewManifest = {
                         preview_mode: true,
                         is_default_splash: true,
                         content: '',
-                        voucher_code: 'AA-317',
+                        voucher_code: 'AA317',
                         app_name: 'Pay Code',
                         app_logo:
                             '/vendor/x-change/images/pay-code/pay-code-logo.svg',
@@ -195,7 +195,7 @@ const manifest: CockpitClaimExperiencePreviewManifest = {
                 frame: null,
                 screen: {
                     kind: 'confirmation',
-                    code: 'AA-317',
+                    code: 'AA317',
                     amount: '₱537.00',
                     title: 'Confirm Claim',
                     description: 'Review and confirm your Pay Code claim.',
@@ -228,7 +228,7 @@ const manifest: CockpitClaimExperiencePreviewManifest = {
                 frame: null,
                 screen: {
                     kind: 'success',
-                    code: 'AA-317',
+                    code: 'AA317',
                     amount: '₱537.00',
                     title: 'Claim accepted',
                     description:
