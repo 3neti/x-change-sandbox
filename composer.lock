@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2595ce29f041b5dfb416af7e1601eb26",
+    "content-hash": "7b07765ca28c0d28d04e4c1b45e371bf",
     "packages": [
         {
             "name": "3neti/cash",
@@ -1678,11 +1678,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.94",
+            "version": "v1.0.95",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "1027c8aed2a71bc3450551dfa3d2f1e0adda5880"
+                "reference": "ac22f0e40e005be9bad151671f14bf86ce87a5ff"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1791,7 +1791,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-10-02T00:13:21+00:00"
+            "time": "2026-10-02T03:35:31+00:00"
         },
         {
             "name": "3neti/x-commerce",
@@ -1984,16 +1984,16 @@
         },
         {
             "name": "3neti/x-mcp",
-            "version": "v0.1.0",
+            "version": "v0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-mcp.git",
-                "reference": "487cdf6eb1cef00ba0559a2882129d698a57e9bc"
+                "reference": "3bf4d032603a786ce98f00761cf58271ea30750b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/x-mcp/zipball/487cdf6eb1cef00ba0559a2882129d698a57e9bc",
-                "reference": "487cdf6eb1cef00ba0559a2882129d698a57e9bc",
+                "url": "https://api.github.com/repos/3neti/x-mcp/zipball/3bf4d032603a786ce98f00761cf58271ea30750b",
+                "reference": "3bf4d032603a786ce98f00761cf58271ea30750b",
                 "shasum": ""
             },
             "require": {
@@ -2038,9 +2038,9 @@
             "description": "AI-native MCP adapters for the X-Change Settlement Operating System.",
             "support": {
                 "issues": "https://github.com/3neti/x-mcp/issues",
-                "source": "https://github.com/3neti/x-mcp/tree/v0.1.0"
+                "source": "https://github.com/3neti/x-mcp/tree/v0.2.0"
             },
-            "time": "2026-08-15T06:37:05+00:00"
+            "time": "2026-10-02T03:35:56+00:00"
         },
         {
             "name": "3neti/x-provisioning",
