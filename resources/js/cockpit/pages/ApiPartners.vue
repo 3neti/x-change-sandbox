@@ -22,7 +22,12 @@ import { computed, reactive, ref } from "vue";
 import CockpitLayout from "../layouts/CockpitLayout.vue";
 
 type Scope = { scope: string; description: string };
-type Issuer = { id: string; name: string; identity: string };
+type Issuer = {
+  type: "account" | "commercial_principal";
+  id: string;
+  name: string;
+  identity: string;
+};
 type PartnerClient = {
   reference: string;
   client_id: string;
@@ -96,7 +101,9 @@ const copied = ref(false);
 const connectionNotice = ref("");
 const form = reactive({
   name: "",
-  issuer_id: props.partnerApi.issuers[0]?.id ?? "",
+  issuer_key: props.partnerApi.issuers[0]
+    ? `${props.partnerApi.issuers[0].type}:${props.partnerApi.issuers[0].id}`
+    : "",
   scopes: ["capabilities:read", "pay-codes:estimate", "pay-codes:read"],
   settlement_rails: ["automatic", "INSTAPAY"],
   maximum_amount: "1000.00",
@@ -112,7 +119,7 @@ const form = reactive({
 const canSubmit = computed(
   () =>
     form.name.trim() !== "" &&
-    form.issuer_id !== "" &&
+    form.issuer_key !== "" &&
     form.scopes.length > 0 &&
     form.settlement_rails.length > 0 &&
     (!usesStoredValueScopes.value || form.stored_value_enabled) &&
@@ -137,6 +144,9 @@ function toMinor(value: string): number | null {
 }
 
 async function createClient(): Promise<void> {
+  const issuer = props.partnerApi.issuers.find(
+    (candidate) => `${candidate.type}:${candidate.id}` === form.issuer_key,
+  );
   const maximum = toMinor(form.maximum_amount);
   const daily = toMinor(form.daily_limit);
   const storedValueMaximum = toMinor(form.stored_value_maximum_amount);
@@ -181,7 +191,8 @@ async function createClient(): Promise<void> {
         },
         body: JSON.stringify({
           name: form.name,
-          issuer_id: form.issuer_id,
+          issuer_type: issuer?.type,
+          issuer_id: issuer?.id,
           ...(createMode.value === "sandbox" ? { environment: "sandbox" } : {}),
           scopes: form.scopes,
           currencies: ["PHP"],
@@ -601,14 +612,14 @@ function finishCredentialCeremony(): void {
           /></label>
           <label class="grid gap-1 text-sm"
             >Issuer Account<select
-              v-model="form.issuer_id"
+              v-model="form.issuer_key"
               class="h-10 rounded-lg border bg-background px-3"
               required
             >
               <option
                 v-for="issuer in partnerApi.issuers"
-                :key="issuer.id"
-                :value="issuer.id"
+                :key="`${issuer.type}:${issuer.id}`"
+                :value="`${issuer.type}:${issuer.id}`"
               >
                 {{ issuer.name }} · {{ issuer.identity }}
               </option>
