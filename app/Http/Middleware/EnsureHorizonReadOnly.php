@@ -8,16 +8,16 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class EnsureHorizonEnabled
+final class EnsureHorizonReadOnly
 {
     /**
-     * Handle an incoming request.
-     *
-     * @param  Closure(Request): (Response)  $next
+     * @param  Closure(Request): Response  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
-        abort_unless(config('queue-operations.dashboard_enabled', false), 404);
+        if (! config('queue-operations.horizon_enabled', false)) {
+            abort_unless($request->isMethodSafe(), Response::HTTP_FORBIDDEN);
+        }
 
         return $next($request);
     }

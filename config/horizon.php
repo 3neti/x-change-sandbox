@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureHorizonEnabled;
+use App\Http\Middleware\EnsureHorizonReadOnly;
 use Illuminate\Support\Str;
 
 return [
@@ -91,6 +92,7 @@ return [
         env('HORIZON_REQUIRE_PASSWORD_CONFIRMATION', true)
             ? 'password.confirm'
             : null,
+        EnsureHorizonReadOnly::class,
     ])),
 
     /*

@@ -9,6 +9,10 @@ $authorizedQueues = array_values(array_filter(array_map(
 
 return [
     'horizon_enabled' => (bool) env('HORIZON_ENABLED', false),
+    'dashboard_enabled' => (bool) env(
+        'HORIZON_DASHBOARD_ENABLED',
+        env('HORIZON_ENABLED', false),
+    ),
     'authorized_queues' => $authorizedQueues,
     'connection' => env('HORIZON_QUEUE_CONNECTION', 'redis'),
     'max_processes_ceiling' => (int) env('HORIZON_MAX_PROCESSES_CEILING', 4),

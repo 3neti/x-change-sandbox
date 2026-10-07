@@ -17,6 +17,17 @@ class QueueOperationsServiceProvider extends ServiceProvider
     {
         $this->app->singleton(InstalledQueueManifestDiscovery::class);
 
+        if (config('queue-operations.dashboard_enabled', false)) {
+            $horizonPath = trim((string) config('horizon.path', 'horizon'), '/ ');
+            $readOnlyPaths = (array) config('x-change.commissioning.read_only_paths', []);
+
+            config()->set('x-change.commissioning.read_only_paths', array_values(array_unique([
+                ...$readOnlyPaths,
+                $horizonPath,
+                $horizonPath.'/*',
+            ])));
+        }
+
         if (! config('queue-operations.horizon_enabled', false)) {
             config()->set('horizon.environments', []);
 
