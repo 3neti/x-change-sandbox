@@ -16,6 +16,7 @@ it('fails strict inspection when Horizon is enabled without Redis commissioning'
     config()->set('queue-operations.horizon_enabled', true);
     config()->set('queue-operations.authorized_queues', []);
     config()->set('queue.default', 'database');
+    config()->set('queue-operations.connection', 'database');
 
     $exitCode = Artisan::call('settlement-os:queues:inspect', [
         '--strict' => true,
@@ -26,7 +27,7 @@ it('fails strict inspection when Horizon is enabled without Redis commissioning'
     expect($exitCode)->toBe(1)
         ->and($payload['ready'])->toBeFalse()
         ->and($payload['errors'])->toContain(
-            'Horizon requires QUEUE_CONNECTION=redis.',
+            'Horizon supervisors require HORIZON_QUEUE_CONNECTION=redis.',
             'Horizon is enabled without any explicitly authorized queues.',
         );
 });

@@ -13,6 +13,7 @@ final readonly class QueueTopologyInspector
      *     ready: bool,
      *     horizon_enabled: bool,
      *     queue_connection: string,
+     *     horizon_connection: string,
      *     retry_after: int|null,
      *     authorized_queues: list<string>,
      *     declared_queues: list<string>,
@@ -93,16 +94,11 @@ final readonly class QueueTopologyInspector
 
         foreach (array_diff($financialQueues, $authorizedQueues) as $queue) {
             $message = "Financial queue [{$queue}] is declared but not commissioned.";
-
-            if ($enabled) {
-                $errors[] = $message;
-            } else {
-                $warnings[] = $message;
-            }
+            $warnings[] = $message;
         }
 
-        if ($enabled && ($connection !== 'redis' || $horizonConnection !== 'redis')) {
-            $errors[] = 'Horizon requires QUEUE_CONNECTION=redis.';
+        if ($enabled && $horizonConnection !== 'redis') {
+            $errors[] = 'Horizon supervisors require HORIZON_QUEUE_CONNECTION=redis.';
         }
 
         if ($enabled && $authorizedQueues === []) {
@@ -117,6 +113,7 @@ final readonly class QueueTopologyInspector
             'ready' => $errors === [],
             'horizon_enabled' => $enabled,
             'queue_connection' => $connection,
+            'horizon_connection' => $horizonConnection,
             'retry_after' => $retryAfter,
             'authorized_queues' => $authorizedQueues,
             'declared_queues' => $declaredQueues,

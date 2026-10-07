@@ -25,6 +25,7 @@ final class SettlementQueuesInspectCommand extends Command
         } else {
             $this->components->twoColumnDetail('Horizon', $report['horizon_enabled'] ? 'enabled' : 'disabled');
             $this->components->twoColumnDetail('Queue connection', $report['queue_connection']);
+            $this->components->twoColumnDetail('Horizon connection', $report['horizon_connection']);
             $this->components->twoColumnDetail('Declared queues', implode(', ', $report['declared_queues']) ?: 'none');
             $this->components->twoColumnDetail('Authorized queues', implode(', ', $report['authorized_queues']) ?: 'none');
 

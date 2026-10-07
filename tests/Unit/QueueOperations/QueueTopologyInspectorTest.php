@@ -12,6 +12,7 @@ it('fails closed when Horizon is enabled without Redis or authorized queues', fu
     config()->set('queue-operations.horizon_enabled', true);
     config()->set('queue-operations.authorized_queues', []);
     config()->set('queue.default', 'database');
+    config()->set('queue-operations.connection', 'database');
 
     $report = (new QueueTopologyInspector(
         new InstalledQueueManifestDiscovery([]),
@@ -19,7 +20,7 @@ it('fails closed when Horizon is enabled without Redis or authorized queues', fu
 
     expect($report['ready'])->toBeFalse()
         ->and($report['errors'])->toContain(
-            'Horizon requires QUEUE_CONNECTION=redis.',
+            'Horizon supervisors require HORIZON_QUEUE_CONNECTION=redis.',
             'Horizon is enabled without any explicitly authorized queues.',
         );
 });
@@ -59,7 +60,7 @@ PHP);
         );
 });
 
-it('rejects enabled financial lanes without authorization and unsafe retry timing', function (): void {
+it('keeps uncommissioned financial lanes disabled while accepting an authorized planning lane', function (): void {
     $root = sys_get_temp_dir().'/queue-timing-'.str()->uuid();
     mkdir($root.'/resources/settlement-os', recursive: true);
     file_put_contents($root.'/composer.json', json_encode([
@@ -81,21 +82,29 @@ return [
             'criticality' => 'financial',
             'recommended' => ['timeout' => 90],
         ],
+        'planning' => [
+            'queue' => 'example-planning',
+            'criticality' => 'planning',
+            'recommended' => ['timeout' => 60],
+        ],
     ],
 ];
 PHP);
     config()->set('queue-operations.horizon_enabled', true);
-    config()->set('queue-operations.authorized_queues', []);
-    config()->set('queue.default', 'redis');
+    config()->set('queue-operations.authorized_queues', ['example-planning']);
+    config()->set('queue.default', 'database');
+    config()->set('queue-operations.connection', 'redis');
     config()->set('queue.connections.redis.retry_after', 90);
 
     $discovery = new InstalledQueueManifestDiscovery(['example/financial-package' => $root]);
-    $uncommissioned = (new QueueTopologyInspector($discovery))->inspect();
+    $planningOnly = (new QueueTopologyInspector($discovery))->inspect();
 
-    expect($uncommissioned['ready'])->toBeFalse()
-        ->and($uncommissioned['errors'])->toContain(
+    expect($planningOnly['ready'])->toBeTrue()
+        ->and($planningOnly['queue_connection'])->toBe('database')
+        ->and($planningOnly['horizon_connection'])->toBe('redis')
+        ->and($planningOnly['errors'])->toBeEmpty()
+        ->and($planningOnly['warnings'])->toContain(
             'Financial queue [example-money] is declared but not commissioned.',
-            'Horizon is enabled without any explicitly authorized queues.',
         );
 
     config()->set('queue-operations.authorized_queues', ['example-money']);
