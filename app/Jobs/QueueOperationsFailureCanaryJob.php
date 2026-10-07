@@ -12,11 +12,17 @@ final class QueueOperationsFailureCanaryJob implements ShouldQueue
 {
     use Queueable;
 
+    public const string Connection = 'redis';
+
+    public const string DisplayName = 'Settlement OS Queue Failure Canary';
+
+    public const string Queue = 'campaigns';
+
     public int $tries = 2;
 
     public function __construct(public readonly string $canaryId)
     {
-        $this->onConnection('redis');
+        $this->onConnection(self::Connection);
     }
 
     public function handle(RedisFactory $redis): never
@@ -54,7 +60,7 @@ final class QueueOperationsFailureCanaryJob implements ShouldQueue
 
     public function displayName(): string
     {
-        return 'Settlement OS Queue Failure Canary';
+        return self::DisplayName;
     }
 
     /**
