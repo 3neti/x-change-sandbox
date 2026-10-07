@@ -26,6 +26,27 @@ class QueueOperationsServiceProvider extends ServiceProvider
                 $horizonPath,
                 $horizonPath.'/*',
             ])));
+
+            $operatorAccessPaths = (array) config(
+                'x-change.commissioning.operator_access_paths',
+                [],
+            );
+
+            foreach ([
+                ['path' => 'login', 'methods' => ['GET', 'HEAD', 'POST']],
+                ['path' => 'user/confirm-password', 'methods' => ['GET', 'HEAD', 'POST']],
+                ['path' => 'two-factor-challenge', 'methods' => ['GET', 'HEAD', 'POST']],
+                ['path' => 'logout', 'methods' => ['POST']],
+            ] as $operatorAccessPath) {
+                if (! in_array($operatorAccessPath, $operatorAccessPaths, true)) {
+                    $operatorAccessPaths[] = $operatorAccessPath;
+                }
+            }
+
+            config()->set(
+                'x-change.commissioning.operator_access_paths',
+                $operatorAccessPaths,
+            );
         }
 
         if (! config('queue-operations.horizon_enabled', false)) {

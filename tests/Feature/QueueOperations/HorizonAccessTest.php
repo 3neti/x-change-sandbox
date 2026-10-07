@@ -7,6 +7,7 @@ use App\Http\Middleware\EnsureHorizonReadOnly;
 use App\Models\User;
 use App\Providers\QueueOperationsServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 
 uses(RefreshDatabase::class);
 
@@ -56,6 +57,11 @@ it('registers the Horizon path as a pre-commissioning read-only surface only whe
     expect(config('x-change.commissioning.read_only_paths'))->toContain(
         'operations/horizon',
         'operations/horizon/*',
+    )->and(config('x-change.commissioning.operator_access_paths'))->toContain(
+        ['path' => 'login', 'methods' => ['GET', 'HEAD', 'POST']],
+        ['path' => 'user/confirm-password', 'methods' => ['GET', 'HEAD', 'POST']],
+        ['path' => 'two-factor-challenge', 'methods' => ['GET', 'HEAD', 'POST']],
+        ['path' => 'logout', 'methods' => ['POST']],
     );
 });
 
@@ -76,6 +82,39 @@ it('reaches Horizon authentication through commissioning while keeping writes lo
 
     $this->post('/horizon/api/jobs/retry/synthetic-job')
         ->assertRedirect('/x/commissioning');
+});
+
+it('allows an operator to authenticate and confirm their password while commissioning remains locked', function (): void {
+    config()->set('x-change.commissioning.enabled', true);
+    config()->set('x-change.commissioning.enforce_during_tests', true);
+    config()->set('queue-operations.horizon_enabled', false);
+    config()->set('queue-operations.dashboard_enabled', true);
+
+    app()->getProvider(QueueOperationsServiceProvider::class)?->register();
+
+    $mobile = '639171234571';
+    $user = User::factory()->create([
+        'mobile' => $mobile,
+        'password' => Hash::make('password'),
+    ]);
+
+    $this->get('/horizon')->assertRedirect(route('login'));
+
+    $this->post(route('login.store'), [
+        'mobile' => $mobile,
+        'password' => 'password',
+    ])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect('/horizon');
+
+    $this->assertAuthenticatedAs($user);
+    $this->get('/horizon')->assertRedirect(route('password.confirm'));
+
+    $this->post(route('password.confirm.store'), [
+        'password' => 'password',
+    ])->assertRedirect('/horizon');
+
+    $this->get('/horizon')->assertOk();
 });
 
 it('can omit password confirmation from a freshly loaded configuration', function (): void {
