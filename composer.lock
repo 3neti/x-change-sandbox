@@ -1496,11 +1496,11 @@
         },
         {
             "name": "3neti/x-action",
-            "version": "v1.0.1",
+            "version": "v1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-action.git",
-                "reference": "e753126bb561e7e1cba30bfb303164373508de4e"
+                "reference": "73125296b33e910af09141d24fec45101a10c1de"
             },
             "require": {
                 "illuminate/support": "^12.0 || ^13.0",
@@ -1519,6 +1519,9 @@
                     "providers": [
                         "LBHurtado\\XAction\\XActionServiceProvider"
                     ]
+                },
+                "settlement-os": {
+                    "queue-manifest": "resources/settlement-os/queues.php"
                 },
                 "branch-alias": {
                     "dev-main": "1.x-dev"
@@ -1555,7 +1558,7 @@
                 }
             ],
             "description": "Workflow action and CTA infrastructure package for the x-change Settlement Operating System",
-            "time": "2026-07-31T08:17:29+00:00"
+            "time": "2026-10-07T02:03:25+00:00"
         },
         {
             "name": "3neti/x-affiliation",
@@ -1614,11 +1617,11 @@
         },
         {
             "name": "3neti/x-campaign",
-            "version": "v1.1.2",
+            "version": "v1.1.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-campaign.git",
-                "reference": "cb67ed6944527efb7693cd618820ee008eb04d1b"
+                "reference": "f5e4d53d923833828957f02a24e7d1bb6b995392"
             },
             "require": {
                 "illuminate/support": "^12.0 || ^13.0",
@@ -1638,6 +1641,9 @@
                     "providers": [
                         "LBHurtado\\XCampaign\\XCampaignServiceProvider"
                     ]
+                },
+                "settlement-os": {
+                    "queue-manifest": "resources/settlement-os/queues.php"
                 },
                 "branch-alias": {
                     "dev-main": "1.x-dev"
@@ -1674,15 +1680,15 @@
                 }
             ],
             "description": "Beneficiary distribution and campaign orchestration package for the x-change Settlement Operating System",
-            "time": "2026-09-18T22:38:05+00:00"
+            "time": "2026-10-07T02:05:02+00:00"
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.104",
+            "version": "v1.0.105",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "8deada0aa711200872c8b7298be6e14ff2b20308"
+                "reference": "380c3eed397269ba1328c48a229c0c6632850c4c"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1739,7 +1745,8 @@
                 "pestphp/pest-plugin-laravel": "^4.1"
             },
             "suggest": {
-                "3neti/x-legal": "Provides jurisdiction-aware advisory Treasury vocabulary and policy traceability."
+                "3neti/x-legal": "Provides jurisdiction-aware advisory Treasury vocabulary and policy traceability.",
+                "laravel/horizon": "Allows a Redis-enabled host application to operate and inspect the declared x-change queue lanes."
             },
             "bin": [
                 "bin/x-change-cloud"
@@ -1750,6 +1757,9 @@
                     "cloud-recipe": "resources/deployment/laravel-cloud.yaml",
                     "deployment-guide": "docs/deployment/X_CHANGE_CLOUD_RECIPE.md",
                     "adopt-command": "x-change:adopt"
+                },
+                "settlement-os": {
+                    "queue-manifest": "resources/settlement-os/queues.php"
                 },
                 "laravel": {
                     "providers": [
@@ -1791,7 +1801,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-10-06T23:41:40+00:00"
+            "time": "2026-10-07T02:15:59+00:00"
         },
         {
             "name": "3neti/x-commerce",
@@ -1855,11 +1865,11 @@
         },
         {
             "name": "3neti/x-feedback",
-            "version": "v1.1.0",
+            "version": "v1.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-feedback.git",
-                "reference": "3c048615c004de90e6a7096aefcf64bb19ed6b1b"
+                "reference": "fa82da09dd923f3934ab3ae3a8d0a1dd337970d2"
             },
             "require": {
                 "illuminate/mail": "^12.0||^13.0",
@@ -1881,6 +1891,9 @@
                     "providers": [
                         "LBHurtado\\XFeedback\\XFeedbackServiceProvider"
                     ]
+                },
+                "settlement-os": {
+                    "queue-manifest": "resources/settlement-os/queues.php"
                 },
                 "branch-alias": {
                     "dev-main": "1.x-dev"
@@ -1917,15 +1930,15 @@
                 }
             ],
             "description": "Feedback, notification, and communication infrastructure package for the x-change Settlement Operating System",
-            "time": "2026-08-10T01:43:13+00:00"
+            "time": "2026-10-07T02:18:53+00:00"
         },
         {
             "name": "3neti/x-journal",
-            "version": "v1.1.0",
+            "version": "v1.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-journal.git",
-                "reference": "02803bebeb78fbfbad21e0391fccbbe414f11d71"
+                "reference": "5791f1c777b93a888c22cf722113517bcfaf057f"
             },
             "require": {
                 "illuminate/support": "^12.0 || ^13.0",
@@ -1944,6 +1957,9 @@
                     "providers": [
                         "LBHurtado\\XJournal\\XJournalServiceProvider"
                     ]
+                },
+                "settlement-os": {
+                    "queue-manifest": "resources/settlement-os/queues.php"
                 },
                 "branch-alias": {
                     "dev-main": "1.x-dev"
@@ -1980,7 +1996,7 @@
                 }
             ],
             "description": "Evidentiary journal package for the x-change Settlement Operating System",
-            "time": "2026-09-17T01:55:10+00:00"
+            "time": "2026-10-07T02:02:06+00:00"
         },
         {
             "name": "3neti/x-mcp",
