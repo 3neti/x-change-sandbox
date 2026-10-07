@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Jobs\QueueOperationsCanaryJob;
+use App\Jobs\QueueOperationsFailureCanaryJob;
 use App\Support\QueueOperations\InstalledQueueManifestDiscovery;
 use App\Support\QueueOperations\QueueTopologyInspector;
 use Illuminate\Console\Attributes\Description;
@@ -14,7 +15,7 @@ use Illuminate\Contracts\Queue\Factory as QueueFactory;
 use Illuminate\Contracts\Redis\Factory as RedisFactory;
 use Illuminate\Support\Str;
 
-#[Signature('settlement-os:queues:canary {--queue=campaigns : Authorized planning lane} {--wait=15 : Seconds to wait for completion} {--json : Emit JSON}')]
+#[Signature('settlement-os:queues:canary {--queue=campaigns : Authorized planning lane} {--outcome=success : Expected outcome (success|failure)} {--wait=15 : Seconds to wait for completion} {--json : Emit JSON}')]
 #[Description('Dispatch one local Redis-only non-financial Horizon canary')]
 final class SettlementQueuesCanaryCommand extends Command
 {
@@ -25,6 +26,7 @@ final class SettlementQueuesCanaryCommand extends Command
         QueueFactory $queueManager,
     ): int {
         $queue = trim((string) $this->option('queue'));
+        $outcome = strtolower(trim((string) $this->option('outcome')));
         $waitSeconds = max(1, (int) $this->option('wait'));
         $report = $inspector->inspect();
         $lane = $this->findLane($discovery->discover(), $queue);
@@ -37,6 +39,7 @@ final class SettlementQueuesCanaryCommand extends Command
             in_array($queue, $report['authorized_queues'], true) ? null : "Queue [{$queue}] is not explicitly authorized.",
             $lane !== null ? null : "Queue [{$queue}] is not declared by an installed package.",
             ($lane['criticality'] ?? null) === 'planning' ? null : "Queue [{$queue}] is not a planning-only lane.",
+            in_array($outcome, ['success', 'failure'], true) ? null : "Outcome [{$outcome}] is not supported.",
         ]));
 
         if ($errors !== []) {
@@ -59,11 +62,16 @@ final class SettlementQueuesCanaryCommand extends Command
         }
 
         $canaryId = (string) Str::ulid();
-        $markerKey = QueueOperationsCanaryJob::markerKey($canaryId);
+        $markerKey = $outcome === 'failure'
+            ? QueueOperationsFailureCanaryJob::markerKey($canaryId)
+            : QueueOperationsCanaryJob::markerKey($canaryId);
+        $job = $outcome === 'failure'
+            ? new QueueOperationsFailureCanaryJob($canaryId)
+            : new QueueOperationsCanaryJob($canaryId);
         $connection->command('del', [$markerKey]);
-        $queueManager->connection('redis')->pushOn(
+        $jobId = $queueManager->connection('redis')->pushOn(
             $queue,
-            (new QueueOperationsCanaryJob($canaryId))->onQueue($queue),
+            $job->onQueue($queue),
         );
 
         $deadline = microtime(true) + $waitSeconds;
@@ -80,12 +88,21 @@ final class SettlementQueuesCanaryCommand extends Command
             usleep(100_000);
         } while (microtime(true) < $deadline);
 
+        $completedAsExpected = $marker !== null && $this->markerMatchesOutcome($marker, $outcome);
+
         return $this->respond([
-            'status' => $marker === null ? 'timed_out' : 'completed',
+            'status' => match (true) {
+                $marker === null => 'timed_out',
+                ! $completedAsExpected => 'unexpected_outcome',
+                $outcome === 'failure' => 'failed_as_planned',
+                default => 'completed',
+            },
             'queue' => $queue,
+            'outcome' => $outcome,
             'canary_id' => $canaryId,
+            'job_id' => $jobId,
             'marker' => $marker,
-        ], $marker === null ? self::FAILURE : self::SUCCESS);
+        ], $completedAsExpected ? self::SUCCESS : self::FAILURE);
     }
 
     /**
@@ -103,6 +120,20 @@ final class SettlementQueuesCanaryCommand extends Command
         }
 
         return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $marker
+     */
+    private function markerMatchesOutcome(array $marker, string $outcome): bool
+    {
+        if ($outcome === 'failure') {
+            return ($marker['status'] ?? null) === 'intentionally_failed'
+                && ($marker['attempts'] ?? null) === 2
+                && ($marker['max_attempts'] ?? null) === 2;
+        }
+
+        return ($marker['status'] ?? null) === 'completed';
     }
 
     /**
