@@ -9,7 +9,7 @@ Changes will be overwritten by php artisan x-change:publish --scope=build --forc
 <script setup lang="ts">
 import NumericKeypad from "@/components/NumericKeypad.vue";
 import { Calculator } from "lucide-vue-next";
-import { computed, ref, watch } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 
 const props = withDefaults(
   defineProps<{
@@ -38,6 +38,7 @@ const emit = defineEmits<{
 const inputElement = ref<HTMLInputElement | null>(null);
 const keypadOpen = ref(false);
 const keypadInitialEntry = ref<string | null>(null);
+const returnFocusElement = ref<HTMLElement | null>(null);
 
 const numericValue = computed<number | null>(() => {
   const value = Number.parseFloat(props.modelValue);
@@ -58,6 +59,15 @@ const displayValue = computed(() => {
 
 function openKeypad(): void {
   if (!props.disabled) {
+    returnFocusElement.value = inputElement.value;
+    keypadInitialEntry.value = null;
+    keypadOpen.value = true;
+  }
+}
+
+function open(returnFocusTo: HTMLElement | null = inputElement.value): void {
+  if (!props.disabled) {
+    returnFocusElement.value = returnFocusTo;
     keypadInitialEntry.value = null;
     keypadOpen.value = true;
   }
@@ -88,6 +98,7 @@ function openKeypadFromNumericKey(event: KeyboardEvent): void {
 }
 
 function confirmAmount(value: number): void {
+  returnFocusElement.value = inputElement.value;
   emit("update:modelValue", value.toFixed(2));
 }
 
@@ -104,14 +115,17 @@ function focus(): void {
   inputElement.value?.select();
 }
 
-watch(keypadOpen, (isOpen) => {
+watch(keypadOpen, async (isOpen) => {
   if (!isOpen) {
     keypadInitialEntry.value = null;
     emit("preview", null);
+    await nextTick();
+    returnFocusElement.value?.focus();
+    returnFocusElement.value = null;
   }
 });
 
-defineExpose({ focus });
+defineExpose({ focus, open });
 </script>
 
 <template>
