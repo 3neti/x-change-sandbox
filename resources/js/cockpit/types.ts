@@ -565,6 +565,9 @@ export type CockpitFundingSuspenseCase = {
   opened_at?: string | null;
   pending_approval: boolean;
   pending_action?: string | null;
+  order_reference?: string | null;
+  payment_minor?: number | null;
+  currency?: string | null;
   allowed_actions: string[];
 };
 
@@ -921,7 +924,20 @@ export type CockpitOnDemandIssuanceFundingProjection = {
     show: string;
     acknowledge: string;
     verify: string;
+    retry_issuance: string;
+    funding_method?: string;
     cancel: string;
+  };
+  checkout?: {
+    reference: string | null;
+    selected_method: "qr_ph" | "bank_transfer";
+    bank_transfer_unlocked: boolean;
+  } | null;
+  retry: {
+    eligible: boolean;
+    pending: boolean;
+    attempts_remaining: number;
+    next_available_at: string | null;
   };
   monitor: {
     enabled: boolean;
@@ -1820,6 +1836,12 @@ export type CockpitQuickGeneratePageProps = CockpitHeaderPageProps & {
     amount: string;
     currency: string;
   } | null;
+  checkout_draft?: {
+    reference: string;
+    guest_token: string;
+    instructions: Record<string, unknown> | null;
+  } | null;
+  turnstile?: { enabled: boolean; site_key: string | null };
   service_discovery?: {
     canonical_url: string;
     description: string;

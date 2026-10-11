@@ -9,6 +9,7 @@ Changes will be overwritten by php artisan x-change:publish --scope=build --forc
 <script setup lang="ts">
 import CockpitPayCodeTemplateStoreController from "@/actions/LBHurtado/XChange/Http/Controllers/Web/Cockpit/CockpitPayCodeTemplateStoreController";
 import CockpitPayCodeTemplateUpdateController from "@/actions/LBHurtado/XChange/Http/Controllers/Web/Cockpit/CockpitPayCodeTemplateUpdateController";
+import { store as savePublicCheckoutDraft } from "@/routes/x-change/public-auto-generate/checkouts";
 import type { RequestPayload } from "@inertiajs/core";
 import { Link, router } from "@inertiajs/vue3";
 import type {
@@ -119,6 +120,7 @@ import CockpitRiderMessageEditor from "./CockpitRiderMessageEditor.vue";
 import CockpitRiderLibrary from "./CockpitRiderLibrary.vue";
 import CockpitRiderPreviewFrame from "./CockpitRiderPreviewFrame.vue";
 import CockpitQuickGenerateSurfaceSwitch from "./CockpitQuickGenerateSurfaceSwitch.vue";
+import PublicIssuanceTurnstile from "./PublicIssuanceTurnstile.vue";
 import type { CockpitQuickGenerateSurface } from "./CockpitQuickGenerateSurfaceSwitch.vue";
 import type { CockpitScheduledPortion } from "./CockpitScheduledPortionsEditor.vue";
 import CockpitValueUseControl from "./CockpitValueUseControl.vue";
@@ -152,7 +154,13 @@ const props = withDefaults(
       amount: string;
       currency: string;
     } | null;
+    checkoutDraft?: {
+      reference: string;
+      guest_token: string;
+      instructions: Record<string, unknown> | null;
+    } | null;
     publicAccountUrl?: string | null;
+    turnstile?: { enabled: boolean; site_key: string | null };
     showEngineeringPreview?: boolean;
     showWorkspaceSwitcher?: boolean;
     allowTemplateManagement?: boolean;
@@ -174,6 +182,10 @@ const props = withDefaults(
 );
 
 const { currentTheme } = useTheme();
+const turnstileToken = ref("");
+const turnstileWidget = ref<InstanceType<
+  typeof PublicIssuanceTurnstile
+> | null>(null);
 
 function capabilityReadiness(
   key: string,
@@ -818,6 +830,9 @@ const executionMetadata = ref("");
 const metadataFlowType = ref("");
 const metadataIssuerId = ref("");
 const processing = ref(false);
+const savingCheckoutDraft = ref(false);
+const checkoutDraftToken = ref<string | null>(props.checkoutDraft?.guest_token ?? null);
+const checkoutDraftMessage = ref<string | null>(props.checkoutDraft ? "A saved checkout draft is available in this browser." : null);
 const lastStatus = ref("ready");
 const lastMessage = ref("Ready to issue when the design is complete.");
 const lastResponse = ref<Record<string, unknown> | null>(null);
@@ -860,6 +875,7 @@ const activeSavedTemplate = ref<CockpitSavedPayCodeTemplate | null>(null);
 const applyingStartingPoint = ref(false);
 const submissionErrors = ref<Array<{ field: string; message: string }>>([]);
 const submissionErrorHeading = ref("Fix these fields before issuing");
+const publicIssuancePaused = ref(false);
 
 const collectionDestinationError = computed<string | null>(() => {
   return (
@@ -1109,7 +1125,10 @@ function startBlank(): void {
 function initializeStartingPoint(): void {
   if (props.publicMode) {
     startBlank();
-    if (props.publicPrefill) {
+    if (props.checkoutDraft?.instructions) {
+      applyInstructionBlueprint(props.checkoutDraft.instructions, true);
+      lastMessage.value = "Your saved checkout draft is ready to review or change.";
+    } else if (props.publicPrefill) {
       amount.value = props.publicPrefill.amount;
       currency.value = props.publicPrefill.currency;
     }
@@ -2151,7 +2170,9 @@ const canSubmit = computed<boolean>(() => {
 
   return (
     props.mutationContract?.runtime_enabled === true &&
+    !publicIssuancePaused.value &&
     routeUrl.value !== null &&
+    (!props.turnstile?.enabled || turnstileToken.value !== "") &&
     allowedMethods.value.includes("POST") &&
     selectedUnavailableCapabilities.value.length === 0 &&
     payeePolicy.value.issuable &&
@@ -4607,6 +4628,10 @@ async function submit(): Promise<void> {
   emit("submitStart", payload);
 
   try {
+    if (props.publicMode) {
+      await saveCheckoutDraft(payload);
+    }
+
     const response = await fetch(routeUrl.value, {
       method: "POST",
       credentials: "same-origin",
@@ -4615,6 +4640,9 @@ async function submit(): Promise<void> {
         "Content-Type": "application/json",
         "Idempotency-Key": idempotencyKey,
         "X-Requested-With": "XMLHttpRequest",
+        ...(props.publicMode && props.turnstile?.enabled
+          ? { "X-Turnstile-Token": turnstileToken.value }
+          : {}),
         ...csrfHeader(),
       },
       body: JSON.stringify(payload),
@@ -4626,16 +4654,27 @@ async function submit(): Promise<void> {
       const normalizedErrors = normalizeSubmissionErrors(body);
       const issuanceIsBusy =
         stringValue(body.code) === "PAY_CODE_ISSUANCE_BUSY";
+      const issuanceIsPaused =
+        props.publicMode && stringValue(body.code) === "PUBLIC_ISSUANCE_PAUSED";
+
+      if (issuanceIsPaused) {
+        publicIssuancePaused.value = true;
+      }
 
       lastStatus.value = "failed";
-      lastMessage.value = issuanceIsBusy
-        ? "No Pay Code was issued or charged. Please try again."
-        : normalizedErrors.length > 0
-          ? "Your Pay Code needs a few corrections before it can be issued."
-          : (stringValue(body.message) ?? "The Pay Code could not be issued.");
-      submissionErrorHeading.value = issuanceIsBusy
-        ? "Issuance is temporarily busy"
-        : "Fix these fields before issuing";
+      if (issuanceIsPaused) {
+        lastMessage.value = "No payment was requested. Your Pay Code order was not created.";
+        submissionErrorHeading.value = "New orders are temporarily paused";
+      } else {
+        lastMessage.value = issuanceIsBusy
+          ? "No Pay Code was issued or charged. Please try again."
+          : normalizedErrors.length > 0
+            ? "Your Pay Code needs a few corrections before it can be issued."
+            : (stringValue(body.message) ?? "The Pay Code could not be issued.");
+        submissionErrorHeading.value = issuanceIsBusy
+          ? "Issuance is temporarily busy"
+          : "Fix these fields before issuing";
+      }
       submissionErrors.value =
         normalizedErrors.length > 0
           ? normalizedErrors
@@ -4653,6 +4692,8 @@ async function submit(): Promise<void> {
     }
 
     if (body.schema === "x-change.cockpit.on-demand-issuance-funding.v1") {
+      checkoutDraftToken.value = null;
+      checkoutDraftMessage.value = null;
       onDemandFundingProjection.value =
         body as CockpitOnDemandIssuanceFundingProjection;
       onDemandFundingDialogOpen.value = true;
@@ -4695,6 +4736,52 @@ async function submit(): Promise<void> {
     emit("submitError", body);
   } finally {
     processing.value = false;
+    if (props.publicMode && props.turnstile?.enabled) {
+      turnstileWidget.value?.reset();
+    }
+  }
+}
+
+async function saveCheckoutDraft(payload: Record<string, unknown>): Promise<void> {
+  if (savingCheckoutDraft.value) {
+    return;
+  }
+
+  savingCheckoutDraft.value = true;
+
+  try {
+    const response = await fetch(savePublicCheckoutDraft().url, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+        ...(checkoutDraftToken.value
+          ? { "X-XChange-Guest-Checkout-Token": checkoutDraftToken.value }
+          : {}),
+        ...csrfHeader(),
+      },
+      body: JSON.stringify({ instructions: payload }),
+    });
+
+    if (!response.ok) {
+      throw new Error("The checkout draft could not be saved. Try again shortly.");
+    }
+
+    const draft = await safeJson(response);
+    checkoutDraftToken.value = stringValue(draft.guest_token);
+    checkoutDraftMessage.value = "Checkout draft saved in this browser. No payment is needed yet.";
+  } finally {
+    savingCheckoutDraft.value = false;
+  }
+}
+
+async function saveCheckoutDraftFromButton(): Promise<void> {
+  try {
+    await saveCheckoutDraft(buildIssuancePayload());
+  } catch (error) {
+    checkoutDraftMessage.value = error instanceof Error ? error.message : "The checkout draft could not be saved.";
   }
 }
 
@@ -6002,6 +6089,17 @@ function instructionRecord(
     data-testid="cockpit-quick-generate-submit-panel"
     @submit.prevent="submit"
   >
+    <div v-if="publicMode && turnstile?.enabled" class="mb-4">
+      <PublicIssuanceTurnstile
+        v-if="turnstile.site_key"
+        ref="turnstileWidget"
+        :site-key="turnstile.site_key"
+        @verified="turnstileToken = $event"
+      />
+      <p v-else class="text-sm text-rose-700" role="alert">
+        Verification is unavailable. Please try again later.
+      </p>
+    </div>
     <div
       v-if="templatePickerOpen"
       class="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/60 p-0 sm:items-center sm:p-6"
@@ -6326,6 +6424,18 @@ function instructionRecord(
                 :tooltip="amountFieldHelp"
               />
             </label>
+            <p
+              v-if="publicMode && (mutationContract?.runtime_enabled !== true || publicIssuancePaused)"
+              class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900 dark:border-amber-900/70 dark:bg-amber-950/30 dark:text-amber-200"
+              data-testid="cockpit-quick-generate-public-paused"
+              role="status"
+            >
+              New Pay Code orders are temporarily paused.
+            </p>
+            <div v-if="publicMode" class="flex flex-wrap items-center gap-3 text-xs">
+              <button type="button" :disabled="savingCheckoutDraft || processing" class="rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" @click="saveCheckoutDraftFromButton">{{ savingCheckoutDraft ? 'Saving…' : 'Save checkout draft' }}</button>
+              <span v-if="checkoutDraftMessage" role="status" class="text-slate-600 dark:text-slate-300">{{ checkoutDraftMessage }}</span>
+            </div>
             <div
               class="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] items-start justify-start gap-x-2 gap-y-1.5 sm:grid-cols-[minmax(0,18rem)_minmax(0,18rem)]"
               data-testid="cockpit-quick-generate-amount-action-row"
