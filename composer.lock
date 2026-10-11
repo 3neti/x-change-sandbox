@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b7960ccf305fc7fd46cf34b2d4cb6582",
+    "content-hash": "47de0af3359dba5e21b3580f1df42741",
     "packages": [
         {
             "name": "3neti/cash",
@@ -182,16 +182,16 @@
         },
         {
             "name": "3neti/emi-netbank",
-            "version": "v2.3.11",
+            "version": "dev-fix/funding-payer-identity",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/emi-netbank.git",
-                "reference": "788dc95e390db5d262ad79c4475569d66d00bafb"
+                "reference": "5e21f3a78669f5110bf14eda22e717860095661d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/emi-netbank/zipball/788dc95e390db5d262ad79c4475569d66d00bafb",
-                "reference": "788dc95e390db5d262ad79c4475569d66d00bafb",
+                "url": "https://api.github.com/repos/3neti/emi-netbank/zipball/5e21f3a78669f5110bf14eda22e717860095661d",
+                "reference": "5e21f3a78669f5110bf14eda22e717860095661d",
                 "shasum": ""
             },
             "require": {
@@ -244,9 +244,9 @@
             "description": "NetBank EMI provider adapter for emi-core",
             "support": {
                 "issues": "https://github.com/3neti/emi-netbank/issues",
-                "source": "https://github.com/3neti/emi-netbank/tree/v2.3.11"
+                "source": "https://github.com/3neti/emi-netbank/tree/fix/funding-payer-identity"
             },
-            "time": "2026-09-29T06:03:50+00:00"
+            "time": "2026-10-11T00:59:45+00:00"
         },
         {
             "name": "3neti/emi-paynamics",
@@ -1688,7 +1688,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "38f3d650c55ec8e1efedd3722b6588da573c3a5a"
+                "reference": "5ac87b1449933fe74f581ecedf5be2c5c4e2d4ef"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1801,7 +1801,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-10-11T00:40:35+00:00"
+            "time": "2026-10-11T00:59:52+00:00"
         },
         {
             "name": "3neti/x-commerce",
@@ -19208,9 +19208,17 @@
             "time": "2025-12-08T11:19:18+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "3neti/emi-netbank",
+            "version": "dev-fix/funding-payer-identity",
+            "alias": "2.3.12",
+            "alias_normalized": "2.3.12.0"
+        }
+    ],
     "minimum-stability": "dev",
     "stability-flags": {
+        "3neti/emi-netbank": 20,
         "3neti/emi-paynamics": 10,
         "3neti/wallet": 10,
         "3neti/x-change": 20

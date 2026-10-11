@@ -49,7 +49,7 @@
     "require": {
         "php": "^8.3",
         "3neti/emi-core": "^2.0.2",
-        "3neti/emi-netbank": "^2.3.9",
+        "3neti/emi-netbank": "dev-fix/funding-payer-identity as 2.3.12",
         "3neti/emi-paynamics": "^2.0@beta",
         "3neti/onboarding": "^1.0",
         "3neti/wallet": "^2.0@beta",
