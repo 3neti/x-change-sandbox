@@ -1684,11 +1684,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.140",
+            "version": "v1.0.141",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "4a5d4a85"
+                "reference": "fd70b81b"
             },
             "require": {
                 "3neti/cash": "^1.3",
