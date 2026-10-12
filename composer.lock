@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "aabd793b11b6fd8e56784e38916f923e",
+    "content-hash": "6c12e171170269d6afe0c8a47016dbf9",
     "packages": [
         {
             "name": "3neti/cash",
@@ -1684,11 +1684,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.141",
+            "version": "v1.0.142",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "fd70b81b"
+                "reference": "4367a7b92d53f19c4767e21c34bfa62a910c2352"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1801,7 +1801,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-10-12T15:12:24+00:00"
+            "time": "2026-10-12T23:04:25+00:00"
         },
         {
             "name": "3neti/x-commerce",
@@ -2295,16 +2295,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.400.1",
+            "version": "3.401.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "c0cf2c322bc1a344aaf39250da8856563532f82b"
+                "reference": "4a1b9615de78a69d91614d45966402cc28d4dfe3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/c0cf2c322bc1a344aaf39250da8856563532f82b",
-                "reference": "c0cf2c322bc1a344aaf39250da8856563532f82b",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/4a1b9615de78a69d91614d45966402cc28d4dfe3",
+                "reference": "4a1b9615de78a69d91614d45966402cc28d4dfe3",
                 "shasum": ""
             },
             "require": {
@@ -2386,9 +2386,9 @@
             "support": {
                 "forum": "https://github.com/aws/aws-sdk-php/discussions",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.400.1"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.401.0"
             },
-            "time": "2026-10-09T18:11:15+00:00"
+            "time": "2026-10-12T18:06:22+00:00"
         },
         {
             "name": "bacon/bacon-qr-code",

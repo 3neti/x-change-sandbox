@@ -50,6 +50,28 @@ const monitorMessage = ref<string | null>(null);
 let pollTimer: ReturnType<typeof setTimeout> | null = null;
 let emittedIssuedReference: string | null = null;
 
+async function downloadBatch(): Promise<void> {
+  const batch = current.value?.batch;
+  if (batch?.download_url === undefined) return;
+
+  const token = sessionStorage.getItem(`x-change.batch-token:${batch.reference}`);
+  if (token === null) return;
+
+  const response = await fetch(batch.download_url, {
+    credentials: "same-origin",
+    headers: { Accept: "text/csv", "X-Issuance-Batch-Token": token },
+  });
+  if (!response.ok) return;
+
+  const blob = await response.blob();
+  const href = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = href;
+  anchor.download = `${batch.reference}.csv`;
+  anchor.click();
+  URL.revokeObjectURL(href);
+}
+
 function guestAccessHeader(): Record<string, string> {
   const token = current.value?.guest_access_token?.trim();
 
@@ -74,6 +96,11 @@ const latePaymentCredited = computed(
   () =>
     current.value?.status === "expired" &&
     current.value.order.late_payment_disposition === "client_funds",
+);
+const batchCount = computed(() => current.value?.batch?.item_count ?? 0);
+const isBatch = computed(() => batchCount.value > 0);
+const issuanceLabel = computed(() =>
+  isBatch.value ? `${batchCount.value} Pay Codes` : "this Pay Code",
 );
 const amount = computed(() => {
   const order = current.value?.order;
@@ -114,7 +141,7 @@ const dialogTitle = computed(() => {
     return "Payment received";
   }
 
-  return `Pay ${amount.value} to issue this Pay Code`;
+  return `Pay ${amount.value} to issue ${issuanceLabel.value}`;
 });
 const dialogDescription = computed(() => {
   if (needsAttention.value) {
@@ -130,7 +157,7 @@ const dialogDescription = computed(() => {
   }
 
   if (["funded", "issuing"].includes(current.value?.status ?? "")) {
-    return "Your payment is verified. Keep this window open while we finish issuing the Pay Code.";
+    return `Your payment is verified. Keep this window open while we finish issuing ${issuanceLabel.value.toLowerCase()}.`;
   }
 
   return "Choose Bank Transfer or QR Ph, pay the exact amount once, and keep this window open. We will check the payment automatically.";
@@ -561,6 +588,9 @@ function text(value: unknown): string | null {
                 : "No expiry"
             }}</span>
           </div>
+          <p v-if="current.pricing && current.pricing.customer_charge > 0" class="text-xs text-slate-500 dark:text-slate-400">
+            {{ new Intl.NumberFormat("en-PH", { style: "currency", currency: current.pricing.currency }).format(current.pricing.pay_code_value) }} Pay Code value + {{ new Intl.NumberFormat("en-PH", { style: "currency", currency: current.pricing.currency }).format(current.pricing.customer_charge) }} issuance fee
+          </p>
           <p
             class="border-t border-slate-200 pt-2 text-slate-600 dark:border-slate-800 dark:text-slate-300"
             role="status"
@@ -625,6 +655,21 @@ function text(value: unknown): string | null {
           <p class="mt-1 leading-6">
             {{ current.lifecycle.message }}
           </p>
+          <button
+            v-if="current.batch?.download_url && current.batch.issued_item_count > 0"
+            class="mt-4 inline-flex min-h-10 items-center justify-center rounded-full bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-700"
+            type="button"
+            @click="downloadBatch"
+          >
+            Download {{ current.batch.issued_item_count }} Pay Codes
+          </button>
+          <a
+            v-if="current.batch?.workspace_url && current.batch.issued_item_count > 0"
+            :href="current.batch.workspace_url"
+            class="mt-4 ml-2 inline-flex min-h-10 items-center justify-center rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-bold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-200"
+          >
+            Open Pay Codes
+          </a>
           <p v-if="latePaymentCredited" class="mt-2 leading-6">
             Start a new issuance when you are ready. Under shortfall funding,
             your Client Funds will be applied first.

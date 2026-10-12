@@ -946,6 +946,22 @@ export type CockpitOnDemandIssuanceFundingProjection = {
     interval_milliseconds: number;
     last_checked_at: string | null;
   };
+  pricing?: {
+    pay_code_value: number;
+    customer_charge: number;
+    total: number;
+    currency: string;
+  } | null;
+  batch?: {
+    reference: string;
+    status: string;
+    item_count: number;
+    valid_item_count: number;
+    total_minor: number;
+    issued_item_count: number;
+    download_url: string;
+    workspace_url: string;
+  } | null;
   order: {
     reference: string;
     funding_basis: "full_amount" | "shortfall";
@@ -1833,6 +1849,7 @@ export type CockpitQuickGeneratePageProps = CockpitHeaderPageProps & {
     login_url: string | null;
     register_url: string | null;
   };
+  batch_endpoints?: { preview: string; create: string; fund: string };
   public_prefill?: {
     amount: string;
     currency: string;
@@ -2047,6 +2064,8 @@ export type CockpitPayCodeExplorerRecord = {
   };
   owner: string;
   lastActivity: string;
+  copyable?: boolean;
+  claimUrl?: string | null;
   attention?: {
     key: string;
     label: string;
