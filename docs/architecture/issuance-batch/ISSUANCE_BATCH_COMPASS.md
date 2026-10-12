@@ -13,6 +13,10 @@ An uploaded list becomes a reviewable, paid, resumable issuance batch. Every amo
 - **Least exposure:** signed status/download access is scoped to the batch session and expires.
 - **Recoverable failure:** payment remains protected while failed rows or provider errors are visible and retryable.
 - **Package first:** domain and reusable orchestration live in `x-change`; the host supplies presentation, configuration, and deployment wiring.
+- **Shared distribution presentation:** the permanent Pay Codes cockpit and temporary batch workspace use the same table component and record presentation contract.
+- **Batch isolation:** the temporary workspace reads only authorized `IssuanceBatchItem` rows and never filters the global Pay Code list to discover batch membership.
+- **Usable completion:** a successful batch provides both a CSV Claim URL export and an interactive Pay Codes workspace.
+- **Safe read projection:** batch status responses never serialize the access-token hash, encrypted uploader fields, provider payloads, or unrelated records.
 
 ## Flow
 

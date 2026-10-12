@@ -28,3 +28,11 @@ Allow a public user to upload a payroll or ayuda CSV/XLS/XLSX file to create man
 - No maker-checker workflow; the uploader/order session controls the batch.
 - SMS is only for the uploader’s completion/download link.
 - A batch is bounded by configuration and cannot be silently accepted when any row is invalid.
+
+## Distribution workspace extension
+
+1. Reuse the package-owned `CockpitPayCodeResultsTable` for both the permanent Pay Codes cockpit and a temporary batch-scoped workspace at `/x/auto-generate/batches/{batch}/pay-codes`.
+2. Add a sanitized, token-authorized batch read response containing only batch facts and item-level distribution fields: recipient, amount, status, Pay Code, claim URL, issue time, and failure message.
+3. Keep the batch workspace isolated from the global Pay Code read model. Its source is `IssuanceBatchItem`, and its access token remains in browser session storage rather than the URL.
+4. After successful batch issuance, offer `Open Pay Codes` and `Download CSV`; preserve the Claim URL column in the CSV.
+5. Adapt batch rows into the shared table record contract so future table presentation changes propagate to both experiences without sharing global cockpit authorization or query logic.
