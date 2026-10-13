@@ -1,0 +1,1 @@
+import{Gt as e}from"./app-BhVNI9PE.js";var t=e(`CircleDotIcon`,[[`circle`,{cx:`12`,cy:`12`,r:`10`,key:`1mglay`}],[`circle`,{cx:`12`,cy:`12`,r:`1`,key:`41hilf`}]]);export{t};

@@ -1,0 +1,1 @@
+@media print{body *{visibility:hidden}.campaign-payment-qr-print,.campaign-payment-qr-print *{visibility:visible}.campaign-payment-qr-print{width:min(100%,44rem);margin:auto;position:fixed;inset:0}}

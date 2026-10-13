@@ -1,0 +1,1 @@
+import{Gt as e}from"./app-BhVNI9PE.js";var t=e(`ChevronDownIcon`,[[`path`,{d:`m6 9 6 6 6-6`,key:`qrunsl`}]]);export{t};

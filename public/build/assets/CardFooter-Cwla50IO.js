@@ -1,0 +1,1 @@
+import{Pr as e,Qr as t,Vn as n,Zr as r,br as i,jr as a,mr as o}from"./app-BhVNI9PE.js";var s=i({__name:`CardFooter`,props:{class:{type:[Boolean,null,String,Object,Array]}},setup(i){let s=i;return(i,c)=>(a(),o(`div`,{"data-slot":`card-footer`,class:t(r(n)(`flex items-center px-6 [.border-t]:pt-6`,s.class))},[e(i.$slots,`default`)],2))}});export{s as t};

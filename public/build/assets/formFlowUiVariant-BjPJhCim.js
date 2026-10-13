@@ -1,0 +1,1 @@
+var e=[`default`,`compact`,`immersive`];function t(t){return e.includes(t)?t:`default`}export{t};

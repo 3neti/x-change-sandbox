@@ -12,11 +12,8 @@ import { useEcho } from '@laravel/echo-vue';
 import {
     CirclePlus,
     FileText,
-    Landmark,
-    QrCode,
     RefreshCw,
     Search,
-    TicketCheck,
 } from 'lucide-vue-next';
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue';
 import { store as storeVerificationCheck } from '@/routes/x-change/cockpit/funding/intents/verification-checks';
@@ -31,13 +28,17 @@ import { store as openStandingFundingAddressRoute } from '@/routes/x-change/cock
 import { store as checkStandingFundingHistoryRoute } from '@/routes/x-change/cockpit/funding/standing-addresses/netbank/history-checks';
 import { approve as approveStandingFundingReceiptRoute } from '@/routes/x-change/cockpit/funding/standing-addresses/netbank/receipts';
 import { store as storeReconciliationRequest } from '@/routes/x-change/cockpit/funding/suspense/reconciliation-requests';
+import CockpitBankTransferReconciliationReference from '../components/CockpitBankTransferReconciliationReference.vue';
 import CockpitFundingActivity from '../components/CockpitFundingActivity.vue';
 import CockpitFundingMethodPanel from '../components/CockpitFundingMethodPanel.vue';
+import CockpitFundingMethodSelector from '../components/CockpitFundingMethodSelector.vue';
 import CockpitFundingQrAddress from '../components/CockpitFundingQrAddress.vue';
 import CockpitLayout from '../layouts/CockpitLayout.vue';
 import type {
     CockpitFundingActivityItem,
+    CockpitFundingMethodSelectorReadModel,
     CockpitFundingPageProps,
+    CockpitPrimaryFundingWorkspaceMode,
     CockpitQrPhFundingSimulationResult,
     CockpitStandingFundingAddress,
     CockpitStandingFundingReceipt,
@@ -120,6 +121,82 @@ const fundingActivity = computed(
             },
         },
 );
+const fundingMethodSelector = computed<CockpitFundingMethodSelectorReadModel>(
+    () =>
+        props.funding_method_selector ?? {
+            schema: 'x-change.cockpit.funding-method-selector.v1',
+            context: 'account_funding',
+            intent_reference: null,
+            amount: null,
+            expires_at: null,
+            status: 'ready',
+            notice:
+                'Funds appear in your Account only after confirmation from the bank or payment provider.',
+            methods: [
+                {
+                    key: 'qr_ph',
+                    workspace_mode: 'self_top_up',
+                    label: 'QR Ph',
+                    description:
+                        'Scan your reusable QR Ph code, then check NetBank for confirmed funds.',
+                    available:
+                        props.standing_funding_address?.available === true,
+                    selectable: true,
+                    unavailable_reason:
+                        props.standing_funding_address?.available === true
+                            ? null
+                            : 'QR Ph is not configured for this Account.',
+                },
+                {
+                    key: 'bank_transfer',
+                    workspace_mode: 'bank_transfer',
+                    label: 'Bank Transfer',
+                    description:
+                        'Reserve an exact amount and transfer it to the configured bank account.',
+                    available:
+                        fundingRequests.value.bank_transfer.enabled === true,
+                    selectable: true,
+                    unavailable_reason:
+                        fundingRequests.value.bank_transfer.enabled === true
+                            ? null
+                            : 'Bank transfer funding is not enabled.',
+                },
+                {
+                    key: 'pay_code',
+                    workspace_mode: 'pay_code',
+                    label: 'Pay Code',
+                    description:
+                        'Add funds with a one-time Pay Code without a provider payout.',
+                    available: true,
+                    selectable: true,
+                    unavailable_reason: null,
+                },
+            ],
+            bank_transfer: {
+                reconciliation_reference: {
+                    mode: 'disabled',
+                    value: null,
+                    label: 'Transfer reference',
+                    instructions:
+                        'No sender-entered reference is used as authoritative matching evidence.',
+                },
+                matching_strategies: fundingRequests.value.bank_transfer
+                    .reserved_exact_amounts_enabled
+                    ? [
+                          'reserved_exact_amount',
+                          'destination_account',
+                          'currency',
+                          'observation_window',
+                      ]
+                    : [
+                          'destination_account',
+                          'currency',
+                          'observation_window',
+                          'manual_review',
+                      ],
+            },
+        },
+);
 const activeReconciliationCase = ref<string | null>(null);
 const activeApproval = ref<string | null>(null);
 const activeVerificationCheck = ref<string | null>(null);
@@ -165,6 +242,24 @@ type FundingWorkspaceMode =
 const activeFundingMode = ref<FundingWorkspaceMode>(
     props.funding_workspace_mode ?? 'self_top_up',
 );
+const openFundingLifecycleLab = (): void => {
+    activeFundingMode.value = 'simulation';
+};
+const activePrimaryFundingMode = computed<
+    CockpitPrimaryFundingWorkspaceMode | null
+>({
+    get: () =>
+        ['self_top_up', 'bank_transfer', 'pay_code'].includes(
+            activeFundingMode.value,
+        )
+            ? (activeFundingMode.value as CockpitPrimaryFundingWorkspaceMode)
+            : null,
+    set: (mode) => {
+        if (mode !== null) {
+            activeFundingMode.value = mode;
+        }
+    },
+});
 const fundingQrMerchantProfile = computed(
     () =>
         props.funding_qr_merchant_profile ?? {
@@ -193,20 +288,6 @@ const fundingQrMerchantProfile = computed(
             controls_settlement: true as const,
         },
 );
-const primaryFundingWorkspaceModes = computed(() => [
-    {
-        key: 'self_top_up' as const,
-        label: 'QR Ph',
-    },
-    {
-        key: 'bank_transfer' as const,
-        label: 'Bank Transfer',
-    },
-    {
-        key: 'pay_code' as const,
-        label: 'Pay Code',
-    },
-]);
 const fundingActivityFilter = computed(() => {
     if (activeFundingMode.value === 'self_top_up') {
         return 'qr_ph' as const;
@@ -866,7 +947,10 @@ function claimPayCodeFunding(): void {
 }
 
 function requestReconciliation(caseReference: string, action: string): void {
-    if (!canManageTreasuryReconciliation.value) {
+    if (
+        !canManageTreasuryReconciliation.value &&
+        action !== 'recover_paid_on_demand_issuance'
+    ) {
         return;
     }
 
@@ -881,10 +965,6 @@ function requestReconciliation(caseReference: string, action: string): void {
 }
 
 function approveFundingReconciliation(reference: string): void {
-    if (!canManageTreasuryReconciliation.value) {
-        return;
-    }
-
     activeApproval.value = reference;
     approvalForm.post(approveReconciliation(reference), {
         preserveScroll: true,
@@ -945,12 +1025,22 @@ function reconciliationActionLabel(action: string): string {
         {
             retry_verification: 'Request verification retry',
             match_verified_observation: 'Request exact evidence match',
+            recover_paid_on_demand_issuance: 'Recover paid Pay Code',
             compensate_verified_posting: 'Request verified posting',
         }[action] ?? displayLabel(action)
     );
 }
 
-async function runQrPhFundingSimulation(): Promise<void> {
+function suspensePaymentAmount(amountMinor: number, currency: string): string {
+    return new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency,
+    }).format(amountMinor / 100);
+}
+
+async function runQrPhFundingSimulation(
+    scenario = 'qrph_funding_existing_mobile_demo',
+): Promise<void> {
     if (
         simulationRunning.value ||
         props.funding_simulation?.enabled !== true ||
@@ -969,9 +1059,11 @@ async function runQrPhFundingSimulation(): Promise<void> {
             credentials: 'same-origin',
             headers: {
                 Accept: 'application/json',
+                'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
                 ...csrfHeader(),
             },
+            body: JSON.stringify({ scenario }),
         });
         const body = await safeJson(response);
 
@@ -985,7 +1077,10 @@ async function runQrPhFundingSimulation(): Promise<void> {
         }
 
         if (
-            body.schema !== 'x-change.lifecycle.qrph-funding-simulation.v1' ||
+            ![
+                'x-change.lifecycle.qrph-funding-simulation.v1',
+                'x-change.lifecycle.on-demand-fixed-qr-ph.v1',
+            ].includes(String(body.schema)) ||
             !Array.isArray(body.steps)
         ) {
             simulationError.value =
@@ -1393,63 +1488,30 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                     </article>
                 </section>
 
+                <CockpitFundingMethodSelector
+                    v-model="activePrimaryFundingMode"
+                    :selector="fundingMethodSelector"
+                />
+
                 <div
-                    class="mt-3 border-t border-slate-200 pt-3 dark:border-slate-800"
-                    data-testid="cockpit-funding-mode-switcher"
+                    v-if="funding_simulation"
+                    class="mt-3 flex justify-end"
                 >
-                    <div
-                        class="grid grid-cols-3 gap-2"
-                        role="tablist"
-                        aria-label="Funding workspace mode"
+                    <button
+                        type="button"
+                        :aria-pressed="activeFundingMode === 'simulation'"
+                        :class="[
+                            'rounded-lg border px-3 py-2 text-xs font-semibold transition',
+                            activeFundingMode === 'simulation'
+                                ? 'border-violet-600 bg-violet-600 text-white'
+                                : 'border-violet-200 bg-white text-violet-700 hover:bg-violet-50 dark:border-violet-900 dark:bg-slate-950 dark:text-violet-200 dark:hover:bg-violet-950/40',
+                        ]"
+                        data-testid="open-funding-lifecycle-lab"
+                        @click="openFundingLifecycleLab"
                     >
-                        <button
-                            v-for="mode in primaryFundingWorkspaceModes"
-                            :id="`funding-mode-${mode.key}`"
-                            :key="mode.key"
-                            type="button"
-                            role="tab"
-                            class="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-2 py-2 text-center text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
-                            :class="
-                                activeFundingMode === mode.key
-                                    ? 'bg-slate-950 text-white shadow-sm dark:bg-sky-300 dark:text-slate-950'
-                                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white'
-                            "
-                            :aria-selected="activeFundingMode === mode.key"
-                            :aria-controls="`funding-panel-${mode.key}`"
-                            :data-testid="`funding-mode-${mode.key}`"
-                            @click="activeFundingMode = mode.key"
-                        >
-                            <QrCode
-                                v-if="mode.key === 'self_top_up'"
-                                class="size-4 shrink-0"
-                                aria-hidden="true"
-                                data-testid="funding-mode-icon-self_top_up"
-                            />
-                            <Landmark
-                                v-else-if="mode.key === 'bank_transfer'"
-                                class="size-4 shrink-0"
-                                aria-hidden="true"
-                                data-testid="funding-mode-icon-bank_transfer"
-                            />
-                            <TicketCheck
-                                v-else
-                                class="size-4 shrink-0"
-                                aria-hidden="true"
-                                data-testid="funding-mode-icon-pay_code"
-                            />
-                            <span>{{ mode.label }}</span>
-                        </button>
-                    </div>
-
+                        Open rollback-only Lifecycle Lab
+                    </button>
                 </div>
-
-                <p
-                    class="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400"
-                    data-testid="funding-confirmation-notice"
-                >
-                    Funds appear in your Account only after confirmation from
-                    the bank or payment provider.
-                </p>
             </section>
 
             <details
@@ -2149,6 +2211,23 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                                     </dd>
                                 </dl>
 
+                                <CockpitBankTransferReconciliationReference
+                                    :reference="
+                                        fundingMethodSelector.bank_transfer
+                                            .reconciliation_reference
+                                    "
+                                    :copied="
+                                        copiedFundingRequest ===
+                                        'reconciliation-reference'
+                                    "
+                                    @copy="
+                                        copyFundingRequest(
+                                            'reconciliation-reference',
+                                            $event,
+                                        )
+                                    "
+                                />
+
                                 <div
                                     class="grid gap-2 text-xs text-slate-600 sm:grid-cols-2 dark:text-slate-300"
                                 >
@@ -2842,7 +2921,7 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                             is rolled back.
                         </p>
                     </div>
-                    <div class="md:text-right">
+                    <div class="grid gap-2 md:text-right">
                         <button
                             type="button"
                             :disabled="
@@ -2852,7 +2931,7 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                             "
                             class="h-10 rounded-lg bg-violet-600 px-4 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
                             data-testid="run-qrph-funding-simulation"
-                            @click="runQrPhFundingSimulation"
+                            @click="runQrPhFundingSimulation()"
                         >
                             {{
                                 simulationRunning
@@ -2863,6 +2942,19 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                                         ? 'Verified mobile required'
                                         : 'Simulate scan and payment'
                             }}
+                        </button>
+                        <button
+                            type="button"
+                            :disabled="
+                                simulationRunning ||
+                                funding_simulation.enabled !== true ||
+                                funding_simulation.mobile_ready !== true
+                            "
+                            class="h-10 rounded-lg border border-violet-300 bg-white px-4 text-sm font-semibold text-violet-700 transition hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-violet-800 dark:bg-slate-950 dark:text-violet-200"
+                            data-testid="run-on-demand-fixed-qr-simulation"
+                            @click="runQrPhFundingSimulation('on_demand_issuance_fixed_qr_demo')"
+                        >
+                            Test on-demand fixed QR
                         </button>
                         <p class="mt-2 text-xs text-slate-500">
                             0 provider calls · 0 retained changes
@@ -3473,9 +3565,25 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                                     >
                                         {{
                                             item.pending_approval
-                                                ? 'Maker request pending independent approval.'
-                                                : 'Awaiting a controlled reconciliation request.'
+                                                ? item.pending_action === 'recover_paid_on_demand_issuance'
+                                                    ? 'Your recovery request is ready to complete. Do not pay again.'
+                                                    : 'Maker request pending independent approval.'
+                                                : item.order_reference
+                                                  ? 'A verified payment was found for this order. You can recover the Pay Code. Do not pay again.'
+                                                  : 'Awaiting a controlled reconciliation request.'
                                         }}
+                                    </p>
+                                    <p
+                                        v-if="item.order_reference"
+                                        class="mt-2 text-xs text-slate-700 dark:text-slate-300"
+                                    >
+                                        Order {{ item.order_reference }}
+                                        <span
+                                            v-if="item.payment_minor != null && item.currency"
+                                        >
+                                            · Payment
+                                            {{ suspensePaymentAmount(item.payment_minor, item.currency) }}
+                                        </span>
                                     </p>
                                     <div
                                         v-if="item.allowed_actions.length"
@@ -3506,6 +3614,15 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                                             }}
                                         </button>
                                     </div>
+                                    <button
+                                        v-if="item.pending_request_reference"
+                                        type="button"
+                                        class="mt-3 rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-amber-800 dark:bg-slate-900 dark:text-amber-300 dark:hover:bg-amber-950/40"
+                                        :disabled="approvalForm.processing"
+                                        @click="approveFundingReconciliation(item.pending_request_reference)"
+                                    >
+                                        {{ activeApproval === item.pending_request_reference ? 'Recovering…' : 'Complete Pay Code recovery' }}
+                                    </button>
                                 </div>
                             </div>
                             <p v-else class="mt-4 text-sm text-slate-500">
@@ -3516,6 +3633,12 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                                 class="mt-3 text-xs text-rose-600 dark:text-rose-300"
                             >
                                 {{ reconciliationForm.errors.reconciliation }}
+                            </p>
+                            <p
+                                v-if="approvalForm.errors.approval"
+                                class="mt-3 text-xs text-rose-600 dark:text-rose-300"
+                            >
+                                {{ approvalForm.errors.approval }}
                             </p>
                         </article>
 
