@@ -961,6 +961,7 @@ export type CockpitOnDemandIssuanceFundingProjection = {
     issued_item_count: number;
     download_url: string;
     workspace_url: string;
+    detail_url?: string | null;
   } | null;
   order: {
     reference: string;
@@ -2265,6 +2266,8 @@ export type CockpitVoucherDetailPageProps = CockpitHeaderPageProps & {
   read_model?: CockpitReadModelBundle;
   payout_institutions?: CockpitMoneyIssuerOption[];
   terminal_control?: CockpitPayCodeTerminalControl;
+  explorer_url?: string | null;
+  distribution_url?: string | null;
 };
 
 export type CockpitPayCodeTerminalControl = {
