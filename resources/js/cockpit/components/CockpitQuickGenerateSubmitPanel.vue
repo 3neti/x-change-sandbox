@@ -4912,6 +4912,7 @@ async function generateClaimPreview(refreshPreview = false): Promise<void> {
     return;
   }
 
+  const submittedFingerprint = previewDraftFingerprint.value;
   previewProcessing.value = true;
   previewStatus.value = "idle";
   previewMessage.value = refreshPreview
@@ -4955,7 +4956,7 @@ async function generateClaimPreview(refreshPreview = false): Promise<void> {
         : "Claim walkthrough preview is ready.";
     previewResult.value =
       body as unknown as CockpitClaimExperiencePreviewManifest;
-    previewDraftSnapshot.value = previewDraftFingerprint.value;
+    previewDraftSnapshot.value = submittedFingerprint;
   } catch (error) {
     previewStatus.value = "failed";
     previewMessage.value =
