@@ -1,1 +1,0 @@
-import{Pr as e,jr as t,mr as n,mt as r}from"./app-BhVNI9PE.js";var i={},a={class:`min-h-svh bg-background`};function o(r,i){return t(),n(`div`,a,[e(r.$slots,`default`)])}var s=r(i,[[`render`,o]]);export{s as t};
