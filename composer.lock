@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "216fde36cf1c35aac690ffea7e2b8d5e",
+    "content-hash": "4c5836296c5c0d75b30987775dc0b009",
     "packages": [
         {
             "name": "3neti/cash",
@@ -1684,11 +1684,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.211",
+            "version": "v1.0.237",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "043a9e777a91d20816597a4056fb04bd9c004489"
+                "reference": "4e4219611e9425f72a0fee5f9130ac493a42142a"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1722,6 +1722,8 @@
                 "3neti/x-provisioning": "^1.0",
                 "3neti/x-ray": "^1.0.1",
                 "3neti/x-rider": "^1.0",
+                "3neti/x-stamp": "^1.0",
+                "3neti/x-stamp-designs": "^1.0",
                 "brick/money": "^0.10.3",
                 "endroid/qr-code": "^6.1",
                 "illuminate/contracts": "^13.0",
@@ -1801,7 +1803,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-10-16T15:52:18+00:00"
+            "time": "2026-10-17T13:04:52+00:00"
         },
         {
             "name": "3neti/x-commerce",
@@ -2238,6 +2240,85 @@
             ],
             "description": "Programmable claimant experience layer for post-claim rider messages, redirects, splash, analytics seams, and future campaign runtimes.",
             "time": "2026-08-14T02:52:05+00:00"
+        },
+        {
+            "name": "3neti/x-stamp",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/3neti/x-stamp.git",
+                "reference": "0cd86ffc4370bd32a43fd3dd2445bc99ba878c6a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/3neti/x-stamp/zipball/0cd86ffc4370bd32a43fd3dd2445bc99ba878c6a",
+                "reference": "0cd86ffc4370bd32a43fd3dd2445bc99ba878c6a",
+                "shasum": ""
+            },
+            "require": {
+                "ext-gd": "*",
+                "ext-mbstring": "*",
+                "opis/json-schema": "^2.6",
+                "php": "^8.4"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.29",
+                "pestphp/pest": "^4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "LBHurtado\\XStamp\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "proprietary"
+            ],
+            "description": "Portable versioned Stamp documents, validation, and HTML/SVG/PNG rendering.",
+            "support": {
+                "issues": "https://github.com/3neti/x-stamp/issues",
+                "source": "https://github.com/3neti/x-stamp/tree/v1.0.0"
+            },
+            "time": "2026-10-17T01:17:26+00:00"
+        },
+        {
+            "name": "3neti/x-stamp-designs",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/3neti/x-stamp-designs.git",
+                "reference": "1da7e7f66716c707aeab26d1bf6b49aac1d5221f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/3neti/x-stamp-designs/zipball/1da7e7f66716c707aeab26d1bf6b49aac1d5221f",
+                "reference": "1da7e7f66716c707aeab26d1bf6b49aac1d5221f",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.4"
+            },
+            "require-dev": {
+                "3neti/x-stamp": "^1.0",
+                "pestphp/pest": "^4.0"
+            },
+            "type": "library",
+            "extra": {
+                "x-stamp": {
+                    "collection": "collection.json"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "proprietary"
+            ],
+            "description": "Versioned portable Stamp design collection.",
+            "support": {
+                "issues": "https://github.com/3neti/x-stamp-designs/issues",
+                "source": "https://github.com/3neti/x-stamp-designs/tree/v1.0.0"
+            },
+            "time": "2026-10-17T01:17:29+00:00"
         },
         {
             "name": "aws/aws-crt-php",
@@ -6782,20 +6863,21 @@
         },
         {
             "name": "league/uri",
-            "version": "7.8.1",
+            "version": "7.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thephpleague/uri.git",
-                "reference": "08cf38e3924d4f56238125547b5720496fac8fd4"
+                "reference": "fcc872a3d872aa13f935e0cd1887b9abb06da07f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/uri/zipball/08cf38e3924d4f56238125547b5720496fac8fd4",
-                "reference": "08cf38e3924d4f56238125547b5720496fac8fd4",
+                "url": "https://api.github.com/repos/thephpleague/uri/zipball/fcc872a3d872aa13f935e0cd1887b9abb06da07f",
+                "reference": "fcc872a3d872aa13f935e0cd1887b9abb06da07f",
                 "shasum": ""
             },
             "require": {
-                "league/uri-interfaces": "^7.8.1",
+                "ext-mbstring": "*",
+                "league/uri-interfaces": "^7.9.0",
                 "php": "^8.1",
                 "psr/http-factory": "^1"
             },
@@ -6868,7 +6950,7 @@
                 "docs": "https://uri.thephpleague.com",
                 "forum": "https://thephpleague.slack.com",
                 "issues": "https://github.com/thephpleague/uri-src/issues",
-                "source": "https://github.com/thephpleague/uri/tree/7.8.1"
+                "source": "https://github.com/thephpleague/uri/tree/7.9.0"
             },
             "funding": [
                 {
@@ -6876,20 +6958,20 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-03-15T20:22:25+00:00"
+            "time": "2026-10-16T15:19:33+00:00"
         },
         {
             "name": "league/uri-interfaces",
-            "version": "7.8.1",
+            "version": "7.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thephpleague/uri-interfaces.git",
-                "reference": "85d5c77c5d6d3af6c54db4a78246364908f3c928"
+                "reference": "eb5f6d24e6a4fe0a8e9c78ded4eb1dfff1404f58"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/uri-interfaces/zipball/85d5c77c5d6d3af6c54db4a78246364908f3c928",
-                "reference": "85d5c77c5d6d3af6c54db4a78246364908f3c928",
+                "url": "https://api.github.com/repos/thephpleague/uri-interfaces/zipball/eb5f6d24e6a4fe0a8e9c78ded4eb1dfff1404f58",
+                "reference": "eb5f6d24e6a4fe0a8e9c78ded4eb1dfff1404f58",
                 "shasum": ""
             },
             "require": {
@@ -6952,7 +7034,7 @@
                 "docs": "https://uri.thephpleague.com",
                 "forum": "https://thephpleague.slack.com",
                 "issues": "https://github.com/thephpleague/uri-src/issues",
-                "source": "https://github.com/thephpleague/uri-interfaces/tree/7.8.1"
+                "source": "https://github.com/thephpleague/uri-interfaces/tree/7.9.0"
             },
             "funding": [
                 {
@@ -6960,7 +7042,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-03-08T20:05:35+00:00"
+            "time": "2026-10-16T15:19:33+00:00"
         },
         {
             "name": "lorisleiva/laravel-actions",
