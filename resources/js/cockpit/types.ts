@@ -978,6 +978,8 @@ export type CockpitOnDemandIssuanceFundingProjection = {
     late_payment_disposition: string | null;
     late_payment_detected_at: string | null;
     voucher: {
+      stamp_provider?: string | null;
+      stamp_presentation?: Record<string, unknown> | null;
       code: string;
       amount: number;
       currency: string;
@@ -1837,12 +1839,16 @@ export type CockpitCollectionDestination = {
 };
 
 export type CockpitQuickGeneratePageProps = CockpitHeaderPageProps & {
+  composer_view?: "prompt" | "standard";
+  initial_workspace?: "composer" | "llm";
+  prompt_interpret_endpoint?: string;
   surface_profile?: {
     kind: "cockpit" | "public_auto_generate";
     show_funding_navigation: boolean;
     show_engineering_preview: boolean;
     show_workspace_switcher: boolean;
     allow_template_management: boolean;
+    available_surfaces?: Array<"composer" | "llm" | "pos" | "qr">;
   };
   public_navigation?: {
     pricing_url: string | null;

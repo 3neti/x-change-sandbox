@@ -7,6 +7,7 @@ Do not edit this published host copy directly.
 Changes will be overwritten by php artisan x-change:publish --scope=build --force.
 -->
 <script setup lang="ts">
+import type { PayCodeStampPreviewState } from "../payCodeStampPreview";
 import { Link } from "@inertiajs/vue3";
 import { Landmark } from "lucide-vue-next";
 import { computed, nextTick, ref } from "vue";
@@ -24,6 +25,7 @@ import CockpitQuickGenerateMutationHandoffPlanPanel from "../components/CockpitQ
 import CockpitQuickGenerateMutationPreconditionsReviewPanel from "../components/CockpitQuickGenerateMutationPreconditionsReviewPanel.vue";
 import CockpitQuickGeneratePosPanel from "../components/CockpitQuickGeneratePosPanel.vue";
 import CockpitQuickGenerateQrPanel from "../components/CockpitQuickGenerateQrPanel.vue";
+import CockpitQuickGenerateLlmPanel from "../components/CockpitQuickGenerateLlmPanel.vue";
 import type { CockpitQuickGenerateSurface } from "../components/CockpitQuickGenerateSurfaceSwitch.vue";
 import CockpitQuickGeneratePricingGatePanel from "../components/CockpitQuickGeneratePricingGatePanel.vue";
 import CockpitQuickGenerateSubmitPanel from "../components/CockpitQuickGenerateSubmitPanel.vue";
@@ -88,13 +90,25 @@ const pageLayoutProps = computed(() =>
         cockpitEntryNotice: props.cockpit_entry_notice,
       },
 );
+const initialWorkspace: CockpitQuickGenerateSurface =
+  props.initial_workspace ??
+  (!publicAutoGenerate.value && props.composer_view === "prompt"
+    ? "llm"
+    : "composer");
 const issuanceSurface = ref<CockpitQuickGenerateSurface>(
-  props.display_session ? "qr" : "composer",
+  props.display_session ? "qr" : initialWorkspace,
+);
+const availableSurfaces = computed<CockpitQuickGenerateSurface[]>(
+  () =>
+    props.surface_profile?.available_surfaces ?? ["composer", "llm", "pos", "qr"],
 );
 const displaySession = ref(props.display_session ?? null);
 const submitPanelElement = ref<InstanceType<
   typeof CockpitQuickGenerateSubmitPanel
 > | null>(null);
+const llmStampPreview = ref<PayCodeStampPreviewState | null>(null);
+const restoreLlmAfterCostPreview = ref(false);
+const restoreLlmAfterIssuance = ref(false);
 
 async function beginPublicIssuance(trigger: HTMLButtonElement): Promise<void> {
   document.getElementById("public-pay-code-builder")?.scrollIntoView({
@@ -103,6 +117,49 @@ async function beginPublicIssuance(trigger: HTMLButtonElement): Promise<void> {
   });
   await nextTick();
   await submitPanelElement.value?.openAmountCalculator(trigger);
+}
+
+function applyLlmInstructions(instructions: Record<string, unknown>): void {
+  submitPanelElement.value?.applyLlmInstructionBlueprint(instructions);
+}
+
+function beginReviewedLlmIssuance(): void {
+  restoreLlmAfterCostPreview.value = false;
+  restoreLlmAfterIssuance.value = true;
+  issuanceSurface.value = "composer";
+}
+
+function showReviewedOrderErrors(): void {
+  if (!restoreLlmAfterIssuance.value) {
+    return;
+  }
+  restoreLlmAfterIssuance.value = false;
+  issuanceSurface.value = "composer";
+}
+
+async function showLlmCostPreview(): Promise<void> {
+  restoreLlmAfterCostPreview.value = true;
+  issuanceSurface.value = "composer";
+  await nextTick();
+  await submitPanelElement.value?.openCostPreview(true);
+}
+
+function restoreLlmWorkspace(): void {
+  if (!restoreLlmAfterCostPreview.value) {
+    return;
+  }
+
+  restoreLlmAfterCostPreview.value = false;
+  issuanceSurface.value = "llm";
+}
+
+function restoreLlmAfterIssuanceFlow(): void {
+  if (!restoreLlmAfterIssuance.value) {
+    return;
+  }
+
+  restoreLlmAfterIssuance.value = false;
+  issuanceSurface.value = "llm";
 }
 
 const clientFundsMinor = computed<number | null>(() => {
@@ -1213,6 +1270,8 @@ function stringValue(value: unknown): string | null {
                 ? "Create a payment QR and watch the sale complete."
                 : issuanceSurface === "qr"
                   ? "Pair a campaign with this seller display."
+                  : issuanceSurface === "llm"
+                    ? "Describe the Pay Code you want to create."
                   : "Create a Pay Code for someone to claim."
             }}
           </p>
@@ -1234,7 +1293,8 @@ function stringValue(value: unknown): string | null {
         data-testid="cockpit-quick-generate-primary-workflow-stack"
       >
         <CockpitQuickGenerateSubmitPanel
-          v-if="issuanceSurface === 'composer'"
+          v-if="issuanceSurface === 'composer' || issuanceSurface === 'llm' || restoreLlmAfterIssuance"
+          v-show="issuanceSurface === 'composer' && !restoreLlmAfterIssuance"
           ref="submitPanelElement"
           v-model:issuance-surface="issuanceSurface"
           :client-funds-minor="clientFundsMinor"
@@ -1271,8 +1331,28 @@ function stringValue(value: unknown): string | null {
           :allow-template-management="
             props.surface_profile?.allow_template_management ?? true
           "
+          :composer-view="props.composer_view ?? 'standard'"
+          :available-surfaces="availableSurfaces"
+          :prompt-composer-endpoint="props.prompt_interpret_endpoint"
           :templates="templates"
+          @stamp-preview="llmStampPreview = $event"
+          @review-issue="beginReviewedLlmIssuance"
+          @submit-error="showReviewedOrderErrors"
           @reset-turnstile="publicTurnstileWidget?.reset()"
+          @cost-preview-closed="restoreLlmWorkspace"
+          @funding-flow-closed="restoreLlmAfterIssuanceFlow"
+        />
+        <CockpitQuickGenerateLlmPanel
+          v-if="issuanceSurface === 'llm' || restoreLlmAfterIssuance || restoreLlmAfterCostPreview"
+          v-show="issuanceSurface === 'llm'"
+          :stamp-preview="llmStampPreview"
+          :issuance-surface="issuanceSurface"
+          :composer-view="props.composer_view ?? 'prompt'"
+          :available-surfaces="availableSurfaces"
+          :prompt-composer-endpoint="props.prompt_interpret_endpoint"
+          @update:issuance-surface="issuanceSurface = $event"
+          @interpreted="applyLlmInstructions"
+          @show-cost="showLlmCostPreview"
         />
         <CockpitQuickGeneratePosPanel
           v-else-if="issuanceSurface === 'pos'"
