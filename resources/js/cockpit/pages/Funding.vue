@@ -947,7 +947,10 @@ function claimPayCodeFunding(): void {
 }
 
 function requestReconciliation(caseReference: string, action: string): void {
-    if (!canManageTreasuryReconciliation.value) {
+    if (
+        !canManageTreasuryReconciliation.value &&
+        action !== 'recover_paid_on_demand_issuance'
+    ) {
         return;
     }
 
@@ -962,10 +965,6 @@ function requestReconciliation(caseReference: string, action: string): void {
 }
 
 function approveFundingReconciliation(reference: string): void {
-    if (!canManageTreasuryReconciliation.value) {
-        return;
-    }
-
     activeApproval.value = reference;
     approvalForm.post(approveReconciliation(reference), {
         preserveScroll: true,
@@ -1026,9 +1025,17 @@ function reconciliationActionLabel(action: string): string {
         {
             retry_verification: 'Request verification retry',
             match_verified_observation: 'Request exact evidence match',
+            recover_paid_on_demand_issuance: 'Recover paid Pay Code',
             compensate_verified_posting: 'Request verified posting',
         }[action] ?? displayLabel(action)
     );
+}
+
+function suspensePaymentAmount(amountMinor: number, currency: string): string {
+    return new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency,
+    }).format(amountMinor / 100);
 }
 
 async function runQrPhFundingSimulation(
@@ -3558,9 +3565,25 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                                     >
                                         {{
                                             item.pending_approval
-                                                ? 'Maker request pending independent approval.'
-                                                : 'Awaiting a controlled reconciliation request.'
+                                                ? item.pending_action === 'recover_paid_on_demand_issuance'
+                                                    ? 'Your recovery request is ready to complete. Do not pay again.'
+                                                    : 'Maker request pending independent approval.'
+                                                : item.order_reference
+                                                  ? 'A verified payment was found for this order. You can recover the Pay Code. Do not pay again.'
+                                                  : 'Awaiting a controlled reconciliation request.'
                                         }}
+                                    </p>
+                                    <p
+                                        v-if="item.order_reference"
+                                        class="mt-2 text-xs text-slate-700 dark:text-slate-300"
+                                    >
+                                        Order {{ item.order_reference }}
+                                        <span
+                                            v-if="item.payment_minor != null && item.currency"
+                                        >
+                                            · Payment
+                                            {{ suspensePaymentAmount(item.payment_minor, item.currency) }}
+                                        </span>
                                     </p>
                                     <div
                                         v-if="item.allowed_actions.length"
@@ -3591,6 +3614,15 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                                             }}
                                         </button>
                                     </div>
+                                    <button
+                                        v-if="item.pending_request_reference"
+                                        type="button"
+                                        class="mt-3 rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-amber-800 dark:bg-slate-900 dark:text-amber-300 dark:hover:bg-amber-950/40"
+                                        :disabled="approvalForm.processing"
+                                        @click="approveFundingReconciliation(item.pending_request_reference)"
+                                    >
+                                        {{ activeApproval === item.pending_request_reference ? 'Recovering…' : 'Complete Pay Code recovery' }}
+                                    </button>
                                 </div>
                             </div>
                             <p v-else class="mt-4 text-sm text-slate-500">
@@ -3601,6 +3633,12 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                                 class="mt-3 text-xs text-rose-600 dark:text-rose-300"
                             >
                                 {{ reconciliationForm.errors.reconciliation }}
+                            </p>
+                            <p
+                                v-if="approvalForm.errors.approval"
+                                class="mt-3 text-xs text-rose-600 dark:text-rose-300"
+                            >
+                                {{ approvalForm.errors.approval }}
                             </p>
                         </article>
 
