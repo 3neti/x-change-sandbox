@@ -6,6 +6,7 @@
  * Do not edit this published host copy directly.
  * Changes will be overwritten by php artisan x-change:publish --scope=build --force.
  */
+import type { FormFlowPresentation } from '@/pages/form-flow/core/components/formFlowPresentation';
 export type CockpitNavigationGroup = "primary" | "secondary";
 
 export type CockpitNavigationItem = {
@@ -1785,6 +1786,7 @@ export type CockpitClaimExperiencePreviewManifest = {
     claim_submission: boolean;
   };
   journey: {
+    presentation?: FormFlowPresentation | null;
     viewport: {
       profile: string;
       width: number;

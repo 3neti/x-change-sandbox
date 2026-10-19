@@ -22,6 +22,9 @@ import {
     UserRound,
 } from 'lucide-vue-next';
 import { computed, defineAsyncComponent, type Component } from 'vue';
+import type { FormFlowPresentation } from '@/pages/form-flow/core/components/formFlowPresentation';
+import FormFlowArtworkSurface from '@/pages/form-flow/core/components/FormFlowArtworkSurface.vue';
+import ClaimStatusIcon from '../../components/x-change/ClaimStatusIcon.vue';
 import PayCodeLogo from '../../components/x-change/PayCodeLogo.vue';
 
 type ClaimPreviewField = {
@@ -52,6 +55,7 @@ type ClaimPreviewScreen = {
 
 const props = defineProps<{
     screen: ClaimPreviewScreen;
+    profile?: FormFlowPresentation | null;
     presentation?: 'framed' | 'viewport';
 }>();
 
@@ -104,7 +108,7 @@ const actualScreenComponent = computed<Component | null>(() => {
         </div>
         <template v-else-if="screen.kind === 'claim_entry'">
             <div
-                class="from-primary/5 via-background to-background min-h-0 flex-1 overflow-y-auto bg-gradient-to-b px-5 py-8"
+                class="x-claim-canvas from-primary/5 via-background to-background min-h-0 flex-1 overflow-y-auto bg-gradient-to-b px-5 py-8"
             >
                 <div
                     class="mx-auto flex min-h-full w-full max-w-md flex-col justify-center"
@@ -142,39 +146,26 @@ const actualScreenComponent = computed<Component | null>(() => {
         </template>
 
         <template v-else-if="screen.kind === 'rider_splash'">
-            <div class="relative flex min-h-0 flex-1 flex-col bg-slate-950">
-                <img
-                    v-if="screen.artwork_url"
-                    :src="screen.artwork_url"
-                    alt="Rider introduction artwork"
-                    class="absolute inset-0 size-full object-cover"
-                />
-                <div
-                    class="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/15"
-                />
-                <div
-                    class="relative mt-auto grid gap-3 px-5 pb-6 pt-20 text-white"
-                >
-                    <p class="text-xl font-semibold tracking-tight">
-                        {{ screen.message || screen.title }}
-                    </p>
-                    <p class="text-xs leading-5 text-white/75">
-                        {{ screen.description }}
-                    </p>
-                    <button
-                        type="button"
-                        tabindex="-1"
-                        class="min-h-10 rounded-full bg-white px-4 text-xs font-bold text-slate-950"
-                    >
-                        Continue
-                    </button>
+            <div class="x-claim-canvas flex min-h-0 flex-1 flex-col justify-center gap-6 bg-background p-5">
+                <div class="aspect-[1200/630] w-full overflow-hidden rounded-lg bg-muted/30" data-testid="claim-rider-splash-artwork">
+                    <img
+                        v-if="screen.artwork_url"
+                        :src="screen.artwork_url"
+                        alt="Rider introduction artwork"
+                        class="size-full object-contain"
+                    />
+                </div>
+                <div class="grid gap-3 text-foreground">
+                    <p class="text-xl font-semibold tracking-tight">{{ screen.message || screen.title }}</p>
+                    <p class="text-xs leading-5 text-muted-foreground">{{ screen.description }}</p>
+                    <button type="button" tabindex="-1" class="min-h-10 rounded-full bg-primary px-4 text-xs font-bold text-primary-foreground">Continue</button>
                 </div>
             </div>
         </template>
 
         <template v-else-if="screen.kind === 'claim_details'">
             <div
-                class="from-primary/5 via-background to-background flex min-h-0 flex-1 flex-col bg-gradient-to-b px-4 py-5"
+                class="x-claim-canvas from-primary/5 via-background to-background flex min-h-0 flex-1 flex-col bg-gradient-to-b px-4 py-5"
             >
                 <div class="grid gap-1">
                     <h3 class="text-lg font-semibold">{{ screen.title }}</h3>
@@ -253,7 +244,7 @@ const actualScreenComponent = computed<Component | null>(() => {
 
         <template v-else-if="isValidation">
             <div
-                class="from-primary/5 via-background to-background flex min-h-0 flex-1 flex-col bg-gradient-to-b px-5 py-6"
+                class="x-claim-canvas from-primary/5 via-background to-background flex min-h-0 flex-1 flex-col bg-gradient-to-b px-5 py-6"
             >
                 <div class="grid gap-1">
                     <div class="flex items-center gap-2">
@@ -406,9 +397,9 @@ const actualScreenComponent = computed<Component | null>(() => {
 
         <template v-else-if="screen.kind === 'confirmation'">
             <div
-                class="from-primary/5 via-background to-background flex min-h-0 flex-1 flex-col bg-gradient-to-b px-5 py-6"
+                class="x-claim-canvas from-primary/5 via-background to-background flex min-h-0 flex-1 flex-col bg-gradient-to-b px-5 py-6"
             >
-                <CheckCircle2 class="text-primary mx-auto size-11" />
+                <ClaimStatusIcon :profile="profile" role="review" data-testid="claim-review-icon" />
                 <div class="mt-3 text-center">
                     <h3 class="text-lg font-semibold">{{ screen.title }}</h3>
                     <p class="text-muted-foreground mt-1 text-[11px]">
@@ -446,9 +437,9 @@ const actualScreenComponent = computed<Component | null>(() => {
 
         <template v-else-if="screen.kind === 'success'">
             <div
-                class="via-background to-background flex min-h-0 flex-1 flex-col justify-center gap-5 bg-gradient-to-b from-emerald-500/10 px-5 py-6 text-center"
+                class="x-claim-canvas via-background to-background flex min-h-0 flex-1 flex-col justify-center gap-5 bg-gradient-to-b from-emerald-500/10 px-5 py-6 text-center"
             >
-                <CheckCircle2 class="mx-auto size-14 text-emerald-500" />
+                <ClaimStatusIcon :profile="profile" role="pending" data-testid="claim-pending-icon" />
                 <div class="grid gap-2">
                     <p class="text-2xl font-bold">{{ screen.amount }}</p>
                     <h3 class="text-lg font-semibold">{{ screen.title }}</h3>
@@ -483,7 +474,7 @@ const actualScreenComponent = computed<Component | null>(() => {
             "
         >
             <div
-                class="via-background to-background flex min-h-0 flex-1 flex-col justify-center gap-5 bg-gradient-to-b px-5 py-6 text-center"
+                class="x-claim-canvas via-background to-background flex min-h-0 flex-1 flex-col justify-center gap-5 bg-gradient-to-b px-5 py-6 text-center"
                 :class="
                     screen.kind === 'claim_attention'
                         ? 'from-amber-500/10'
@@ -529,34 +520,24 @@ const actualScreenComponent = computed<Component | null>(() => {
                 screen.kind === 'rider_handoff'
             "
         >
-            <div
-                class="relative flex min-h-0 flex-1 flex-col bg-slate-950 text-white"
-            >
+            <FormFlowArtworkSurface :artwork-src="screen.artwork_url" :presentation="profile">
                 <img
                     v-if="screen.artwork_url"
                     :src="screen.artwork_url"
                     alt="Rider link artwork"
-                    class="absolute inset-0 size-full object-cover opacity-60"
+                    class="mx-auto h-auto w-auto max-w-full rounded-lg object-contain shadow-sm"
+                    style="max-height:50svh"
+                    data-testid="rider-link-foreground"
                 />
-                <div
-                    class="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/10"
-                />
-                <div class="relative mt-auto grid gap-3 px-5 pb-6 pt-20">
-                    <ExternalLink class="size-7 text-cyan-300" />
-                    <h3 class="text-xl font-semibold tracking-tight">
-                        {{ handoffTitle }}
-                    </h3>
-                    <p class="text-xs leading-5 text-white/70">
-                        {{ handoffDescription }}
-                    </p>
-                    <div
-                        v-if="screen.kind === 'redirect_countdown'"
-                        class="rounded-full bg-white/10 px-3 py-2 text-center text-xs"
-                    >
-                        Opening in 5 seconds…
-                    </div>
+                <div class="grid gap-3 text-foreground">
+                    <ExternalLink class="size-7 text-primary" />
+                    <h3 class="text-xl font-semibold tracking-tight">{{ handoffTitle }}</h3>
+                    <p class="text-xs leading-5 text-muted-foreground">{{ handoffDescription }}</p>
                 </div>
-            </div>
+                <template v-if="screen.kind === 'redirect_countdown'" #footer>
+                    <div class="rounded-full bg-card/90 px-3 py-2 text-center text-xs text-foreground">Opening in 5 seconds…</div>
+                </template>
+            </FormFlowArtworkSurface>
         </template>
 
         <template v-else>
