@@ -2266,6 +2266,13 @@ export type CockpitPageAuthorization = {
 };
 
 export type CockpitVoucherDetailPageProps = CockpitHeaderPageProps & {
+  rider_redirect?: {
+    reference: string;
+    destination_host: string;
+    eligible_at: string | null;
+    pending_journal_events?: number;
+    events: { event_type: string; occurred_at: string; attempt_reference: string | null }[];
+  } | null;
   context?: {
     code?: string | null;
   };

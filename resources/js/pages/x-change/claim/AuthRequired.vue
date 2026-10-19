@@ -7,10 +7,16 @@ Do not edit this published host copy directly.
 Changes will be overwritten by php artisan x-change:publish --scope=build --force.
 -->
 <script setup lang="ts">
+import ClaimStatePanel from '@/components/x-change/ClaimStatePanel.vue';
+import FormFlowActions from '@/pages/form-flow/core/components/FormFlowActions.vue';
+import { useClaimActionLabel } from '@/composables/useClaimActionLabel';
+
 import { Head } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import ClaimStepShell from '@/components/x-change/ClaimStepShell.vue';
 import { ShieldCheck } from 'lucide-vue-next';
+
+const claimActionLabel = useClaimActionLabel();
 
 defineOptions({ layout: null });
 
@@ -44,9 +50,7 @@ defineProps<{
 
     <ClaimStepShell tone="warning" width="lg">
         <div class="space-y-5" data-testid="claim-auth-required-page">
-            <div class="space-y-3 text-center">
-                <ShieldCheck class="mx-auto h-12 w-12 text-amber-600" />
-
+            <ClaimStatePanel role="attention" class="space-y-3 text-center">
                 <div class="space-y-1">
                     <p
                         class="text-xs font-semibold tracking-[0.18em] text-amber-700 uppercase"
@@ -67,7 +71,7 @@ defineProps<{
                 >
                     {{ intent.description }}
                 </p>
-            </div>
+            </ClaimStatePanel>
 
             <div
                 class="rounded-lg border border-border/70 bg-background/70 px-4 py-3"
@@ -87,9 +91,11 @@ defineProps<{
                 </p>
             </div>
 
-            <div class="grid gap-3 sm:grid-cols-2">
+            <FormFlowActions>
                 <Button as-child class="w-full" data-testid="claim-auth-login">
-                    <a :href="login_url">Continue to sign in</a>
+                    <a :href="login_url">{{
+                        claimActionLabel('open_link', 'Continue to sign in')
+                    }}</a>
                 </Button>
 
                 <Button
@@ -98,9 +104,11 @@ defineProps<{
                     class="w-full"
                     data-testid="claim-auth-return"
                 >
-                    <a :href="claim_url">Retry claim link</a>
+                    <a :href="claim_url">{{
+                        claimActionLabel('retry', 'Retry claim link')
+                    }}</a>
                 </Button>
-            </div>
+            </FormFlowActions>
         </div>
     </ClaimStepShell>
 </template>
