@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "69aff343642863eced899703543704fa",
+    "content-hash": "4402620f7f3bfb4d2e6bc03ea60503c8",
     "packages": [
         {
             "name": "3neti/cash",
@@ -1439,16 +1439,16 @@
         },
         {
             "name": "3neti/wallet",
-            "version": "v2.1.0",
+            "version": "v2.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/wallet.git",
-                "reference": "a6fba2ef9d13fdfda397a53347e4b88d8f7469f9"
+                "reference": "8f1387df0906058edf299f21a91e7ed6953f9a48"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/wallet/zipball/a6fba2ef9d13fdfda397a53347e4b88d8f7469f9",
-                "reference": "a6fba2ef9d13fdfda397a53347e4b88d8f7469f9",
+                "url": "https://api.github.com/repos/3neti/wallet/zipball/8f1387df0906058edf299f21a91e7ed6953f9a48",
+                "reference": "8f1387df0906058edf299f21a91e7ed6953f9a48",
                 "shasum": ""
             },
             "require": {
@@ -1490,9 +1490,9 @@
             "description": "Custom wallet for X-Change",
             "support": {
                 "issues": "https://github.com/3neti/wallet/issues",
-                "source": "https://github.com/3neti/wallet/tree/v2.1.0"
+                "source": "https://github.com/3neti/wallet/tree/v2.1.1"
             },
-            "time": "2026-09-29T02:45:51+00:00"
+            "time": "2026-10-20T11:59:55+00:00"
         },
         {
             "name": "3neti/x-action",
