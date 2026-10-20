@@ -13,6 +13,7 @@ import type {
 import type { XChangeQrArtifactData } from '../components/x-change/qrArtifacts';
 
 export type PayCodeStampPreviewState = Readonly<{
+    stampInstructions?: Record<string, unknown>;
     amount: string | number;
     currency: string;
     provider: string;

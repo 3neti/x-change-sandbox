@@ -377,7 +377,6 @@ watch(
                     <CockpitClaimPreviewViewport
                         :step="currentStep"
                         :viewport="manifest.journey.viewport"
-                        :profile="manifest.journey.presentation"
                         :safe-presentation="safePresentation"
                     />
                 </article>
@@ -475,7 +474,6 @@ watch(
                             <CockpitClaimPreviewViewport
                                 :step="currentStep"
                                 :viewport="manifest.journey.viewport"
-                        :profile="manifest.journey.presentation"
                                 presentation="expanded"
                                 :safe-presentation="safePresentation"
                             />

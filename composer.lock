@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f7baf638db9b61a42d9f447733b0a90b",
+    "content-hash": "fc2f3b79c4befea67c9ccd03b9fa2326",
     "packages": [
         {
             "name": "3neti/cash",
@@ -1144,16 +1144,16 @@
         },
         {
             "name": "3neti/report-registry",
-            "version": "v1.1.2",
+            "version": "v1.1.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/report-registry.git",
-                "reference": "b3e4d07883120d4c749cc195514932c880501992"
+                "reference": "0035d75693076e6ef015a83add52c75d1d4351e9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/report-registry/zipball/b3e4d07883120d4c749cc195514932c880501992",
-                "reference": "b3e4d07883120d4c749cc195514932c880501992",
+                "url": "https://api.github.com/repos/3neti/report-registry/zipball/0035d75693076e6ef015a83add52c75d1d4351e9",
+                "reference": "0035d75693076e6ef015a83add52c75d1d4351e9",
                 "shasum": ""
             },
             "require": {
@@ -1195,9 +1195,9 @@
             "description": "Driver-based report registry with multi-format output and Handlebars templating",
             "support": {
                 "issues": "https://github.com/3neti/report-registry/issues",
-                "source": "https://github.com/3neti/report-registry/tree/v1.1.2"
+                "source": "https://github.com/3neti/report-registry/tree/v1.1.3"
             },
-            "time": "2026-07-31T05:21:30+00:00"
+            "time": "2026-10-20T01:37:50+00:00"
         },
         {
             "name": "3neti/settlement-envelope",
@@ -1684,11 +1684,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.253",
+            "version": "v1.0.255",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "c58055717b09aff2a03d5114b231ad136dd3c18f"
+                "reference": "ae3346bb4e41340a13d0390b2b233e84c3ebc844"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1722,7 +1722,7 @@
                 "3neti/x-provisioning": "^1.0",
                 "3neti/x-ray": "^1.0.1",
                 "3neti/x-rider": "^1.0",
-                "3neti/x-stamp": "^1.3",
+                "3neti/x-stamp": "^1.4",
                 "3neti/x-stamp-designs": "^1.3",
                 "brick/money": "^0.10.3",
                 "endroid/qr-code": "^6.1",
@@ -1803,7 +1803,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-10-20T00:09:05+00:00"
+            "time": "2026-10-20T03:51:55+00:00"
         },
         {
             "name": "3neti/x-commerce",
@@ -2245,16 +2245,16 @@
         },
         {
             "name": "3neti/x-stamp",
-            "version": "v1.3.0",
+            "version": "v1.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-stamp.git",
-                "reference": "d9d0e27f017b759e9d2a952b57728643c8f419e7"
+                "reference": "6b82640b91f324fbcc649e18fba818fde4136c79"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/x-stamp/zipball/d9d0e27f017b759e9d2a952b57728643c8f419e7",
-                "reference": "d9d0e27f017b759e9d2a952b57728643c8f419e7",
+                "url": "https://api.github.com/repos/3neti/x-stamp/zipball/6b82640b91f324fbcc649e18fba818fde4136c79",
+                "reference": "6b82640b91f324fbcc649e18fba818fde4136c79",
                 "shasum": ""
             },
             "require": {
@@ -2265,7 +2265,11 @@
             },
             "require-dev": {
                 "laravel/pint": "^1.29",
-                "pestphp/pest": "^4.0"
+                "pestphp/pest": "^4.0",
+                "spatie/browsershot": "^5.4"
+            },
+            "suggest": {
+                "spatie/browsershot": "^5.4 enables optional browser and browser-hd rendering (requires Node and Puppeteer)."
             },
             "type": "library",
             "autoload": {
@@ -2280,9 +2284,9 @@
             "description": "Portable versioned Stamp documents, validation, and HTML/SVG/PNG rendering.",
             "support": {
                 "issues": "https://github.com/3neti/x-stamp/issues",
-                "source": "https://github.com/3neti/x-stamp/tree/v1.3.0"
+                "source": "https://github.com/3neti/x-stamp/tree/v1.4.0"
             },
-            "time": "2026-10-18T14:43:22+00:00"
+            "time": "2026-10-20T02:13:16+00:00"
         },
         {
             "name": "3neti/x-stamp-designs",

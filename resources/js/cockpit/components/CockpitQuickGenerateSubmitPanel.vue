@@ -6329,6 +6329,7 @@ function instructionRecord(
     : {};
 }
 const stampPreviewProjection = computed<PayCodeStampPreviewState>(() => ({
+  stampInstructions: sanitizedInstructionPayload.value,
   amount: amount.value, currency: currency.value, provider: provider.value,
   recipient: payeeDisplayReference.value, purpose: purpose.value,
   claimOutcome: claimOutcome.value, voucherType: voucherType.value,
@@ -7429,6 +7430,7 @@ watch(stampPreviewProjection, (value) => emit("stampPreview", value), { immediat
           data-testid="cockpit-quick-generate-cost-preview"
         >
         <CockpitPayCodeCanvas
+          :stamp-instructions="sanitizedInstructionPayload"
           v-model:view="canvasView"
           :render-stamp="issuanceSurface === 'composer' || costPreviewOpen"
           :amount="amount"
