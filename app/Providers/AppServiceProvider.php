@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
+use LBHurtado\XChange\Contracts\CommercialProductRevenueMovementContract;
+use LBHurtado\XChange\Services\Commercial\BavixCommercialProductRevenueMovement;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -18,7 +20,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        if (interface_exists(CommercialProductRevenueMovementContract::class)
+            && class_exists(BavixCommercialProductRevenueMovement::class)) {
+            $this->app->singleton(
+                CommercialProductRevenueMovementContract::class,
+                BavixCommercialProductRevenueMovement::class,
+            );
+        }
     }
 
     /**
