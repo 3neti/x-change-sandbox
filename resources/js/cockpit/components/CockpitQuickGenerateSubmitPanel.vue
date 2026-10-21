@@ -7,10 +7,15 @@ Do not edit this published host copy directly.
 Changes will be overwritten by php artisan x-change:publish --scope=build --force.
 -->
 <script setup lang="ts">
+import type { PayCodeStampPreviewState } from "../payCodeStampPreview";
+import CockpitStampDesigner from './CockpitStampDesigner.vue';
+import { defaultStampPresentation, changeStampPresentation } from '../stampQrPresentation';
+import type { StampDesignOption, StampPresentation, StampOptions } from '../stampQrPresentation';
 import CockpitPayCodeTemplateStoreController from "@/actions/LBHurtado/XChange/Http/Controllers/Web/Cockpit/CockpitPayCodeTemplateStoreController";
 import CockpitPayCodeTemplateUpdateController from "@/actions/LBHurtado/XChange/Http/Controllers/Web/Cockpit/CockpitPayCodeTemplateUpdateController";
+import { store as savePublicCheckoutDraft } from "@/routes/x-change/public-auto-generate/checkouts";
 import type { RequestPayload } from "@inertiajs/core";
-import { Link, router } from "@inertiajs/vue3";
+import { Link, router, usePage } from "@inertiajs/vue3";
 import type {
   XChangePayCodeQrArtifacts,
   XChangeQrArtifactData,
@@ -68,6 +73,7 @@ import type {
   CockpitSettlementRailCapability,
 } from "../types";
 import { usePayCodeCostEstimate } from "../../composables/usePayCodeCostEstimate";
+import { useIssuanceFundingPreflight } from "../../composables/useIssuanceFundingPreflight";
 import { useTheme } from "../../composables/useTheme";
 import type { PayCodeCostEstimate } from "../../composables/usePayCodeCostEstimate";
 import { useRiderUrlArtworkPreview } from "../composables/useRiderUrlArtworkPreview";
@@ -152,10 +158,20 @@ const props = withDefaults(
       amount: string;
       currency: string;
     } | null;
+    checkoutDraft?: {
+      reference: string;
+      guest_token: string;
+      instructions: Record<string, unknown> | null;
+    } | null;
     publicAccountUrl?: string | null;
+    turnstile?: { enabled: boolean; site_key: string | null };
+    turnstileToken?: string;
     showEngineeringPreview?: boolean;
     showWorkspaceSwitcher?: boolean;
     allowTemplateManagement?: boolean;
+    composerView?: "prompt" | "standard";
+    promptComposerEndpoint?: string;
+    availableSurfaces?: CockpitQuickGenerateSurface[];
     templates: CockpitQuickGenerateTemplate[];
   }>(),
   {
@@ -170,6 +186,8 @@ const props = withDefaults(
     showEngineeringPreview: true,
     showWorkspaceSwitcher: true,
     allowTemplateManagement: true,
+    composerView: "standard",
+    availableSurfaces: () => ["composer", "llm", "pos", "qr"],
   },
 );
 
@@ -218,6 +236,11 @@ const emit = defineEmits<{
   submitStart: [payload: Record<string, unknown>];
   submitSuccess: [response: Record<string, unknown>];
   submitError: [error: Record<string, unknown>];
+  resetTurnstile: [];
+  costPreviewClosed: [];
+  fundingFlowClosed: [];
+  stampPreview: [value: PayCodeStampPreviewState];
+  reviewIssue: [];
 }>();
 
 type VoucherInputFieldOption = {
@@ -753,8 +776,49 @@ const riderStampFit = ref<RiderStampFit>("cover");
 const riderStampPosition = ref<RiderStampPosition>("center");
 const riderStampScrim = ref("18");
 const riderStampTheme = ref<RiderStampTheme>("automatic");
-const riderStampDesignId = ref<string | null>(null);
-const riderStampDesignVersion = ref<number | null>(null);
+const stampPage = usePage();
+const stampClaimEntryArtifact = computed<XChangeQrArtifactData | null>(() =>
+  qrArtifactValue(
+    dataGet(stampPage.props, ["cockpit_claim_entry_artifact"])
+      ?? dataGet(stampPage.props, ["xchange", "claim_entry_artifact"]),
+  ),
+);
+const systemStampOptions = computed<StampDesignOption[]>(() => (stampPage.props.xchange as { stamps?: StampDesignOption[] } | undefined)?.stamps ?? []);
+const stampPresentation = ref<StampPresentation | null>(null);
+const currentStampOption = computed(() => systemStampOptions.value.find(design => design.id === riderStampDesignId.value && design.revision === riderStampDesignVersion.value));
+function changeStampAppearance(changes: Partial<StampOptions>): void {
+  stampPresentation.value = changeStampPresentation(stampPresentation.value ?? defaultStampPresentation(currentStampOption.value), changes);
+  if (changes.show_tagline !== undefined) riderStampShowTagline.value = changes.show_tagline;
+}
+function resetStampAppearance(): void {
+  stampPresentation.value = defaultStampPresentation(currentStampOption.value);
+  riderStampCopySource.value = 'automatic';
+  riderStampTitle.value = '';
+  riderStampDescription.value = '';
+  riderStampShowLogo.value = true;
+  riderStampShowTagline.value = stampPresentation.value?.options.show_tagline ?? true;
+  riderStampClaimMarker.value = 'qr';
+  riderStampClaimMarkerPosition.value = 'bottom_right';
+  riderStampArtworkSource.value = 'x_change';
+  riderStampArtworkTreatment.value = 'automatic';
+  riderStampFit.value = 'cover'; riderStampPosition.value = 'center'; riderStampScrim.value = '18'; riderStampTheme.value = 'automatic';
+}
+function selectSystemStamp(id: string): void {
+  const design = systemStampOptions.value.find(option => option.id === id);
+  if (design) {
+    riderStampDesignId.value = design.id; riderStampDesignVersion.value = design.revision;
+    resetStampAppearance();
+  }
+}
+function setStampCustomMessage(enabled: boolean): void {
+  riderStampCopySource.value = enabled ? 'custom' : 'automatic';
+  riderStampTitle.value = '';
+  if (!enabled) riderStampDescription.value = '';
+}
+const defaultSystemStamp = (stampPage.props.xchange as { stamp_default?: string } | undefined)?.stamp_default ?? "steampunk";
+const riderStampDesignId = ref<string | null>(defaultSystemStamp);
+const defaultSystemStampRevision = Math.max(1, ...systemStampOptions.value.filter(design => design.id === defaultSystemStamp).map(design => design.revision));
+const riderStampDesignVersion = ref<number | null>(defaultSystemStampRevision);
 const {
   preview: riderUrlArtworkPreview,
   resolving: riderUrlArtworkResolving,
@@ -817,7 +881,12 @@ const executionVisibility = ref("");
 const executionMetadata = ref("");
 const metadataFlowType = ref("");
 const metadataIssuerId = ref("");
+const interpretedPrompt = ref("");
+const interpreterVersion = ref("");
 const processing = ref(false);
+const savingCheckoutDraft = ref(false);
+const checkoutDraftToken = ref<string | null>(props.checkoutDraft?.guest_token ?? null);
+const checkoutDraftMessage = ref<string | null>(props.checkoutDraft ? "A saved checkout draft is available in this browser." : null);
 const lastStatus = ref("ready");
 const lastMessage = ref("Ready to issue when the design is complete.");
 const lastResponse = ref<Record<string, unknown> | null>(null);
@@ -836,6 +905,7 @@ const onDemandFundingProjection =
 const instructionBuilderElement = ref<HTMLDetailsElement | null>(null);
 const canvasSectionElement = ref<HTMLElement | null>(null);
 const canvasView = ref<"stamp" | "design" | "claim" | "cost">("stamp");
+const costPreviewOpen = ref(false);
 const amountInputElement = ref<InstanceType<typeof CockpitAmountPicker> | null>(
   null,
 );
@@ -844,7 +914,6 @@ const amountCalculatorPreview = ref<number | null>(null);
 const amountCalculatorEstimatePending = ref(false);
 const riderDesignEditor = ref<RiderDesignEditor>("appearance");
 const riderDesignTeleportReady = ref(false);
-const riderDesignTeleportTarget = ref<HTMLElement | null>(null);
 const startingPoint = ref<"blank" | "last" | "template">("blank");
 const templatePickerOpen = ref(false);
 const saveTemplateOpen = ref(false);
@@ -860,6 +929,7 @@ const activeSavedTemplate = ref<CockpitSavedPayCodeTemplate | null>(null);
 const applyingStartingPoint = ref(false);
 const submissionErrors = ref<Array<{ field: string; message: string }>>([]);
 const submissionErrorHeading = ref("Fix these fields before issuing");
+const publicIssuancePaused = ref(false);
 
 const collectionDestinationError = computed<string | null>(() => {
   return (
@@ -893,6 +963,9 @@ onBeforeUnmount((): void => {
 
 async function focusAmountEditor(): Promise<void> {
   await nextTick();
+  if (props.issuanceSurface !== "composer") {
+    return;
+  }
   amountInputElement.value?.focus();
 }
 
@@ -903,7 +976,7 @@ async function openAmountCalculator(
   amountInputElement.value?.open(returnFocusTo);
 }
 
-defineExpose({ openAmountCalculator });
+defineExpose({ openAmountCalculator, applyInstructionBlueprint, applyLlmInstructionBlueprint, openCostPreview, submit });
 
 watch(
   selectedTemplate,
@@ -919,6 +992,12 @@ watch(
   },
   { flush: "sync" },
 );
+
+watch(riderStampShowTagline, (visible): void => {
+  if (stampPresentation.value && stampPresentation.value.options.show_tagline !== visible) {
+    changeStampAppearance({ show_tagline: visible });
+  }
+});
 
 watch(amount, (): void => {
   if (sliceMode.value === "whole") {
@@ -1061,8 +1140,9 @@ function applyTemplateDefaults(templateKey: string): void {
   riderStampPosition.value = "center";
   riderStampScrim.value = "18";
   riderStampTheme.value = "automatic";
-  riderStampDesignId.value = null;
-  riderStampDesignVersion.value = null;
+  riderStampDesignId.value = defaultSystemStamp;
+  riderStampDesignVersion.value = defaultSystemStampRevision;
+  stampPresentation.value = defaultStampPresentation(currentStampOption.value);
   cashType.value =
     defaults.executionDriver === "settlement_envelope"
       ? "settlement_cash"
@@ -1109,7 +1189,10 @@ function startBlank(): void {
 function initializeStartingPoint(): void {
   if (props.publicMode) {
     startBlank();
-    if (props.publicPrefill) {
+    if (props.checkoutDraft?.instructions) {
+      applyInstructionBlueprint(props.checkoutDraft.instructions, true);
+      lastMessage.value = "Your saved checkout draft is ready to review or change.";
+    } else if (props.publicPrefill) {
       amount.value = props.publicPrefill.amount;
       currency.value = props.publicPrefill.currency;
     }
@@ -1125,6 +1208,9 @@ function initializeStartingPoint(): void {
   }
 
   if (props.startupMode === "repeat_last" && hydrateLastInstructions()) {
+    riderStampDesignId.value = defaultSystemStamp;
+    riderStampDesignVersion.value = defaultSystemStampRevision;
+    resetStampAppearance();
     return;
   }
 
@@ -1148,6 +1234,27 @@ async function openDesignEditor(): Promise<void> {
     behavior: "smooth",
     block: "center",
   });
+}
+
+const reviewIssueAvailable = ref(false);
+
+async function openCostPreview(allowIssue = false, view: "cost" | "stamp" = "cost"): Promise<void> {
+  reviewIssueAvailable.value = allowIssue;
+  canvasView.value = view;
+  await nextTick();
+  costPreviewOpen.value = true;
+
+  await nextTick();
+
+  if (canEstimateLivePricing.value) {
+    await refreshLivePricingEstimate();
+  }
+}
+
+function closeCostPreview(): void {
+  reviewIssueAvailable.value = false;
+  costPreviewOpen.value = false;
+  emit("costPreviewClosed");
 }
 
 function hydrateLastInstructions(): boolean {
@@ -1406,10 +1513,50 @@ function applyRiderSplashLibraryPayload(
     typeof meta.html_profile === "string" ? meta.html_profile : "";
 }
 
+function applyLlmInstructionBlueprint(instructions: Record<string, unknown>): void {
+  const rider = (instructions.rider ?? {}) as Record<string, unknown>;
+  const metadata = (instructions.metadata ?? {}) as Record<string, unknown>;
+  const custom = (metadata.custom ?? {}) as Record<string, unknown>;
+  applyInstructionBlueprint({
+    ...instructions,
+    rider: { ...rider, stamp: riderSummary.value.stamp },
+    metadata: {
+      ...metadata,
+      custom: {
+        ...custom,
+        ...(stampPresentation.value ? { stamp_presentation: stampPresentation.value } : {}),
+      },
+    },
+  }, false);
+}
+
+async function issueReviewedOrder(): Promise<void> {
+  if (!canSubmit.value || processing.value) {
+    return;
+  }
+  reviewIssueAvailable.value = false;
+  costPreviewOpen.value = false;
+  emit("reviewIssue");
+  await nextTick();
+  await submit();
+}
+
 function applyInstructionBlueprint(
   instructions: Record<string, unknown>,
   clearRecipient: boolean,
 ): void {
+  interpretedPrompt.value = instructionString(instructions, [
+    "metadata",
+    "custom",
+    "cockpit",
+    "prompt",
+  ]);
+  interpreterVersion.value = instructionString(instructions, [
+    "metadata",
+    "custom",
+    "cockpit",
+    "parser_version",
+  ]);
   const templateKey = instructionString(
     instructions,
     ["metadata", "custom", "cockpit", "template_key"],
@@ -1677,6 +1824,10 @@ function applyInstructionBlueprint(
     hydratedStampDesignVersion > 0
       ? hydratedStampDesignVersion
       : null;
+
+  const savedPresentation = dataGet(instructions, ['metadata', 'custom', 'stamp_presentation']);
+  stampPresentation.value = savedPresentation && typeof savedPresentation === 'object'
+    ? JSON.parse(JSON.stringify(savedPresentation)) as StampPresentation : defaultStampPresentation(currentStampOption.value);
 
   feedbackEmail.value = instructionString(instructions, ["feedback", "email"]);
   feedbackMobile.value = instructionString(instructions, [
@@ -2151,11 +2302,14 @@ const canSubmit = computed<boolean>(() => {
 
   return (
     props.mutationContract?.runtime_enabled === true &&
+    !publicIssuancePaused.value &&
     routeUrl.value !== null &&
+    (!props.turnstile?.enabled || props.turnstileToken !== "") &&
     allowedMethods.value.includes("POST") &&
     selectedUnavailableCapabilities.value.length === 0 &&
     payeePolicy.value.issuable &&
     feedbackValid.value &&
+    expirationValidationError.value === null &&
     namedClaimSliceValidationMessage.value === null &&
     storedValuePolicyError.value === null &&
     claimRecipientError.value === null &&
@@ -2177,6 +2331,7 @@ const canGenerateClaimPreview = computed<boolean>(() => {
     normalizedAmount > 0 &&
     payeePolicy.value.issuable &&
     feedbackValid.value &&
+    expirationValidationError.value === null &&
     namedClaimSliceValidationMessage.value === null &&
     storedValuePolicyError.value === null &&
     claimRecipientError.value === null &&
@@ -2277,6 +2432,13 @@ const campaignContextAvailable = computed<boolean>(() => {
 
 const resultCode = computed<string | null>(() => {
   return stringValue(dataGet(lastResponse.value, ["result", "code"]));
+});
+
+const resultStampProvider = computed<string>(() => {
+  return (
+    stringValue(dataGet(lastResponse.value, ["result", "stamp_provider"])) ??
+    "manual"
+  );
 });
 
 const resultAmount = computed<string | number>(() => {
@@ -2680,7 +2842,11 @@ const canvasInstructionKeys = computed<string[]>(() => {
 
 const canvasExpiryLabel = computed<string>(() => {
   if (expiresAt.value.trim() !== "") {
-    return "Exact Expiration";
+    return `Expires ${expiresAt.value.trim().replace("T", " ")}`;
+  }
+
+  if (ttl.value.trim() !== "") {
+    return `Duration: ${ttl.value.trim()}`;
   }
 
   if (expiryPreset.value === "none") {
@@ -3075,7 +3241,7 @@ const effectiveTtl = computed<string>(() => {
   const advancedTtl = ttl.value.trim();
 
   if (advancedTtl !== "") {
-    return advancedTtl;
+    return normalizeDurationInput(advancedTtl) ?? advancedTtl;
   }
 
   if (expiryPreset.value === "custom") {
@@ -3087,6 +3253,59 @@ const effectiveTtl = computed<string>(() => {
   }
 
   return expiryPreset.value === "none" ? "" : expiryPreset.value;
+});
+
+function normalizeDurationInput(value: string): string | null {
+  const trimmed = value.trim();
+
+  if (trimmed === "") {
+    return "";
+  }
+
+  if (
+    /^P(?:\d+(?:\.\d+)?[DWMY]|T\d+(?:\.\d+)?[HMS])(?:\d+(?:\.\d+)?[DWMY])?(?:T\d+(?:\.\d+)?[HMS])?$/i.test(
+      trimmed,
+    )
+  ) {
+    return trimmed.toUpperCase();
+  }
+
+  const match = trimmed.match(
+    /^(\d+(?:\.\d+)?)\s*(minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w)$/i,
+  );
+
+  if (match === null) {
+    return null;
+  }
+
+  const amount = Number(match[1]);
+  const unit = match[2].toLowerCase();
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return null;
+  }
+
+  if (["minutes", "minute", "mins", "min", "m"].includes(unit)) {
+    return `PT${amount}M`;
+  }
+
+  if (["hours", "hour", "hrs", "hr", "h"].includes(unit)) {
+    return `PT${amount}H`;
+  }
+
+  if (["weeks", "week", "w"].includes(unit)) {
+    return `P${amount}W`;
+  }
+
+  return `P${amount}D`;
+}
+
+const expirationValidationError = computed<string | null>(() => {
+  const value = ttl.value.trim();
+
+  return value === "" || normalizeDurationInput(value) !== null
+    ? null
+    : "Use a duration such as 30 minutes, 2 hours, 1 day, or 1 week.";
 });
 
 const effectiveExpiry = computed<EffectiveExpiry>(() => {
@@ -3108,7 +3327,7 @@ const effectiveExpiry = computed<EffectiveExpiry>(() => {
 
   if (advancedTtl !== "") {
     const payload: Record<string, string> = {
-      ttl: advancedTtl,
+      ttl: normalizeDurationInput(advancedTtl) ?? advancedTtl,
     };
 
     return {
@@ -4502,7 +4721,20 @@ const {
   estimate: livePricingEstimate,
   estimating: livePricingEstimating,
   estimateError: livePricingEstimateError,
+  refreshEstimate: refreshLivePricingEstimate,
 } = usePayCodeCostEstimate(livePricingPayload, canEstimateLivePricing);
+const liveFundingPreflightPayload = computed<Record<string, unknown>>(() =>
+  buildPayloadShape(false, amountCalculatorPreview.value),
+);
+const {
+  preflight: liveFundingPreflight,
+  preflighting: liveFundingPreflighting,
+  preflightError: liveFundingPreflightError,
+  refreshPreflight: refreshLiveFundingPreflight,
+} = useIssuanceFundingPreflight(
+  liveFundingPreflightPayload,
+  computed(() => canEstimateLivePricing.value && !props.publicMode),
+);
 const liveAccountDebit = computed<number | null>(() =>
   optionalMoney(livePricingEstimate.value?.account_debit),
 );
@@ -4533,6 +4765,16 @@ const liveAccountDebitPending = computed<boolean>(
 const liveAccountDebitAffordability = computed<
   "unknown" | "affordable" | "insufficient-client-funds"
 >(() => {
+  const execution = liveFundingPreflight.value?.funding?.execution;
+
+  if (execution === "direct") {
+    return "affordable";
+  }
+
+  if (execution === "payment_required") {
+    return "insufficient-client-funds";
+  }
+
   if (
     liveAccountDebit.value === null ||
     typeof props.clientFundsMinor !== "number" ||
@@ -4551,14 +4793,22 @@ const liveAccountDebitExceedsClientFunds = computed<boolean>(
   () => liveAccountDebitAffordability.value === "insufficient-client-funds",
 );
 const requiresOnDemandFunding = computed<boolean>(() => {
+  const execution = liveFundingPreflight.value?.funding?.execution;
+
+  if (execution === "payment_required") {
+    return true;
+  }
+
+  if (execution === "direct") {
+    return false;
+  }
+
   if (!props.onDemandIssuancePolicy?.enabled) {
     return false;
   }
 
-  return (
-    props.onDemandIssuancePolicy.basis === "full_amount" ||
-    liveAccountDebitAffordability.value === "insufficient-client-funds"
-  );
+  return props.onDemandIssuancePolicy.basis === "full_amount" ||
+    liveAccountDebitAffordability.value === "insufficient-client-funds";
 });
 const issueActionLabel = computed<string>(() => {
   if (onboardingEnabled.value) {
@@ -4566,7 +4816,7 @@ const issueActionLabel = computed<string>(() => {
   }
 
   return requiresOnDemandFunding.value
-    ? "Fund & Issue Pay Code"
+    ? "Fund and Issue Pay Code"
     : "Issue Pay Code";
 });
 
@@ -4607,6 +4857,10 @@ async function submit(): Promise<void> {
   emit("submitStart", payload);
 
   try {
+    if (props.publicMode) {
+      await saveCheckoutDraft(payload);
+    }
+
     const response = await fetch(routeUrl.value, {
       method: "POST",
       credentials: "same-origin",
@@ -4615,6 +4869,9 @@ async function submit(): Promise<void> {
         "Content-Type": "application/json",
         "Idempotency-Key": idempotencyKey,
         "X-Requested-With": "XMLHttpRequest",
+        ...(props.publicMode && props.turnstile?.enabled
+          ? { "X-Turnstile-Token": props.turnstileToken ?? "" }
+          : {}),
         ...csrfHeader(),
       },
       body: JSON.stringify(payload),
@@ -4626,16 +4883,27 @@ async function submit(): Promise<void> {
       const normalizedErrors = normalizeSubmissionErrors(body);
       const issuanceIsBusy =
         stringValue(body.code) === "PAY_CODE_ISSUANCE_BUSY";
+      const issuanceIsPaused =
+        props.publicMode && stringValue(body.code) === "PUBLIC_ISSUANCE_PAUSED";
+
+      if (issuanceIsPaused) {
+        publicIssuancePaused.value = true;
+      }
 
       lastStatus.value = "failed";
-      lastMessage.value = issuanceIsBusy
-        ? "No Pay Code was issued or charged. Please try again."
-        : normalizedErrors.length > 0
-          ? "Your Pay Code needs a few corrections before it can be issued."
-          : (stringValue(body.message) ?? "The Pay Code could not be issued.");
-      submissionErrorHeading.value = issuanceIsBusy
-        ? "Issuance is temporarily busy"
-        : "Fix these fields before issuing";
+      if (issuanceIsPaused) {
+        lastMessage.value = "No payment was requested. Your Pay Code order was not created.";
+        submissionErrorHeading.value = "New orders are temporarily paused";
+      } else {
+        lastMessage.value = issuanceIsBusy
+          ? "No Pay Code was issued or charged. Please try again."
+          : normalizedErrors.length > 0
+            ? "Your Pay Code needs a few corrections before it can be issued."
+            : (stringValue(body.message) ?? "The Pay Code could not be issued.");
+        submissionErrorHeading.value = issuanceIsBusy
+          ? "Issuance is temporarily busy"
+          : "Fix these fields before issuing";
+      }
       submissionErrors.value =
         normalizedErrors.length > 0
           ? normalizedErrors
@@ -4653,6 +4921,8 @@ async function submit(): Promise<void> {
     }
 
     if (body.schema === "x-change.cockpit.on-demand-issuance-funding.v1") {
+      checkoutDraftToken.value = null;
+      checkoutDraftMessage.value = null;
       onDemandFundingProjection.value =
         body as CockpitOnDemandIssuanceFundingProjection;
       onDemandFundingDialogOpen.value = true;
@@ -4695,6 +4965,52 @@ async function submit(): Promise<void> {
     emit("submitError", body);
   } finally {
     processing.value = false;
+    if (props.publicMode && props.turnstile?.enabled) {
+      emit("resetTurnstile");
+    }
+  }
+}
+
+async function saveCheckoutDraft(payload: Record<string, unknown>): Promise<void> {
+  if (savingCheckoutDraft.value) {
+    return;
+  }
+
+  savingCheckoutDraft.value = true;
+
+  try {
+    const response = await fetch(savePublicCheckoutDraft().url, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+        ...(checkoutDraftToken.value
+          ? { "X-XChange-Guest-Checkout-Token": checkoutDraftToken.value }
+          : {}),
+        ...csrfHeader(),
+      },
+      body: JSON.stringify({ instructions: payload }),
+    });
+
+    if (!response.ok) {
+      throw new Error("The checkout draft could not be saved. Try again shortly.");
+    }
+
+    const draft = await safeJson(response);
+    checkoutDraftToken.value = stringValue(draft.guest_token);
+    checkoutDraftMessage.value = "Checkout draft saved in this browser. No payment is needed yet.";
+  } finally {
+    savingCheckoutDraft.value = false;
+  }
+}
+
+async function saveCheckoutDraftFromButton(): Promise<void> {
+  try {
+    await saveCheckoutDraft(buildIssuancePayload());
+  } catch (error) {
+    checkoutDraftMessage.value = error instanceof Error ? error.message : "The checkout draft could not be saved.";
   }
 }
 
@@ -4711,6 +5027,8 @@ function handleOnDemandIssued(
     status: "issued",
     result: {
       code: voucher.code,
+      stamp_provider: voucher.stamp_provider,
+      stamp_presentation: voucher.stamp_presentation,
       amount: voucher.amount,
       currency: voucher.currency,
       links: {
@@ -4742,6 +5060,7 @@ function handleOnDemandClosed(
       projection.order.late_payment_disposition === "client_funds"
         ? "The late payment was added to Client Funds. You may prepare a new Pay Code."
         : "Ready to prepare another Pay Code.";
+    emit("fundingFlowClosed");
 
     return;
   }
@@ -4749,6 +5068,7 @@ function handleOnDemandClosed(
   lastStatus.value = "awaiting_funds";
   lastMessage.value =
     "Funding is still active. Payment checking will continue when you resume this window.";
+  emit("fundingFlowClosed");
 }
 
 function generateAnotherAfterOnDemandIssuance(): void {
@@ -4765,6 +5085,16 @@ function handleOnDemandCancelled(): void {
   onDemandFundingProjection.value = null;
   lastStatus.value = "ready";
   lastMessage.value = "Funding cancelled safely. No Pay Code was issued.";
+  emit("fundingFlowClosed");
+}
+
+function handleIssuedPayCodeDialogClosed(): void {
+  issuedPayCodeDialogOpen.value = false;
+  // The issued receipt is already complete. Release the funding projection so
+  // the next issuance can be prepared without requiring the operator to use
+  // the explicit "Generate another" action.
+  onDemandFundingProjection.value = null;
+  emit("fundingFlowClosed");
 }
 
 async function generateClaimPreview(refreshPreview = false): Promise<void> {
@@ -4772,6 +5102,7 @@ async function generateClaimPreview(refreshPreview = false): Promise<void> {
     return;
   }
 
+  const submittedFingerprint = previewDraftFingerprint.value;
   previewProcessing.value = true;
   previewStatus.value = "idle";
   previewMessage.value = refreshPreview
@@ -4815,7 +5146,7 @@ async function generateClaimPreview(refreshPreview = false): Promise<void> {
         : "Claim walkthrough preview is ready.";
     previewResult.value =
       body as unknown as CockpitClaimExperiencePreviewManifest;
-    previewDraftSnapshot.value = previewDraftFingerprint.value;
+    previewDraftSnapshot.value = submittedFingerprint;
   } catch (error) {
     previewStatus.value = "failed";
     previewMessage.value =
@@ -5018,6 +5349,7 @@ function buildPayloadShape(
     metadata: {
       ...(campaign === null ? {} : { campaign }),
       custom: {
+        ...(stampPresentation.value && !usesRiderArtwork.value ? { stamp_presentation: stampPresentation.value } : {}),
         cockpit: {
           template_key: selectedTemplate.value,
           ...(activeSavedTemplate.value === null
@@ -5030,6 +5362,12 @@ function buildPayloadShape(
               }),
           source: "cockpit.quick-generate",
           builder: "guided-voucher-instruction-builder",
+          ...(interpretedPrompt.value === ""
+            ? {}
+            : {
+                interpreted_prompt: interpretedPrompt.value,
+                interpreter_version: interpreterVersion.value || "unknown",
+              }),
           payee: {
             kind: payeePolicy.value.kind,
             explicit_secret: payeePolicy.value.explicitSecret,
@@ -5994,6 +6332,18 @@ function instructionRecord(
     ? (value as Record<string, unknown>)
     : {};
 }
+const stampPreviewProjection = computed<PayCodeStampPreviewState>(() => ({
+  stampInstructions: sanitizedInstructionPayload.value,
+  amount: amount.value, currency: currency.value, provider: provider.value,
+  recipient: payeeDisplayReference.value, purpose: purpose.value,
+  claimOutcome: claimOutcome.value, voucherType: voucherType.value,
+  expiry: canvasExpiryLabel.value, instructionKeys: canvasInstructionKeys.value,
+  hasRiderDesign: usesRiderArtwork.value, riderDesignSource: riderStampPreview.value.source,
+  riderDesignDocument: riderCanvasArtworkDocument.value, riderStamp: riderStampPreview.value,
+  stampPresentation: stampPresentation.value, claimEntryArtifact: stampClaimEntryArtifact.value,
+  quantity: count.value,
+}));
+watch(stampPreviewProjection, (value) => emit("stampPreview", value), { immediate: true });
 </script>
 
 <template>
@@ -6304,6 +6654,7 @@ function instructionRecord(
             v-if="showWorkspaceSwitcher"
             class="w-auto p-0.5 [&>button]:min-h-7 [&>button]:px-2"
             :model-value="issuanceSurface"
+            :surfaces="availableSurfaces"
             :disabled="processing"
             @update:model-value="emit('update:issuanceSurface', $event)"
           />
@@ -6326,6 +6677,18 @@ function instructionRecord(
                 :tooltip="amountFieldHelp"
               />
             </label>
+            <p
+              v-if="publicMode && (mutationContract?.runtime_enabled !== true || publicIssuancePaused)"
+              class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900 dark:border-amber-900/70 dark:bg-amber-950/30 dark:text-amber-200"
+              data-testid="cockpit-quick-generate-public-paused"
+              role="status"
+            >
+              New Pay Code orders are temporarily paused.
+            </p>
+            <div v-if="publicMode" class="flex flex-wrap items-center gap-3 text-xs">
+              <button type="button" :disabled="savingCheckoutDraft || processing" class="rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-700 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" @click="saveCheckoutDraftFromButton">{{ savingCheckoutDraft ? 'Saving…' : 'Save checkout draft' }}</button>
+              <span v-if="checkoutDraftMessage" role="status" class="text-slate-600 dark:text-slate-300">{{ checkoutDraftMessage }}</span>
+            </div>
             <div
               class="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] items-start justify-start gap-x-2 gap-y-1.5 sm:grid-cols-[minmax(0,18rem)_minmax(0,18rem)]"
               data-testid="cockpit-quick-generate-amount-action-row"
@@ -6798,6 +7161,42 @@ function instructionRecord(
             <label
               v-if="publicMode"
               class="grid min-w-0 gap-1 text-xs font-medium text-slate-700 dark:text-slate-300"
+              data-testid="public-auto-generate-expiration"
+            >
+              <span class="flex min-w-0 items-center gap-1">
+                <span class="min-w-0 truncate">Expiration</span>
+                <CockpitFieldHelp
+                  label="About Expiration"
+                  tooltip="Choose how long the Pay Code can be claimed."
+                />
+              </span>
+              <input
+                v-model="ttl"
+                type="text"
+                inputmode="text"
+                autocomplete="off"
+                placeholder="1 day"
+                class="h-11 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-950 shadow-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50 dark:focus:border-emerald-600 dark:focus:ring-emerald-950"
+                data-testid="public-auto-generate-expiration-input"
+                :aria-invalid="expirationValidationError !== null"
+                :disabled="processing"
+              />
+              <span class="text-[11px] font-normal leading-5 text-slate-500 dark:text-slate-400">
+                Try “30 minutes”, “2 hours”, “1 day”, or “1 week”. Leave blank
+                for no expiration.
+              </span>
+              <span
+                v-if="expirationValidationError"
+                class="text-[11px] font-medium text-rose-600 dark:text-rose-300"
+                data-testid="public-auto-generate-expiration-error"
+              >
+                {{ expirationValidationError }}
+              </span>
+            </label>
+
+            <label
+              v-if="publicMode"
+              class="grid min-w-0 gap-1 text-xs font-medium text-slate-700 dark:text-slate-300"
               data-testid="public-auto-generate-after-claim-destination"
             >
               <span class="flex min-w-0 items-center gap-1">
@@ -7017,12 +7416,27 @@ function instructionRecord(
         </section>
       </div>
 
-      <div
-        ref="canvasSectionElement"
-        class="min-w-0 2xl:sticky 2xl:top-4 2xl:self-start"
-      >
+      <Teleport to="body" :disabled="!costPreviewOpen">
+        <div
+          v-if="costPreviewOpen"
+          class="fixed inset-0 z-50 bg-slate-950/60"
+          data-testid="cockpit-quick-generate-cost-preview-backdrop"
+          @click="closeCostPreview"
+        />
+        <div
+          ref="canvasSectionElement"
+          class="min-w-0"
+          :class="
+            costPreviewOpen
+              ? 'fixed inset-x-4 top-6 z-[51] mx-auto max-h-[calc(100vh-3rem)] max-w-7xl overflow-y-auto rounded-3xl bg-white p-4 shadow-2xl dark:bg-slate-950'
+              : '2xl:sticky 2xl:top-4 2xl:self-start'
+          "
+          data-testid="cockpit-quick-generate-cost-preview"
+        >
         <CockpitPayCodeCanvas
+          :stamp-instructions="sanitizedInstructionPayload"
           v-model:view="canvasView"
+          :render-stamp="issuanceSurface === 'composer' || costPreviewOpen"
           :amount="amount"
           :currency="currency"
           :recipient="payeeDisplayReference"
@@ -7036,18 +7450,20 @@ function instructionRecord(
           :rider-design-source="riderStampPreview.source"
           :rider-design-document="riderCanvasArtworkDocument"
           :rider-stamp="riderStampPreview"
+          :stamp-presentation="stampPresentation"
+          :provider="provider"
+          :claim-qr="beneficiaryClaimQr"
+          :claim-entry-artifact="stampClaimEntryArtifact"
           :cost-estimate="livePricingEstimate"
           :cost-loading="livePricingEstimating"
           :cost-error="livePricingEstimateError"
+          :cost-retry="refreshLivePricingEstimate"
           :quantity="count"
         >
           <template #design>
-            <div
-              ref="riderDesignTeleportTarget"
-              id="quick-generate-rider-design-editor"
-              class="h-full overflow-y-auto overscroll-contain pr-1"
-              data-testid="cockpit-quick-generate-rider-design-editor"
-            />
+            <CockpitStampDesigner :legacy-artwork="usesRiderArtwork" :designs="systemStampOptions" :design-id="riderStampPreview.design.id" :revision="riderStampPreview.design.version" :presentation="stampPresentation" :custom-message="riderStampCopySource === 'custom'" :message="riderStampDescription" @choose="selectSystemStamp" @change="changeStampAppearance" @reset="resetStampAppearance" @custom-message="setStampCustomMessage" @message="riderStampDescription = $event">
+              <div id="quick-generate-rider-design-editor" class="max-h-[50vh] overflow-y-auto overscroll-contain pr-1" data-testid="cockpit-quick-generate-rider-design-editor" />
+            </CockpitStampDesigner>
           </template>
           <template #claim>
             <CockpitClaimExperiencePreview
@@ -7064,12 +7480,25 @@ function instructionRecord(
             />
           </template>
         </CockpitPayCodeCanvas>
-      </div>
+        <div v-if="costPreviewOpen" class="sticky bottom-0 z-10 mt-4 flex flex-wrap justify-end gap-3 border-t bg-white py-4 dark:bg-slate-950" data-testid="pay-code-review-actions">
+          <button
+            type="button"
+            class="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            data-testid="cockpit-quick-generate-cost-preview-close"
+            @click="closeCostPreview"
+          >
+            Close
+          </button>
+          <button v-if="reviewIssueAvailable" type="button" data-testid="llm-reviewed-order-issue" class="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white disabled:opacity-50" :disabled="!canSubmit || processing" @click="issueReviewedOrder">{{ issueActionLabel }}</button>
+        </div>
+        </div>
+      </Teleport>
     </div>
 
     <CockpitOnDemandIssuanceFundingDialog
       :open="onDemandFundingDialogOpen"
       :projection="onDemandFundingProjection"
+      :stamp-preview="stampPreviewProjection"
       @issued="handleOnDemandIssued"
       @cancelled="handleOnDemandCancelled"
       @closed="handleOnDemandClosed"
@@ -7107,6 +7536,8 @@ function instructionRecord(
       :rider-design-source="riderStampPreview.source"
       :rider-design-document="riderCanvasArtworkDocument"
       :rider-stamp="riderStampPreview"
+      :provider="resultStampProvider"
+      :stamp-presentation="dataGet(lastResponse, ['result', 'stamp_presentation']) as Record<string, unknown> | null"
       :cost-estimate="issuedCostEstimate"
       :quantity="count"
       :claim-url="beneficiaryClaimUrl"
@@ -7123,7 +7554,7 @@ function instructionRecord(
           : null
       "
       :public-account-url="publicMode ? publicAccountUrl : null"
-      @close="issuedPayCodeDialogOpen = false"
+      @close="handleIssuedPayCodeDialogClosed"
       @generate-another="generateAnotherAfterOnDemandIssuance"
     />
 
@@ -8366,9 +8797,9 @@ function instructionRecord(
           </div>
           <Teleport
             v-if="
-              riderDesignTeleportReady && riderDesignTeleportTarget !== null
+              riderDesignTeleportReady
             "
-            :to="riderDesignTeleportTarget"
+            to="#quick-generate-rider-design-editor"
           >
             <div class="grid gap-3">
               <div
@@ -9055,7 +9486,7 @@ function instructionRecord(
                             class="rounded border-sky-300"
                             :disabled="processing"
                           />
-                          Show Tagline
+                          Show brand messaging
                         </label>
                         <fieldset
                           class="grid gap-2"

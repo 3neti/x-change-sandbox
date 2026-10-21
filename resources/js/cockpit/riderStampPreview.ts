@@ -229,6 +229,9 @@ export function resolveRiderStampDesign(
         'experienceTheme' | 'designId' | 'designVersion'
     >,
 ): RiderStampDesignReference {
+    if (input.designId && !input.designId.startsWith('x-change-')) {
+        return { id: input.designId, version: Number(input.designVersion) || 1 };
+    }
     const explicitTheme = experienceThemeForStampDesign(input.designId);
     const theme =
         explicitTheme ??
@@ -444,6 +447,10 @@ function resolveStampCopy(
     }
 
     if (selectedSource === 'none') {
+        return { title: '', description: '' };
+    }
+
+    if (!composition.showTagline) {
         return { title: '', description: '' };
     }
 

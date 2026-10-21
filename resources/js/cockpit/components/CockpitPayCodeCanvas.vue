@@ -15,7 +15,10 @@ import {
     Route,
     UserRound,
 } from 'lucide-vue-next';
-import { computed, useId, useSlots, watchEffect } from 'vue';
+import { computed, ref, useId, useSlots, watchEffect } from 'vue';
+import CockpitSystemStamp from './CockpitSystemStamp.vue';
+import CockpitClaimEntryLauncher from './CockpitClaimEntryLauncher.vue';
+import type { XChangeQrArtifactData } from '../../components/x-change/qrArtifacts';
 import type {
     PayCodeCostCharge,
     PayCodeCostEstimate,
@@ -32,8 +35,13 @@ import CockpitPayCodeIndicator from './CockpitPayCodeIndicator.vue';
 
 const props = withDefaults(
     defineProps<{
+        stampInstructions?: Record<string, unknown>;
+        previewOnly?: boolean;
+        renderStamp?: boolean;
         amount: string | number;
         currency: string;
+        provider?: string | null;
+        stampPresentation?: Record<string, unknown> | null;
         recipient?: string;
         purpose?: string;
         claimOutcome: 'provider_disbursement' | 'account_funding';
@@ -46,14 +54,18 @@ const props = withDefaults(
         riderDesignDocument?: string;
         riderStamp?: RiderStampPreview | null;
         claimQr?: string | null;
+        claimEntryArtifact?: XChangeQrArtifactData | null;
         interactiveClaimQr?: boolean;
         presentation?: 'live' | 'finalized';
         costEstimate?: PayCodeCostEstimate | null;
         costLoading?: boolean;
         costError?: string | null;
+        costRetry?: (() => void) | null;
         quantity?: string | number;
     }>(),
     {
+        previewOnly: false,
+        renderStamp: true,
         recipient: '',
         purpose: '',
         expiry: 'No expiry',
@@ -64,18 +76,42 @@ const props = withDefaults(
         riderDesignDocument: '',
         riderStamp: null,
         claimQr: null,
+        claimEntryArtifact: null,
         interactiveClaimQr: false,
         presentation: 'live',
         costEstimate: null,
         costLoading: false,
         costError: null,
+        costRetry: null,
         quantity: 1,
     },
 );
 
 const emit = defineEmits<{
     claimQrClick: [];
+    previewError: [failed: boolean];
+    previewImage: [image: string];
 }>();
+
+const claimEntryLauncher = ref<{ open: () => void } | null>(null);
+const stampClaimQr = computed(
+    () => props.claimQr || props.claimEntryArtifact?.image_data_uri || null,
+);
+const stampQrInteractive = computed(
+    () =>
+        !props.previewOnly &&
+        (props.claimQr ? props.interactiveClaimQr : !!props.claimEntryArtifact),
+);
+const stampQrLabel = computed(() =>
+    props.claimQr ? 'Claim Pay Code QR' : 'Enter Pay Code QR',
+);
+function openStampQr(): void {
+    if (props.claimQr) {
+        emit('claimQrClick');
+    } else {
+        claimEntryLauncher.value?.open();
+    }
+}
 
 type PayCodeCanvasView = 'stamp' | 'design' | 'claim' | 'cost';
 
@@ -204,6 +240,32 @@ const showStampCopy = computed<boolean>(() => {
         props.riderStamp?.composition.copySource !== 'none' &&
         ((props.riderStamp?.title.trim() ?? '') !== '' ||
             (props.riderStamp?.description.trim() ?? '') !== '')
+    );
+});
+
+const systemStampPurpose = computed<string>(() => {
+    const stamp = props.riderStamp;
+    if (stamp?.composition.copySource === 'none') {
+        return '';
+    }
+    if (
+        props.stampPresentation &&
+        stamp?.composition.copySource === 'custom' &&
+        stamp.title === 'Pay Code'
+    ) {
+        return stamp.description;
+    }
+    if (
+        stamp?.title === 'Pay Code' &&
+        stamp.description ===
+            'Money should adapt to people. Not the other way around.'
+    ) {
+        return 'Money should adapt to people.\nNot the other way around.';
+    }
+
+    return (
+        [stamp?.title, stamp?.description].filter(Boolean).join('\n') ||
+        props.purpose
     );
 });
 
@@ -528,10 +590,16 @@ function stringValue(value: unknown): string | null {
 
 <template>
     <section
-        class="@container rounded-2xl border border-emerald-200 bg-white/80 p-4 dark:border-emerald-900/70 dark:bg-slate-950/70"
+        class="@container"
+        :class="
+            previewOnly
+                ? 'aspect-[1200/630] w-full overflow-hidden rounded-[1.4rem]'
+                : 'rounded-2xl border border-emerald-200 bg-white/80 p-4 dark:border-emerald-900/70 dark:bg-slate-950/70'
+        "
         data-testid="cockpit-pay-code-canvas"
     >
         <div
+            v-if="!previewOnly"
             class="@md:flex-row @md:items-start @md:justify-between mb-4 flex flex-col gap-3"
             data-testid="cockpit-pay-code-canvas-header"
         >
@@ -637,17 +705,115 @@ function stringValue(value: unknown): string | null {
             </div>
         </div>
 
-        <article
-            v-if="visibleView === 'stamp'"
-            :id="panelId('stamp')"
-            role="tabpanel"
-            :aria-labelledby="tabId('stamp')"
-            class="@md:min-h-72 @md:p-7 min-h-88 relative flex aspect-[1.72/1] w-full flex-col overflow-hidden rounded-[1.4rem] border p-5 shadow-xl shadow-slate-900/10"
+        <div
             :class="
+                visibleView === 'design'
+                    ? '@3xl:grid @3xl:grid-cols-2 @3xl:items-start @3xl:gap-4'
+                    : ''
+            "
+        >
+        <section v-if="renderStamp && stampInstructions && (visibleView === 'stamp' || visibleView === 'design')"
+            :id="!previewOnly && visibleView === 'stamp' ? panelId('stamp') : undefined"
+            :role="!previewOnly && visibleView === 'stamp' ? 'tabpanel' : undefined"
+            :aria-labelledby="!previewOnly && visibleView === 'stamp' ? tabId('stamp') : undefined"
+            data-testid="canonical-stamp-preview">
+            <CockpitSystemStamp
+                :instructions="stampInstructions"
+                :design-id="riderStamp?.design.id ?? 'steampunk'"
+                :revision="riderStamp?.design.version ?? 1"
+                :slots="{ brand: 'Pay Code', amount: formattedAmount, recipient: recipientLabel, purpose, expiry }"
+                :claim-qr="stampClaimQr" :interactive="stampQrInteractive"
+                :marker="riderStamp?.composition.claimMarker"
+                @preview-error="emit('previewError', $event)"
+                @preview-image="emit('previewImage', $event)"
+                @claim-qr-click="openStampQr" />
+        </section>
+        <section
+            v-else-if="
+                renderStamp && (visibleView === 'stamp' || visibleView === 'design') &&
+                riderStamp &&
+                !riderStamp.design.id.startsWith('x-change-') &&
+                !hasRiderDesign
+            "
+                :id="
+                    !previewOnly && visibleView === 'stamp'
+                        ? panelId('stamp')
+                        : undefined
+                "
+                :role="
+                    !previewOnly && visibleView === 'stamp'
+                        ? 'tabpanel'
+                        : undefined
+                "
+                :aria-labelledby="
+                    !previewOnly && visibleView === 'stamp'
+                        ? tabId('stamp')
+                        : undefined
+                "
+        >
+            <CockpitSystemStamp
+                :design-id="riderStamp.design.id"
+                :revision="riderStamp.design.version"
+                :indicator-keys="stampIndicatorKeys"
+                :provider="provider"
+                :stamp-presentation="stampPresentation"
+                :slots="{
+                        brand: riderStamp.composition.showLogo
+                            ? 'Pay Code'
+                            : '',
+                    tagline: riderStamp.composition.showTagline
+                        ? 'The instruction that moves money.'
+                        : '',
+                    amount: formattedAmount,
+                    recipient: recipientLabel,
+                    purpose: systemStampPurpose,
+                    expiry,
+                    instructions: stampIndicatorKeys
+                        .map((key) => resolvePayCodeIndicator(key).label)
+                        .join(' · '),
+                }"
+                :claim-qr="stampClaimQr"
+                :claim-qr-label="stampQrLabel"
+                :code="issuedCode"
+                :marker="riderStamp.composition.claimMarker"
+                :position="riderStamp.composition.claimMarkerPosition"
+                :interactive="stampQrInteractive"
+                    @preview-error="emit('previewError', $event)"
+                    @preview-image="emit('previewImage', $event)"
+                @claim-qr-click="openStampQr"
+            />
+        </section>
+        <article
+            v-else-if="renderStamp && (visibleView === 'stamp' || visibleView === 'design')"
+                :id="
+                    !previewOnly && visibleView === 'stamp'
+                        ? panelId('stamp')
+                        : undefined
+                "
+                :role="
+                    !previewOnly && visibleView === 'stamp'
+                        ? 'tabpanel'
+                        : undefined
+                "
+                :aria-labelledby="
+                    !previewOnly && visibleView === 'stamp'
+                        ? tabId('stamp')
+                        : undefined
+                "
+                class="relative flex w-full flex-col overflow-hidden rounded-[1.4rem] border p-5 shadow-xl shadow-slate-900/10"
+                :style="
+                    previewOnly
+                        ? { aspectRatio: '1200 / 630', minHeight: '0' }
+                        : undefined
+                "
+                :class="[
+                    previewOnly
+                        ? ''
+                        : '@md:min-h-72 @md:p-7 min-h-88 aspect-[1.72/1]',
                 hasRiderDesign
                     ? 'border-slate-700 bg-slate-950 text-white'
-                    : stampDesignClass
-            "
+                        : stampDesignClass,
+                ]"
             data-testid="cockpit-pay-code-canvas-front"
         >
             <iframe
@@ -687,24 +853,28 @@ function stringValue(value: unknown): string | null {
                 data-testid="cockpit-pay-code-canvas-claim-marker"
             >
                 <button
-                    v-if="showClaimQr && claimQr && interactiveClaimQr"
+                    v-if="showClaimQr && stampClaimQr && stampQrInteractive"
                     type="button"
                     class="rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300"
-                    :aria-label="`Enlarge claim QR for ${displayedCode}`"
+                    :aria-label="
+                        claimQr
+                            ? `Enlarge claim QR for ${displayedCode}`
+                            : 'Expand claim entry QR'
+                    "
                     data-testid="cockpit-pay-code-canvas-claim-qr-button"
-                    @click="emit('claimQrClick')"
+                    @click="openStampQr"
                 >
                     <img
-                        :src="claimQr"
-                        :alt="`Claim ${displayedCode}`"
+                        :src="stampClaimQr"
+                        :alt="stampQrLabel"
                         class="@md:size-20 size-16 rounded-lg border-4 border-white bg-white object-contain shadow-lg"
                         data-testid="cockpit-pay-code-canvas-claim-qr"
                     />
                 </button>
                 <img
-                    v-else-if="showClaimQr && claimQr"
-                    :src="claimQr"
-                    :alt="`Claim ${displayedCode}`"
+                    v-else-if="showClaimQr && stampClaimQr"
+                    :src="stampClaimQr"
+                    :alt="stampQrLabel"
                     class="@md:size-20 size-16 rounded-lg border-4 border-white bg-white object-contain shadow-lg"
                     data-testid="cockpit-pay-code-canvas-claim-qr"
                 />
@@ -780,7 +950,9 @@ function stringValue(value: unknown): string | null {
                             data-testid="cockpit-pay-code-canvas-tagline"
                         >
                             Money should adapt to people.
-                            <span class="block">Not the other way around.</span>
+                                <span class="block"
+                                    >Not the other way around.</span
+                                >
                         </p>
                     </div>
                     <div
@@ -922,11 +1094,12 @@ function stringValue(value: unknown): string | null {
             :id="panelId('design')"
             role="tabpanel"
             :aria-labelledby="tabId('design')"
-            class="h-[clamp(24rem,58vh,36rem)] w-full overflow-hidden rounded-[1.4rem] border border-slate-200 bg-slate-50/80 p-4 xl:h-[clamp(28rem,64vh,42rem)] 2xl:h-[clamp(28rem,64vh,38rem)] dark:border-slate-800 dark:bg-slate-900/70"
+            class="@3xl:mt-0 mt-4 max-h-[64vh] w-full overflow-y-auto rounded-[1.4rem] border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/70"
             data-testid="cockpit-pay-code-canvas-design"
         >
             <slot name="design" />
         </section>
+        </div>
 
         <section
             v-show="visibleView === 'claim' && hasClaimView"
@@ -992,11 +1165,20 @@ function stringValue(value: unknown): string | null {
                         class="rounded-xl border border-white/10 bg-white/5 px-3 py-4 text-sm text-slate-300"
                         data-testid="cockpit-pay-code-cost-unavailable"
                     >
-                        {{
+                        <span>{{
                             costError
                                 ? 'Estimate unavailable'
                                 : 'Enter an amount to see the issue cost.'
-                        }}
+                        }}</span>
+                        <button
+                            v-if="costError && costRetry"
+                            type="button"
+                            class="mt-3 inline-flex rounded-lg border border-white/20 px-3 py-1.5 text-xs font-semibold text-white transition hover:border-emerald-300 hover:text-emerald-200"
+                            data-testid="cockpit-pay-code-cost-retry"
+                            @click="costRetry()"
+                        >
+                            Try again
+                        </button>
                     </p>
 
                     <div
@@ -1089,7 +1271,9 @@ function stringValue(value: unknown): string | null {
                         class="@sm:text-xs mt-auto grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-0.5 border-t border-white/20 pt-2 text-[0.6875rem] leading-4"
                         data-testid="cockpit-pay-code-cost-summary"
                     >
-                        <dt class="text-slate-300">Service &amp; Instruction Fees</dt>
+                        <dt class="text-slate-300">
+                            Service &amp; Instruction Fees
+                        </dt>
                         <dd
                             class="whitespace-nowrap text-right font-semibold tabular-nums text-white"
                             :class="
@@ -1119,9 +1303,7 @@ function stringValue(value: unknown): string | null {
                             class="col-span-2 my-1 border-t border-dashed border-white/25"
                             aria-hidden="true"
                         />
-                        <dt class="font-bold text-white">
-                            Total Required Now
-                        </dt>
+                        <dt class="font-bold text-white">Total Required Now</dt>
                         <dd
                             class="@sm:text-base whitespace-nowrap text-right text-sm font-black tabular-nums text-emerald-300"
                             data-testid="cockpit-pay-code-cost-total"
@@ -1152,5 +1334,11 @@ function stringValue(value: unknown): string | null {
                 <slot name="action" />
             </div>
         </footer>
+        <CockpitClaimEntryLauncher
+            v-if="!previewOnly && !claimQr && claimEntryArtifact"
+            ref="claimEntryLauncher"
+            :artifact="claimEntryArtifact"
+            :listen-for-launcher-event="false"
+        />
     </section>
 </template>

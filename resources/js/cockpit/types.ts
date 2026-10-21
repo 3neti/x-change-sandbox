@@ -565,6 +565,10 @@ export type CockpitFundingSuspenseCase = {
   opened_at?: string | null;
   pending_approval: boolean;
   pending_action?: string | null;
+  pending_request_reference?: string | null;
+  order_reference?: string | null;
+  payment_minor?: number | null;
+  currency?: string | null;
   allowed_actions: string[];
 };
 
@@ -921,7 +925,20 @@ export type CockpitOnDemandIssuanceFundingProjection = {
     show: string;
     acknowledge: string;
     verify: string;
+    retry_issuance: string;
+    funding_method?: string;
     cancel: string;
+  };
+  checkout?: {
+    reference: string | null;
+    selected_method: "qr_ph" | "bank_transfer";
+    bank_transfer_unlocked: boolean;
+  } | null;
+  retry: {
+    eligible: boolean;
+    pending: boolean;
+    attempts_remaining: number;
+    next_available_at: string | null;
   };
   monitor: {
     enabled: boolean;
@@ -929,6 +946,23 @@ export type CockpitOnDemandIssuanceFundingProjection = {
     interval_milliseconds: number;
     last_checked_at: string | null;
   };
+  pricing?: {
+    pay_code_value: number;
+    customer_charge: number;
+    total: number;
+    currency: string;
+  } | null;
+  batch?: {
+    reference: string;
+    status: string;
+    item_count: number;
+    valid_item_count: number;
+    total_minor: number;
+    issued_item_count: number;
+    download_url: string;
+    workspace_url: string;
+    detail_url?: string | null;
+  } | null;
   order: {
     reference: string;
     funding_basis: "full_amount" | "shortfall";
@@ -944,6 +978,8 @@ export type CockpitOnDemandIssuanceFundingProjection = {
     late_payment_disposition: string | null;
     late_payment_detected_at: string | null;
     voucher: {
+      stamp_provider?: string | null;
+      stamp_presentation?: Record<string, unknown> | null;
       code: string;
       amount: number;
       currency: string;
@@ -1734,6 +1770,7 @@ export type CockpitClaimPreviewSimulation = {
 };
 
 export type CockpitClaimExperiencePreviewManifest = {
+  expires_at?: string | null;
   schema: string;
   status: "ready";
   reference: string;
@@ -1802,24 +1839,37 @@ export type CockpitCollectionDestination = {
 };
 
 export type CockpitQuickGeneratePageProps = CockpitHeaderPageProps & {
+  composer_view?: "prompt" | "standard";
+  initial_workspace?: "composer" | "llm";
+  prompt_interpret_endpoint?: string;
   surface_profile?: {
     kind: "cockpit" | "public_auto_generate";
     show_funding_navigation: boolean;
     show_engineering_preview: boolean;
     show_workspace_switcher: boolean;
     allow_template_management: boolean;
+    available_surfaces?: Array<"composer" | "llm" | "pos" | "qr">;
   };
   public_navigation?: {
     pricing_url: string | null;
+    analytics_url: string | null;
     claim_url: string | null;
     create_url: string | null;
     login_url: string | null;
     register_url: string | null;
   };
+  batch_endpoints?: { preview: string; create: string; fund: string };
+  batch_recovery_endpoints?: { request: string; verify: string; select: string };
   public_prefill?: {
     amount: string;
     currency: string;
   } | null;
+  checkout_draft?: {
+    reference: string;
+    guest_token: string;
+    instructions: Record<string, unknown> | null;
+  } | null;
+  turnstile?: { enabled: boolean; site_key: string | null };
   service_discovery?: {
     canonical_url: string;
     description: string;
@@ -2024,6 +2074,8 @@ export type CockpitPayCodeExplorerRecord = {
   };
   owner: string;
   lastActivity: string;
+  copyable?: boolean;
+  claimUrl?: string | null;
   attention?: {
     key: string;
     label: string;
@@ -2223,6 +2275,8 @@ export type CockpitVoucherDetailPageProps = CockpitHeaderPageProps & {
   read_model?: CockpitReadModelBundle;
   payout_institutions?: CockpitMoneyIssuerOption[];
   terminal_control?: CockpitPayCodeTerminalControl;
+  explorer_url?: string | null;
+  distribution_url?: string | null;
 };
 
 export type CockpitPayCodeTerminalControl = {

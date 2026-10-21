@@ -9,6 +9,8 @@ Changes will be overwritten by php artisan x-change:publish --scope=build --forc
 <script setup lang="ts">
 import { Head, Link } from "@inertiajs/vue3";
 import PublicNavigation from "../components/PublicNavigation.vue";
+import PublicIssuanceBatchDialog from "../components/PublicIssuanceBatchDialog.vue";
+import PublicIssuanceBatchRecovery from "../components/PublicIssuanceBatchRecovery.vue";
 import {
   ArrowRight,
   BadgeCheck,
@@ -26,20 +28,28 @@ withDefaults(
   defineProps<{
     navigation?: {
       pricing_url: string | null;
+      analytics_url: string | null;
       claim_url: string | null;
       create_url: string | null;
       login_url: string | null;
       register_url: string | null;
     };
+    batch_endpoints?: { preview: string; create: string; fund: string; template: string };
+    turnstile_token?: string;
+    batch_recovery_endpoints?: { request: string; verify: string; select: string };
   }>(),
   {
     navigation: () => ({
       pricing_url: null,
+      analytics_url: null,
       claim_url: null,
       create_url: null,
       login_url: null,
       register_url: null,
     }),
+    batch_endpoints: undefined,
+    turnstile_token: "",
+    batch_recovery_endpoints: undefined,
   },
 );
 
@@ -72,7 +82,11 @@ const painPoints = [
     <div
       class="relative z-10 mx-auto w-full max-w-[90rem] px-4 sm:px-6 lg:px-8"
     >
-      <PublicNavigation :navigation="navigation" active="create" />
+      <PublicNavigation
+        :navigation="navigation"
+        :batch-recovery-endpoints="batch_recovery_endpoints"
+        active="create"
+      />
 
       <section
         class="grid items-start gap-8 py-9 lg:grid-cols-[minmax(0,0.82fr)_minmax(36rem,1.18fr)] lg:gap-12 lg:py-14"
@@ -130,6 +144,7 @@ const painPoints = [
               Create one now
               <ArrowRight class="size-4" aria-hidden="true" />
             </button>
+      <PublicIssuanceBatchDialog v-if="batch_endpoints" :endpoints="batch_endpoints" :turnstile-token="turnstile_token" />
             <a
               href="#public-how-it-works"
               class="inline-flex rounded-full px-4 py-3 text-sm font-semibold text-slate-600 transition hover:bg-white hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white"
@@ -156,6 +171,13 @@ const painPoints = [
               {{ item }}
             </li>
           </ul>
+          <div
+            id="public-issuance-verification"
+            class="mt-6 min-h-16"
+            data-testid="public-issuance-verification"
+          >
+            <slot name="verification" />
+          </div>
         </header>
 
         <div

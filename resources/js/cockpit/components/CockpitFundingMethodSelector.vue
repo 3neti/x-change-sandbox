@@ -16,6 +16,7 @@ import type {
 
 const props = defineProps<{
     selector: CockpitFundingMethodSelectorReadModel;
+    compact?: boolean;
     modelValue: CockpitPrimaryFundingWorkspaceMode | null;
 }>();
 
@@ -84,12 +85,14 @@ async function moveFocus(
         data-testid="cockpit-funding-mode-switcher"
     >
         <div
-            class="grid grid-cols-3 gap-2"
+            class="grid gap-2"
+            :class="compact ? 'grid-flow-col auto-cols-fr' : 'grid-cols-3'"
             role="tablist"
             aria-label="Funding workspace mode"
         >
             <button
                 v-for="(method, index) in selector.methods"
+                v-show="!compact || method.selectable"
                 :id="`funding-mode-${method.workspace_mode}`"
                 :key="method.key"
                 type="button"
@@ -144,6 +147,7 @@ async function moveFocus(
     </div>
 
     <p
+        v-if="!compact"
         class="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400"
         data-testid="funding-confirmation-notice"
     >
