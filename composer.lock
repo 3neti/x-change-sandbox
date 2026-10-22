@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3a0db88b3afd941766a2b3bbab555b23",
+    "content-hash": "204dd150b825068bb09ee8b30c2b1f59",
     "packages": [
         {
             "name": "3neti/cash",
@@ -1684,11 +1684,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.280",
+            "version": "v1.0.285",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "8da6f87a6b9a7eb6bb49eb53e4cc64bc662831d0"
+                "reference": "704a2f7cedde70d1427748b36e030811996f5785"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1803,7 +1803,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-10-21T23:17:03+00:00"
+            "time": "2026-10-22T05:53:10+00:00"
         },
         {
             "name": "3neti/x-commerce",
@@ -2181,11 +2181,11 @@
         },
         {
             "name": "3neti/x-rider",
-            "version": "v1.1.0",
+            "version": "v1.1.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-rider.git",
-                "reference": "bad38c686e8ac808669863a6b01f45d901e90169"
+                "reference": "d1e0a2b7bf1a437a9e17ce0153799eb42765ca1c"
             },
             "require": {
                 "illuminate/http": "^12.0 || ^13.0",
@@ -2241,7 +2241,7 @@
                 }
             ],
             "description": "Programmable claimant experience layer for post-claim rider messages, redirects, splash, analytics seams, and future campaign runtimes.",
-            "time": "2026-10-19T15:22:42+00:00"
+            "time": "2026-10-22T05:19:49+00:00"
         },
         {
             "name": "3neti/x-stamp",
