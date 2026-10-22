@@ -461,6 +461,7 @@ function sanitizeRecord(
 
     return {
         code,
+        stamp: sanitizeStamp(record.stamp),
         template: stringValue(record.template) ?? 'Template pending',
         purpose:
             stringValue(posReference.purpose) ?? stringValue(record.purpose),
@@ -498,6 +499,16 @@ function sanitizeRecord(
                       > => action !== null,
                   )
             : [],
+    };
+}
+
+function sanitizeStamp(value: unknown): CockpitPayCodeExplorerRecord['stamp'] {
+    const stamp = objectValue(value);
+
+    return {
+        available: stamp.available === true,
+        thumbnail_url: stringValue(stamp.thumbnail_url) ?? undefined,
+        detail_url: stringValue(stamp.detail_url) ?? undefined,
     };
 }
 
