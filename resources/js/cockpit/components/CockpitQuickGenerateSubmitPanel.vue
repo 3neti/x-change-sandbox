@@ -3217,6 +3217,10 @@ function applyOnboardingDependencies(): void {
 }
 
 function isAutomaticInputField(field: string): boolean {
+  if (reusableBalance.value && (field === "mobile" || field === "otp")) {
+    return true;
+  }
+
   if (field === "kyc" && faceMatchRequired.value) {
     return true;
   }
@@ -3278,6 +3282,10 @@ function toggleInputField(field: string, selected: boolean): void {
 // This mirrors isAutomaticInputField's existing conditions exactly and adds
 // no new dependency policy — it only narrates rules that already exist.
 function automaticInputFieldReason(field: string): string {
+  if (reusableBalance.value && (field === "mobile" || field === "otp")) {
+    return "Required to activate Reusable Balance with a verified mobile number.";
+  }
+
   if (field === "kyc" && faceMatchRequired.value) {
     return "Required because face matching needs identity verification.";
   }
@@ -3848,6 +3856,11 @@ const effectiveMandatesDisplay = computed<string>(() => {
 
 const selectedInputFields = computed<string[]>(() => {
   const fields = new Set(selectedInputFieldValues.value);
+
+  if (reusableBalance.value) {
+    fields.add("mobile");
+    fields.add("otp");
+  }
 
   if (effectiveVerificationKyc.value) {
     fields.add("kyc");
