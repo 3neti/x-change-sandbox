@@ -1142,9 +1142,13 @@ function applyTemplateDefaults(templateKey: string): void {
   requireMobileValidation.value = defaults.requireMobileValidation;
   requirePayableValidation.value = defaults.requirePayableValidation;
   requireCountryValidation.value = defaults.requireCountryValidation;
-  verificationKyc.value = defaults.verificationKyc;
-  verificationOtp.value = defaults.verificationOtp;
-  verificationSelfie.value = defaults.verificationSelfie;
+  verificationKyc.value = defaults.verificationKyc || defaults.inputFields.includes("kyc");
+  verificationOtp.value = defaults.verificationOtp || defaults.inputFields.includes("otp");
+  verificationSelfie.value = defaults.verificationSelfie || defaults.inputFields.includes("selfie");
+  signatureRequired.value = defaults.inputFields.includes("signature");
+  faceMatchRequired.value = false;
+  requireLocationValidation.value = false;
+  timeValidationEnabled.value = false;
   feedbackMobile.value = defaults.feedbackMobile;
   feedbackEmail.value = defaults.feedbackEmail;
   feedbackWebhook.value = defaults.feedbackWebhook;
@@ -2413,7 +2417,7 @@ const selectedUnavailableCapabilities = computed<
     selected.add("location");
   }
 
-  if (verificationKyc.value) {
+  if (effectiveVerificationKyc.value) {
     selected.add("kyc");
   }
 
@@ -2993,7 +2997,7 @@ const canvasInstructionKeys = computed<string[]>(() => {
     keys.push("validation.otp");
   }
 
-  if (verificationKyc.value) {
+  if (effectiveVerificationKyc.value) {
     keys.push("validation.identity");
   }
 
@@ -3099,6 +3103,10 @@ const effectiveVerificationOtp = computed<boolean>(
     verificationOtp.value ||
     onboardingOtpEnforced.value ||
     payeeRequiresMobile.value,
+);
+
+const effectiveVerificationKyc = computed<boolean>(
+  () => verificationKyc.value || faceMatchRequired.value,
 );
 
 const effectiveMobileValidation = computed<boolean>(
@@ -3209,6 +3217,10 @@ function applyOnboardingDependencies(): void {
 }
 
 function isAutomaticInputField(field: string): boolean {
+  if (field === "kyc" && faceMatchRequired.value) {
+    return true;
+  }
+
   if (field === "mobile" && payeeRequiresMobile.value) {
     return true;
   }
@@ -3252,12 +3264,24 @@ function toggleInputField(field: string, selected: boolean): void {
   selectedInputFieldValues.value = voucherInputFieldPayloadOrder.filter(
     (candidate) => fields.has(candidate),
   );
+
+  if (field === "kyc") {
+    verificationKyc.value = selected;
+  } else if (field === "selfie") {
+    verificationSelfie.value = selected;
+  } else if (field === "signature") {
+    signatureRequired.value = selected;
+  }
 }
 
 // Human-readable explanation for a locked/automatic Claim Requirements chip.
 // This mirrors isAutomaticInputField's existing conditions exactly and adds
 // no new dependency policy — it only narrates rules that already exist.
 function automaticInputFieldReason(field: string): string {
+  if (field === "kyc" && faceMatchRequired.value) {
+    return "Required because face matching needs identity verification.";
+  }
+
   if (field === "mobile" && payeeRequiresMobile.value) {
     return "Required because Pay To is a mobile number.";
   }
@@ -3825,6 +3849,18 @@ const effectiveMandatesDisplay = computed<string>(() => {
 const selectedInputFields = computed<string[]>(() => {
   const fields = new Set(selectedInputFieldValues.value);
 
+  if (effectiveVerificationKyc.value) {
+    fields.add("kyc");
+  }
+
+  if (verificationSelfie.value) {
+    fields.add("selfie");
+  }
+
+  if (signatureRequired.value) {
+    fields.add("signature");
+  }
+
   if (onboardingEnabled.value) {
     fields.add("name");
     fields.add("email");
@@ -4042,7 +4078,7 @@ const structuredValidationPreviewDisplay = computed<string>(() => {
 
 const verificationSummary = computed<string[]>(() => {
   return [
-    verificationKyc.value ? "kyc" : null,
+    effectiveVerificationKyc.value ? "kyc" : null,
     effectiveVerificationOtp.value ? "otp" : null,
     verificationSelfie.value ? "selfie" : null,
   ].filter((item): item is string => item !== null);
@@ -8737,11 +8773,13 @@ watch(stampPreviewProjection, (value) => emit("stampPreview", value), { immediat
                   class="flex items-start gap-2 rounded-xl border border-sky-200 bg-white/70 p-3 text-xs font-medium text-sky-900 dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-100"
                 >
                   <input
-                    v-model="verificationKyc"
+                    :checked="effectiveVerificationKyc"
                     type="checkbox"
+                    @change="toggleInputField('kyc', ($event.target as HTMLInputElement).checked)"
                     class="mt-0.5 rounded border-sky-300"
                     :disabled="
-                      capabilitySelectionDisabled('kyc', verificationKyc)
+                      faceMatchRequired ||
+                      capabilitySelectionDisabled('kyc', effectiveVerificationKyc)
                     "
                   />
                   <span class="grid gap-0.5">
@@ -8793,6 +8831,7 @@ watch(stampPreviewProjection, (value) => emit("stampPreview", value), { immediat
                   <input
                     v-model="verificationSelfie"
                     type="checkbox"
+                    @change="toggleInputField('selfie', verificationSelfie)"
                     class="mt-0.5 rounded border-sky-300"
                     :disabled="
                       capabilitySelectionDisabled('selfie', verificationSelfie)
@@ -8813,6 +8852,7 @@ watch(stampPreviewProjection, (value) => emit("stampPreview", value), { immediat
                   <input
                     v-model="signatureRequired"
                     type="checkbox"
+                    @change="toggleInputField('signature', signatureRequired)"
                     class="mt-0.5 rounded border-sky-300"
                     data-testid="cockpit-quick-generate-signature-required"
                     :disabled="

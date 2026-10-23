@@ -1839,6 +1839,7 @@ export type CockpitCollectionDestination = {
 };
 
 export type CockpitQuickGeneratePageProps = CockpitHeaderPageProps & {
+  stored_value_collect_url?: string;
   composer_view?: "prompt" | "standard";
   initial_workspace?: "composer" | "llm";
   prompt_interpret_endpoint?: string;
