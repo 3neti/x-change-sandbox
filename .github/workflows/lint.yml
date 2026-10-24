@@ -26,7 +26,23 @@ jobs:
       - name: Validate composer.json
         run: composer validate --no-check-publish
 
+      - name: Detect frontend changes
+        id: frontend
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+          else
+            base="${{ github.event.before }}"
+          fi
+          git fetch origin "$base"
+          if git diff --quiet "$base" HEAD -- resources tests/playwright package.json package-lock.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup Node
+        if: steps.frontend.outputs.changed == 'true'
         uses: actions/setup-node@v6
         with:
           node-version: '22'
@@ -34,10 +50,13 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Install Node Dependencies
+        if: steps.frontend.outputs.changed == 'true'
         run: npm ci
 
       - name: Format Frontend Check
-        run: npm run format --if-present
+        if: steps.frontend.outputs.changed == 'true'
+        run: npm run format:check --if-present
 
       - name: Lint Frontend
-        run: npm run lint --if-present
+        if: steps.frontend.outputs.changed == 'true'
+        run: npm run lint:check --if-present
