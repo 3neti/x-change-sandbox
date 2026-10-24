@@ -7,6 +7,7 @@ use Dedoc\Scramble\Scramble;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -34,7 +35,23 @@ class AppServiceProvider extends ServiceProvider
             $this->configureAuiDemoConnection();
         }
         $this->configureApiDocumentation();
+        $this->configureStoredValueCollectors();
         $this->configureDefaults();
+    }
+
+    protected function configureStoredValueCollectors(): void
+    {
+        $operatorIds = config('stored_value_collection.operator_user_ids', []);
+
+        if (! is_array($operatorIds) || $operatorIds === []) {
+            return;
+        }
+
+        Gate::define('x-change.stored-value.collect', static fn ($user): bool => in_array(
+            (int) $user->getAuthIdentifier(),
+            $operatorIds,
+            true,
+        ));
     }
 
     protected function configureAuiDemoConnection(): void
