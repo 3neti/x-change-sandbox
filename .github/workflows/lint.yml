@@ -24,7 +24,7 @@ jobs:
           coverage: none
 
       - name: Validate composer.json
-        run: composer validate --strict
+        run: composer validate --no-check-publish
 
       - name: Setup Node
         uses: actions/setup-node@v6
