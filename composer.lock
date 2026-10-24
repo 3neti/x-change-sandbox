@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f18009a39a05dd6bbc2b482932473600",
+    "content-hash": "e7625343668faedb086c2928e9c28cbf",
     "packages": [
         {
             "name": "3neti/cash",
@@ -1617,11 +1617,11 @@
         },
         {
             "name": "3neti/x-campaign",
-            "version": "v1.1.3",
+            "version": "v1.1.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-campaign.git",
-                "reference": "f5e4d53d923833828957f02a24e7d1bb6b995392"
+                "reference": "83f632c3fb93ecae0cf2a67cac47835c1243e0bf"
             },
             "require": {
                 "illuminate/support": "^12.0 || ^13.0",
@@ -1680,15 +1680,15 @@
                 }
             ],
             "description": "Beneficiary distribution and campaign orchestration package for the x-change Settlement Operating System",
-            "time": "2026-10-07T02:05:02+00:00"
+            "time": "2026-10-24T07:20:23+00:00"
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.0.306",
+            "version": "v1.0.307",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "149e408fd650e84f64042a22a9b8568726da4c1b"
+                "reference": "e0fecd1f2c54faf679ce84dc68ba5fb53a55946e"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1715,7 +1715,7 @@
                 "3neti/wallet": "^2.0",
                 "3neti/x-action": "^1.0",
                 "3neti/x-affiliation": "^0.1.1",
-                "3neti/x-campaign": "^1.1.2",
+                "3neti/x-campaign": "^1.1.4",
                 "3neti/x-commerce": "^1.2",
                 "3neti/x-feedback": "^1.1.4",
                 "3neti/x-journal": "^1.1",
@@ -1803,7 +1803,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-10-24T06:24:10+00:00"
+            "time": "2026-10-24T08:19:48+00:00"
         },
         {
             "name": "3neti/x-commerce",
