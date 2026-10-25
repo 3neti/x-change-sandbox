@@ -26,6 +26,12 @@ jobs:
       - name: Validate composer.json
         run: composer validate --no-check-publish
 
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Verify package-generated build inputs
+        run: php artisan x-change:doctor --assets --strict --no-interaction
+
       - name: Detect frontend changes
         id: frontend
         run: |
@@ -35,7 +41,9 @@ jobs:
             base="${{ github.event.before }}"
           fi
           git fetch origin "$base"
-          if git diff --quiet "$base" HEAD -- resources tests/playwright package.json package-lock.json; then
+          if git diff --quiet "$base" HEAD -- \
+            resources tests/playwright package.json package-lock.json \
+            ':(exclude)resources/js/cockpit/**'; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
