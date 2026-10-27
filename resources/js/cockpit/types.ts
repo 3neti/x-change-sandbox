@@ -2028,6 +2028,7 @@ export type CockpitPayCodeExplorerStats = {
 
 export type CockpitPayCodeExplorerRecord = {
   code: string;
+  storedValueActivated?: boolean;
   stamp?: CockpitPayCodeStamp;
   template: string;
   purpose: string | null;
@@ -2293,6 +2294,7 @@ export type CockpitVoucherDetailPageProps = CockpitHeaderPageProps & {
   read_model?: CockpitReadModelBundle;
   payout_institutions?: CockpitMoneyIssuerOption[];
   terminal_control?: CockpitPayCodeTerminalControl;
+  stored_value?: { activated: boolean; holder_url: string | null };
   explorer_url?: string | null;
   distribution_url?: string | null;
 };
@@ -2334,6 +2336,7 @@ export type CockpitMoneyIssuerOption = {
 
 export type CockpitPayCodeExplorerReadModelRecord = {
   code?: string | null;
+  stored_value_activated?: boolean;
   stamp?: CockpitPayCodeStamp;
   template?: string | null;
   purpose?: string | null;
