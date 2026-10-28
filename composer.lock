@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d639ab18bed90e484b851a40a46c691e",
+    "content-hash": "25cedf84407dac4b16fdb7ed78765de1",
     "packages": [
         {
             "name": "3neti/cash",
@@ -1684,11 +1684,11 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.2.0",
+            "version": "v1.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "ffe324bcfec3cff80c44f09b7841095ef47f73d8"
+                "reference": "084f13c375228016b661b564c1c2b5233026cdcd"
             },
             "require": {
                 "3neti/cash": "^1.3",
@@ -1720,7 +1720,7 @@
                 "3neti/x-feedback": "^1.1.4",
                 "3neti/x-journal": "^1.1",
                 "3neti/x-provisioning": "^1.0",
-                "3neti/x-ray": "^1.0.1",
+                "3neti/x-ray": "^1.0.3",
                 "3neti/x-rider": "^1.0",
                 "3neti/x-stamp": "^1.4",
                 "3neti/x-stamp-designs": "^1.3",
@@ -1803,7 +1803,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-10-28T12:04:22+00:00"
+            "time": "2026-10-28T15:24:40+00:00"
         },
         {
             "name": "3neti/x-commerce",
@@ -2119,11 +2119,11 @@
         },
         {
             "name": "3neti/x-ray",
-            "version": "v1.0.2",
+            "version": "v1.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-ray.git",
-                "reference": "df83888dcba49cec0dba1d8c14bde7f64475818b"
+                "reference": "c5b38a9cee33f6befed71e987e1ec0134108bac7"
             },
             "require": {
                 "illuminate/http": "^12.0 || ^13.0",
@@ -2177,7 +2177,7 @@
                 }
             ],
             "description": "Permissioned pre-claim inspection and disclosure runtime for Pay Codes.",
-            "time": "2026-09-02T00:19:01+00:00"
+            "time": "2026-10-28T14:35:25+00:00"
         },
         {
             "name": "3neti/x-rider",
