@@ -6,6 +6,8 @@
  * Do not edit this published host copy directly.
  * Changes will be overwritten by php artisan x-change:publish --scope=build --force.
  */
+import type { XRayClaimPreviewResult } from "../components/x-change/xrayClaimPreviewViewModel";
+
 export type CockpitNavigationGroup = "primary" | "secondary";
 
 export type CockpitNavigationItem = {
@@ -1733,6 +1735,7 @@ export type CockpitClaimExperiencePreviewStep = {
   frame: CockpitClaimExperiencePreviewFrame | null;
   screen: {
     kind: string;
+    xray?: XRayClaimPreviewResult | null;
     code?: string;
     amount?: string;
     title?: string;
