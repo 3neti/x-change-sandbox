@@ -611,16 +611,16 @@
         },
         {
             "name": "3neti/form-handler-signature",
-            "version": "v1.4.0",
+            "version": "v1.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/form-handler-signature.git",
-                "reference": "3a22921bf4175391de1ab1540e03cbf1c707c680"
+                "reference": "0ad71a7a9806ab368d9752707d17ff12a89725da"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/form-handler-signature/zipball/3a22921bf4175391de1ab1540e03cbf1c707c680",
-                "reference": "3a22921bf4175391de1ab1540e03cbf1c707c680",
+                "url": "https://api.github.com/repos/3neti/form-handler-signature/zipball/0ad71a7a9806ab368d9752707d17ff12a89725da",
+                "reference": "0ad71a7a9806ab368d9752707d17ff12a89725da",
                 "shasum": ""
             },
             "require": {
@@ -662,9 +662,9 @@
             "description": "Signature capture handler for form flow system",
             "support": {
                 "issues": "https://github.com/3neti/form-handler-signature/issues",
-                "source": "https://github.com/3neti/form-handler-signature/tree/v1.4.0"
+                "source": "https://github.com/3neti/form-handler-signature/tree/v1.4.1"
             },
-            "time": "2026-10-19T13:30:30+00:00"
+            "time": "2026-10-31T03:10:52+00:00"
         },
         {
             "name": "3neti/hyperverge",
