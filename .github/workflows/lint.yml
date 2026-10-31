@@ -44,6 +44,7 @@ jobs:
           if git diff --quiet "$base" HEAD -- \
             resources tests/playwright package.json package-lock.json \
             ':(exclude)resources/js/cockpit/**' \
+            ':(exclude)resources/js/composables/usePayCodeCostEstimate.ts' \
             ':(exclude)resources/js/composables/usePublicClaimAppearance.ts' \
             ':(exclude)resources/js/experience/claim-midnight.css'; then
             echo "changed=false" >> "$GITHUB_OUTPUT"

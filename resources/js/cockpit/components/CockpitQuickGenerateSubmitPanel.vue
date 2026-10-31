@@ -144,6 +144,7 @@ const props = withDefaults(
     campaignContext?: CockpitQuickGenerateCampaignContext;
     applicationJourney?: { key: string; label: string; kind: string } | null;
     feedbackDefaults?: CockpitQuickGenerateFeedbackDefaults;
+    v2EventCatalog?: Record<string, { label: string; stage: string; workflows: string[]; requires_destination?: boolean }>;
     onboardingOtpRequired?: boolean;
     onboardingPreset?: boolean;
     issuanceSurface?: CockpitQuickGenerateSurface;
@@ -864,6 +865,7 @@ const feedbackEmailEnabled = ref(false);
 const feedbackMobileEnabled = ref(false);
 const feedbackWebhookEnabled = ref(false);
 const feedbackTokenErrors = ref<string[]>([]);
+const eventSubscriptions = ref<Array<{ url: string; events: string[] }>>([]);
 const autoFilledFeedback = ref<Record<FeedbackChannel, string | null>>({
   email: null,
   mobile: null,
@@ -915,7 +917,38 @@ const rulesMaxPayment = ref("");
 const rulesAllowOverpayment = ref(false);
 const rulesAutoCloseOnFullPayment = ref(true);
 const includeExecutionInstruction = ref(false);
-const executionSchema = ref("voucher.execution.v1");
+const executionSchema = ref("voucher.execution.v2");
+const philhealthSettlement = ref(false);
+const availableNotificationEvents = computed(() => {
+  if (props.publicMode) return [];
+  if (!philhealthSettlement.value && includeExecutionInstruction.value && (executionSchema.value === "voucher.execution.v1" || executionDriver.value !== "default")) return [];
+  const workflow = philhealthSettlement.value ? "philhealth" : voucherType.value === "payable" ? "payable" : null;
+  if (workflow === null) return [];
+  return Object.entries(props.v2EventCatalog ?? {})
+    .filter(([, event]) => event.workflows.includes(workflow)
+      && (!event.requires_destination || valueFlowDestination.value.startsWith("instapay.")))
+    .map(([key, event]) => ({ key, label: event.label }));
+});
+const eventWebhookError = computed<string | null>(() => {
+  if (eventSubscriptions.value.length === 0) return null;
+  for (const subscription of eventSubscriptions.value) {
+    if (!isValidWebhookUrl(subscription.url.trim())) return "Enter an http(s) URL for each event webhook.";
+    if (subscription.events.length === 0) return "Select at least one event for each webhook.";
+    if (subscription.events.some((key) => !availableNotificationEvents.value.some((event) => event.key === key))) return "Remove events that are unavailable for this workflow.";
+  }
+  return null;
+});
+function configurePhilhealthSettlement(): void {
+  if (!philhealthSettlement.value) return;
+  if (!(Number(targetAmount.value) > 0) && Number(amount.value) > 0) {
+    targetAmount.value = amount.value;
+  }
+  amount.value = "0";
+  settlementRepayment.value = false;
+  if (selectedInputFieldValues.value.length === 0) {
+    selectedInputFieldValues.value = ["signature"];
+  }
+}
 const executionDriver = ref("default");
 const executionMode = ref("");
 const executionPipeline = ref("");
@@ -1137,6 +1170,9 @@ watch(claimOutcome, (outcome): void => {
 });
 
 watch(voucherType, (type): void => {
+  if (type !== "settlement") {
+    philhealthSettlement.value = false;
+  }
   if (type === "payable" && claimOutcome.value === "account_funding") {
     claimOutcome.value = "provider_disbursement";
   }
@@ -1204,6 +1240,7 @@ function applyTemplateDefaults(templateKey: string): void {
   feedbackMobile.value = defaults.feedbackMobile;
   feedbackEmail.value = defaults.feedbackEmail;
   feedbackWebhook.value = defaults.feedbackWebhook;
+  eventSubscriptions.value = [];
   provider.value = defaults.provider;
   riderUrl.value = defaults.riderUrl;
   riderUrlPreset.value = "";
@@ -1241,6 +1278,7 @@ function applyTemplateDefaults(templateKey: string): void {
   customMandates.value = "";
   applyTemplateSliceDefaults(defaults);
   reusableBalance.value = false;
+  philhealthSettlement.value = false;
   storedValueReplenishable.value = false;
   storedValueMaximumBalance.value = formatSliceAmount(
     normalizedPayCodeAmount(),
@@ -1252,6 +1290,9 @@ function applyTemplateDefaults(templateKey: string): void {
   voucherType.value = defaults.voucherType;
   targetAmount.value = defaults.targetAmount;
   includeExecutionInstruction.value = defaults.includeExecutionInstruction;
+  executionSchema.value = defaults.executionDriver === "settlement_envelope"
+    ? "voucher.execution.v1"
+    : "voucher.execution.v2";
   executionDriver.value = defaults.executionDriver;
   claimOutcome.value = defaults.claimOutcome;
   executionPipeline.value =
@@ -1941,6 +1982,11 @@ function applyInstructionBlueprint(
   feedbackEmailEnabled.value = feedbackEmail.value !== "";
   feedbackMobileEnabled.value = feedbackMobile.value !== "";
   feedbackWebhookEnabled.value = feedbackWebhook.value !== "";
+  const subscriptions = dataGet(instructions, ["feedback", "webhooks"]);
+  eventSubscriptions.value = Array.isArray(subscriptions) ? subscriptions.map((subscription) => ({
+    url: instructionString(subscription, ["url"]),
+    events: instructionStringArray(subscription, ["events"]),
+  })) : [];
 
   prefix.value = instructionString(instructions, ["prefix"]);
   mask.value = instructionString(instructions, ["mask"]);
@@ -2031,10 +2077,13 @@ function applyInstructionBlueprint(
     dataGet(instructions, ["rules", "auto_close_on_full_payment"]) !== false;
 
   const execution = instructionRecord(instructions, ["execution"]);
+  philhealthSettlement.value = instructionString(execution, ["schema"]) === "voucher.execution.v2"
+    && instructionString(execution, ["settlement", "driver"]) === "philhealth-bst";
   settlementRepayment.value = instructionString(instructions, ["rules", "settlement_mode"]) === "disburse_then_repay";
   feeBearer.value = instructionString(instructions, ["fee_bearer"]) === "payer" ? "payer" : "issuer";
   valueFlowDestination.value =
     instructionString(instructions, ["value_flow", "destination"]) ||
+    instructionString(instructions, ["execution", "value_flow", "destination"]) ||
     instructionString(instructions, ["execution", "metadata", "value_flow", "destination"]) || "";
   const storedValuePolicy = instructionRecord(instructions, ["stored_value"]);
   const compiledStoredValuePolicy = instructionRecord(execution, [
@@ -2318,6 +2367,7 @@ const feedbackValidationErrors = computed<string[]>(() => {
     feedbackEmailError.value,
     feedbackMobileError.value,
     feedbackWebhookError.value,
+    eventWebhookError.value,
     ...feedbackTokenErrors.value,
   ].filter((error): error is string => error !== null);
 });
@@ -2549,6 +2599,7 @@ const canSubmit = computed<boolean>(() => {
     (specializedJourney.value === null || (voucherType.value === 'redeemable' && count.value === '1' && claimOutcome.value === 'provider_disbursement')) &&
     payableAmountIsValid &&
     settlementTargetIsValid &&
+    (!philhealthSettlement.value || (valueFlowDestination.value !== "" && selectedInputFields.value.length > 0)) &&
     onDemandFundingProjection.value === null &&
     (!isAccountFundingClaim.value || sliceMode.value === "whole")
   );
@@ -2561,7 +2612,8 @@ const canGenerateClaimPreview = computed<boolean>(() => {
     claimPreviewRouteUrl.value !== null &&
     !previewProcessing.value &&
     Number.isFinite(normalizedAmount) &&
-    normalizedAmount > 0 &&
+    (normalizedAmount > 0 || (philhealthSettlement.value && Number(targetAmount.value) > 0)) &&
+    (!philhealthSettlement.value || (valueFlowDestination.value !== "" && selectedInputFields.value.length > 0)) &&
     payeePolicy.value.issuable &&
     feedbackValid.value &&
     locationRuleError.value === null &&
@@ -3125,10 +3177,12 @@ const requiresCollectionDestination = computed<boolean>(
     metadataFlowType.value.trim() === "collectible",
 );
 const amountFieldLabel = computed<string>(() =>
-  isPayableVoucher.value ? "Amount to Collect" : "Amount",
+  philhealthSettlement.value ? "Disbursement Amount" : (isPayableVoucher.value ? "Amount to Collect" : "Amount"),
 );
 const amountFieldHelp = computed<string>(() =>
-  isPayableVoucher.value
+  philhealthSettlement.value
+    ? "This workflow collects the target amount after review; no value is disbursed to the patient."
+    : isPayableVoucher.value
     ? "Amount to be collected from the payer. Not funded upfront."
     : "Value the recipient can claim. Select the field to open the calculator.",
 );
@@ -4170,6 +4224,9 @@ const feedbackSummary = computed<Record<string, unknown>>(() => {
     mobile: mobile === "" ? null : mobile,
     email: email === "" ? null : email,
     webhook: webhook === "" ? null : webhook,
+    ...(eventWebhookError.value === null && eventSubscriptions.value.length > 0
+      ? { webhooks: eventSubscriptions.value.map((subscription) => ({ url: subscription.url.trim(), events: subscription.events })) }
+      : {}),
   };
 });
 
@@ -4915,11 +4972,11 @@ const contractSummaryItems = computed<Array<{ label: string; value: string }>>(
 );
 
 const sanitizedInstructionPayload = computed<Record<string, unknown>>(() => {
-  return buildPayloadShape(true);
+  return buildPayloadShape(true, null, true);
 });
 
 const engineeringPreviewJson = computed<string>(() => {
-  return JSON.stringify(buildPayloadShape(false), null, 2);
+  return JSON.stringify(buildPayloadShape(false, null, true), null, 2);
 });
 const engineeringPreviewExportMessage = ref("");
 const engineeringPreviewClipboard = useClipboard();
@@ -5043,7 +5100,12 @@ const executionSummary = computed<Record<string, unknown> | null>(() => {
 const livePricingPayload = computed<Record<string, unknown>>(() => {
   const payload = buildPayloadShape(true, amountCalculatorPreview.value);
   if (valueFlowVisible.value && valueFlowDestination.value) {
-    payload.value_flow = { destination: valueFlowDestination.value };
+    const execution = payload.execution as Record<string, unknown> | undefined;
+    if (execution?.schema === "voucher.execution.v2") {
+      execution.value_flow = { destination: valueFlowDestination.value };
+    } else {
+      payload.value_flow = { destination: valueFlowDestination.value };
+    }
   }
   return payload;
 });
@@ -5055,13 +5117,14 @@ const canEstimateLivePricing = computed<boolean>(() => {
   return (
     valueFlowValid.value &&
     Number.isFinite(normalizedAmount) &&
-    normalizedAmount > 0 &&
+    (normalizedAmount > 0 || (philhealthSettlement.value && Number(targetAmount.value) > 0 && valueFlowDestination.value !== "" && selectedInputFields.value.length > 0)) &&
     Number.isFinite(normalizedCount) &&
     normalizedCount > 0
   );
 });
 const {
   estimate: livePricingEstimate,
+  estimatePayload: livePricingEstimatePayload,
   estimating: livePricingEstimating,
   estimateError: livePricingEstimateError,
   refreshEstimate: refreshLivePricingEstimate,
@@ -5580,7 +5643,7 @@ function refreshReadModel(): void {
 }
 
 function buildPayload(): Record<string, unknown> {
-  return buildPayloadShape(false);
+  return buildPayloadShape(false, null, true);
 }
 
 function buildIssuancePayload(): Record<string, unknown> {
@@ -5608,13 +5671,14 @@ function buildIssuancePayload(): Record<string, unknown> {
 function buildPayloadShape(
   redactSensitive: boolean,
   amountOverride: number | null = null,
+  includePricing = false,
 ): Record<string, unknown> {
   const normalizedAmount =
     amountOverride === null ? Number(amount.value) : amountOverride;
   const normalizedCount = Number(count.value);
   const campaign = campaignMetadata();
   const cash: Record<string, unknown> = {
-    amount: Number.isFinite(normalizedAmount) ? normalizedAmount : amount.value,
+    amount: philhealthSettlement.value || isPayableVoucher.value ? 0 : (Number.isFinite(normalizedAmount) ? normalizedAmount : amount.value),
     currency: currency.value.trim() || "PHP",
     validation: validationSummary.value,
   };
@@ -5641,14 +5705,57 @@ function buildPayloadShape(
 
   cash.validation = validation;
 
+  const preserveLegacyExecution = includeExecutionInstruction.value && executionSchema.value.trim() === "voucher.execution.v1";
+  const execution = philhealthSettlement.value ? {
+    schema: "voucher.execution.v2",
+    driver: "settlement_envelope",
+    settlement: { driver: "philhealth-bst", readiness_gate: "settleable" },
+    events: {
+      attest: { actor: "beneficiary", surface: "claim", authentication: "anonymous", requires: [] },
+      review: { actor: "hospital_reviewer", surface: "claim", authentication: "required", requires: ["attestation_recorded"] },
+      settle: { actor: "payer", surface: "pay", authentication: "optional", requires: ["settlement_ready", "confirmed_payment"] },
+    },
+  } : reusableBalance.value ? (preserveLegacyExecution ? null : { schema: "voucher.execution.v2", driver: "stored_value" }) : onboardingEnabled.value
+    ? { schema: preserveLegacyExecution ? "voucher.execution.v1" : "voucher.execution.v2", driver: "onboarding_account_provisioning" }
+    : voucherType.value === "payable" && eventSubscriptions.value.length > 0 && eventWebhookError.value === null
+    ? { schema: "voucher.execution.v2", driver: "default", events: { settle: { actor: "payer", surface: "pay", authentication: "optional", requires: ["confirmed_payment"] } } }
+    : executionSummary.value ??
+    (!reusableBalance.value && !onboardingEnabled.value
+      ? { schema: "voucher.execution.v2", driver: "default" }
+      : null);
+  const destination = valueFlowVisible.value && valueFlowDestination.value
+    ? { destination: redactSensitive
+        ? valueFlowDestination.value.replace(/:[0-9]+(?=\.client_funds$|$)/, ":[redacted]")
+        : valueFlowDestination.value }
+    : null;
+  const isV2Execution = execution?.schema === "voucher.execution.v2";
+  const estimate = includePricing ? livePricingEstimate.value : null;
+  const reference = estimate?.commercial_quote_reference;
+  const pricing = isV2Execution && typeof reference === "string"
+    && /^commercial-quote:[a-f0-9]{64}$/.test(reference)
+    && typeof estimate?.currency === "string"
+    && livePricingEstimatePayload.value === JSON.stringify(livePricingPayload.value)
+    ? { quote_reference: reference, currency: estimate.currency,
+        fee_bearer: isPayableVoucher.value || isSettlementVoucher.value ? feeBearer.value : "issuer",
+        quote_hash: reference.slice("commercial-quote:".length) }
+    : null;
+  const stamp = riderSummary.value.stamp as Record<string, unknown> | undefined;
+  const presentation = isV2Execution && typeof stamp?.design_id === "string" && typeof stamp?.design_version === "number"
+    ? { stamp: {
+        design_id: stamp.design_id,
+        design_version: stamp.design_version,
+        show_logo: stamp.show_logo,
+        show_tagline: stamp.show_tagline,
+        claim_marker: stamp.claim_marker,
+      } }
+    : null;
+
   const payload: Record<string, unknown> = {
     cash,
+    ...(pricing === null ? {} : { pricing }),
+    ...(presentation === null ? {} : { presentation }),
     ...((isPayableVoucher.value || isSettlementVoucher.value) ? { fee_bearer: feeBearer.value } : {}),
-    ...(valueFlowVisible.value && valueFlowDestination.value
-      ? { value_flow: { destination: redactSensitive
-          ? valueFlowDestination.value.replace(/:[0-9]+(?=\.client_funds$|$)/, ":[redacted]")
-          : valueFlowDestination.value } }
-      : {}),
+    ...(destination && !isV2Execution ? { value_flow: destination } : {}),
     ...(executableSlicePlan.value === null
       ? {}
       : { slice_plan: executableSlicePlan.value }),
@@ -5797,11 +5904,14 @@ function buildPayloadShape(
     payload.rules = settlementRulesSummary.value;
   }
 
-  if (executionSummary.value !== null) {
-    payload.execution = executionSummary.value;
+  if (execution !== null) {
+    payload.execution = {
+      ...execution,
+      ...(destination && isV2Execution ? { value_flow: destination } : {}),
+    };
   }
 
-  const flowType = metadataFlowType.value.trim();
+  const flowType = philhealthSettlement.value ? "settlement" : metadataFlowType.value.trim();
   const issuerId = metadataIssuerId.value.trim();
 
   if (flowType !== "") {
@@ -7086,7 +7196,7 @@ watch(stampPreviewProjection, (value) => emit("stampPreview", value), { immediat
                 ref="amountInputElement"
                 v-model="amount"
                 class="col-start-1 row-start-1 min-w-0 w-full max-w-72"
-                :disabled="processing"
+                :disabled="processing || philhealthSettlement"
                 :estimated-cost="amountCalculatorEstimatedCost"
                 :estimate-pending="amountCalculatorEstimatePending"
                 :estimate-affordability="liveAccountDebitAffordability"
@@ -7362,6 +7472,10 @@ watch(stampPreviewProjection, (value) => emit("stampPreview", value), { immediat
               {{ targetAmountError }}
             </span>
           </label>
+          <label v-if="isSettlementVoucher && !publicMode && !onboardingEnabled" class="flex items-start gap-2 text-xs text-slate-700 sm:col-span-2 dark:text-slate-300">
+            <input v-model="philhealthSettlement" type="checkbox" :disabled="processing" data-testid="philhealth-settlement-workflow" @change="configurePhilhealthSettlement" />
+            <span>PhilHealth settlement: patient attestation, hospital review, and payment to the hospital.</span>
+          </label>
           <label
             class="grid w-full min-w-0 max-w-72 gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300"
             data-testid="cockpit-quick-generate-recipient-field"
@@ -7431,29 +7545,29 @@ watch(stampPreviewProjection, (value) => emit("stampPreview", value), { immediat
               <span
                 class="flex min-w-0 items-center gap-1 text-xs font-medium text-slate-700 dark:text-slate-300"
               >
-                <span class="truncate">Collection destination</span>
+                <span class="truncate">{{ philhealthSettlement ? 'Hospital payout destination' : 'Collection destination' }}</span>
                 <CockpitFieldHelp
                   label="About Collection destination"
-                  tooltip="Payments are credited automatically to the collection account authorized for the signed-in operator."
+                  :tooltip="philhealthSettlement ? 'Choose the hospital account in Options. Verified payment is routed to that account.' : 'Payments are credited automatically to the collection account authorized for the signed-in operator.'"
                 />
               </span>
               <span
                 class="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-[0.68rem] font-semibold text-emerald-800 dark:bg-emerald-900 dark:text-emerald-100"
               >
                 <Check class="size-3" aria-hidden="true" />
-                Automatic
+                {{ philhealthSettlement ? (valueFlowDestination ? 'Selected' : 'Required') : 'Automatic' }}
               </span>
             </div>
             <p
               class="truncate text-sm font-semibold text-slate-950 dark:text-slate-50"
               data-testid="cockpit-quick-generate-collection-destination-label"
             >
-              {{ collectionDestination?.label ?? "Your Client Funds" }}
+              {{ philhealthSettlement ? (valueFlowDestination ? 'Bank / Wallet selected' : 'Choose a bank or wallet in Options') : (collectionDestination?.label ?? "Your Client Funds") }}
             </p>
             <p class="text-xs leading-5 text-slate-600 dark:text-slate-400">
               {{
-                collectionDestination?.description ??
-                "Payments are credited to the collection account authorized for the signed-in operator."
+                philhealthSettlement ? 'The hospital receives the verified settlement through its selected account.' : (collectionDestination?.description ??
+                "Payments are credited to the collection account authorized for the signed-in operator.")
               }}
             </p>
             <span
@@ -7546,6 +7660,27 @@ watch(stampPreviewProjection, (value) => emit("stampPreview", value), { immediat
                 @validation="feedbackTokenErrors = $event"
               />
             </div>
+
+            <fieldset v-if="!publicMode && (availableNotificationEvents.length > 0 || eventSubscriptions.length > 0)" class="grid gap-2 rounded-xl border border-slate-200 p-3 dark:border-slate-700" data-testid="v2-event-subscriptions">
+              <legend class="px-1 text-xs font-semibold">Event updates</legend>
+              <div v-for="(subscription, index) in eventSubscriptions" :key="index" class="grid gap-2 rounded-lg border border-slate-200 p-3 dark:border-slate-700" :data-testid="`v2-event-subscription-${index}`">
+                <label class="grid gap-1 text-xs font-medium">
+                  Event webhook URL
+                  <input v-model="subscription.url" type="url" class="w-full rounded-xl border bg-white px-3 py-2 text-sm dark:bg-slate-900" :disabled="processing" :data-testid="`v2-event-webhook-url-${index}`" />
+                </label>
+                <label v-for="event in availableNotificationEvents" :key="event.key" class="flex items-center gap-2 text-sm">
+                  <input v-model="subscription.events" type="checkbox" :value="event.key" :disabled="processing" :data-testid="`v2-event-${index}-${event.key}`" />
+                  {{ event.label }}
+                </label>
+                <label v-for="event in subscription.events.filter((key) => !availableNotificationEvents.some((available) => available.key === key))" :key="event" class="flex items-center gap-2 text-xs text-rose-600 dark:text-rose-300">
+                  <input v-model="subscription.events" type="checkbox" :value="event" :disabled="processing" />
+                  Unavailable event: {{ event }}
+                </label>
+                <button type="button" class="justify-self-start text-xs underline" :disabled="processing" @click="eventSubscriptions.splice(index, 1)">Remove webhook</button>
+              </div>
+              <button v-if="availableNotificationEvents.length > 0" type="button" class="justify-self-start text-xs underline" :disabled="processing" data-testid="v2-event-add-webhook" @click="eventSubscriptions.push({ url: '', events: [] })">Add event webhook</button>
+              <p v-if="eventWebhookError" class="text-xs text-rose-600 dark:text-rose-300">{{ eventWebhookError }}</p>
+            </fieldset>
 
             <label
               v-if="publicMode"
@@ -7665,7 +7800,7 @@ watch(stampPreviewProjection, (value) => emit("stampPreview", value), { immediat
               </p>
             </div>
 
-            <fieldset v-if="isSettlementVoucher" class="grid gap-2" data-testid="settlement-repayment-control">
+            <fieldset v-if="isSettlementVoucher && !philhealthSettlement" class="grid gap-2" data-testid="settlement-repayment-control">
               <label class="flex items-center gap-2 text-sm">
                 <input v-model="settlementRepayment" type="checkbox" :disabled="processing" data-testid="settlement-repayment-enabled" />
                 Disburse first, then collect repayments
