@@ -1849,6 +1849,7 @@ export type CockpitCollectionDestination = {
 };
 
 export type CockpitQuickGeneratePageProps = CockpitHeaderPageProps & {
+  invoice_draft_url?: string;
   v2_event_catalog?: Record<string, { label: string; stage: string; workflows: string[]; requires_destination?: boolean }>;
   stored_value_collect_url?: string;
   composer_view?: "prompt" | "standard";
@@ -2187,6 +2188,7 @@ export type CockpitPayCodeClaimSummaryReadModel = {
   claimed_by_label?: string | null;
   claimed_mobile_masked?: string | null;
   amount_minor?: number | null;
+  amount_kind?: 'requested' | 'disbursed' | null;
   currency?: string | null;
   location_label?: string | null;
   evidence_count?: number | null;
