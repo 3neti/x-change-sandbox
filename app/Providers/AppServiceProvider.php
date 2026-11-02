@@ -19,7 +19,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        config()->set('filesystems.disks.envelope-private', array_replace(
+            (array) config('filesystems.disks.s3', []),
+            ['visibility' => 'private', 'throw' => true, 'report' => true],
+        ));
     }
 
     /**
