@@ -173,7 +173,7 @@ const rowDetail = (row: PreviewRow): string => {
     return [
         beneficiary.institution,
         beneficiary.mobile || beneficiary.bank_account,
-        row.normalized.delivery_preference,
+        row.normalized?.delivery_preference,
     ]
         .filter(Boolean)
         .join(' · ');
