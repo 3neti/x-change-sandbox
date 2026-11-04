@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bb85e7a38e74e87fb143ece73599a7d7",
+    "content-hash": "00e078e579bf43be9c21a0e995956940",
     "packages": [
         {
             "name": "3neti/cash",
@@ -127,16 +127,16 @@
         },
         {
             "name": "3neti/emi-core",
-            "version": "v2.0.2",
+            "version": "v2.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/emi-core.git",
-                "reference": "edf2d41d3cc0e9a46779cad19644fdab785aa58d"
+                "reference": "8c7c69b105ba9b65a27033add5b08cd60e663af6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/emi-core/zipball/edf2d41d3cc0e9a46779cad19644fdab785aa58d",
-                "reference": "edf2d41d3cc0e9a46779cad19644fdab785aa58d",
+                "url": "https://api.github.com/repos/3neti/emi-core/zipball/8c7c69b105ba9b65a27033add5b08cd60e663af6",
+                "reference": "8c7c69b105ba9b65a27033add5b08cd60e663af6",
                 "shasum": ""
             },
             "require": {
@@ -176,26 +176,26 @@
             "description": "Provider-agnostic EMI domain: contracts, enums, models, DTOs, events",
             "support": {
                 "issues": "https://github.com/3neti/emi-core/issues",
-                "source": "https://github.com/3neti/emi-core/tree/v2.0.2"
+                "source": "https://github.com/3neti/emi-core/tree/v2.1.0"
             },
-            "time": "2026-09-24T05:38:56+00:00"
+            "time": "2026-11-04T03:51:34+00:00"
         },
         {
             "name": "3neti/emi-netbank",
-            "version": "v2.3.13",
+            "version": "v2.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/emi-netbank.git",
-                "reference": "766e55b5050471513be669a34d51bc561d2c4bc9"
+                "reference": "4975d9fef8a919637431704fa8fbba8319f599da"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/emi-netbank/zipball/766e55b5050471513be669a34d51bc561d2c4bc9",
-                "reference": "766e55b5050471513be669a34d51bc561d2c4bc9",
+                "url": "https://api.github.com/repos/3neti/emi-netbank/zipball/4975d9fef8a919637431704fa8fbba8319f599da",
+                "reference": "4975d9fef8a919637431704fa8fbba8319f599da",
                 "shasum": ""
             },
             "require": {
-                "3neti/emi-core": "^2.0.1",
+                "3neti/emi-core": "^2.1.0",
                 "3neti/laravel-model-channel": "^1.1",
                 "3neti/merchant": "^1.2",
                 "3neti/money-issuer": "^1.1",
@@ -244,26 +244,26 @@
             "description": "NetBank EMI provider adapter for emi-core",
             "support": {
                 "issues": "https://github.com/3neti/emi-netbank/issues",
-                "source": "https://github.com/3neti/emi-netbank/tree/v2.3.13"
+                "source": "https://github.com/3neti/emi-netbank/tree/v2.4.0"
             },
-            "time": "2026-10-15T04:46:11+00:00"
+            "time": "2026-11-04T04:07:31+00:00"
         },
         {
             "name": "3neti/emi-paynamics",
-            "version": "v2.0.0",
+            "version": "v2.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/emi-paynamics.git",
-                "reference": "7d36263cd6092ed117db863dc41c2c462185385a"
+                "reference": "a5072a2795641006e25bb85a90829060089bdbc5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/emi-paynamics/zipball/7d36263cd6092ed117db863dc41c2c462185385a",
-                "reference": "7d36263cd6092ed117db863dc41c2c462185385a",
+                "url": "https://api.github.com/repos/3neti/emi-paynamics/zipball/a5072a2795641006e25bb85a90829060089bdbc5",
+                "reference": "a5072a2795641006e25bb85a90829060089bdbc5",
                 "shasum": ""
             },
             "require": {
-                "3neti/emi-core": "^2.0",
+                "3neti/emi-core": "^2.1.0",
                 "illuminate/http": "^12.0 || ^13.0",
                 "illuminate/support": "^12.0 || ^13.0",
                 "lorisleiva/laravel-actions": "^2.9",
@@ -302,9 +302,9 @@
             "description": "Paynamics Constellation adapter for EMI core",
             "support": {
                 "issues": "https://github.com/3neti/emi-paynamics/issues",
-                "source": "https://github.com/3neti/emi-paynamics/tree/v2.0.0"
+                "source": "https://github.com/3neti/emi-paynamics/tree/v2.1.0"
             },
-            "time": "2026-09-12T09:39:36+00:00"
+            "time": "2026-11-04T04:07:31+00:00"
         },
         {
             "name": "3neti/form-flow",
@@ -1684,18 +1684,18 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.6.2",
+            "version": "v1.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "082adad4c311dedc068744b2cfe34ddbbcc045d4"
+                "reference": "5298f055a11ed81ec098cd5e9df001e7cddbcf2d"
             },
             "require": {
                 "3neti/cash": "^1.3",
                 "3neti/contact": "^1.1",
-                "3neti/emi-core": "^2.0.2",
-                "3neti/emi-netbank": "^2.3.9",
-                "3neti/emi-paynamics": "^2.0",
+                "3neti/emi-core": "^2.1.0",
+                "3neti/emi-netbank": "^2.4.0",
+                "3neti/emi-paynamics": "^2.1.0",
                 "3neti/form-flow": "^1.11.0",
                 "3neti/form-handler-kyc": "^1.1.4",
                 "3neti/form-handler-location": "^1.2.4",
@@ -1803,7 +1803,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-11-02T22:25:17+00:00"
+            "time": "2026-11-04T04:51:41+00:00"
         },
         {
             "name": "3neti/x-commerce",
