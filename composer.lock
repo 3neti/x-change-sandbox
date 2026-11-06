@@ -127,16 +127,16 @@
         },
         {
             "name": "3neti/emi-core",
-            "version": "v2.1.0",
+            "version": "v2.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/emi-core.git",
-                "reference": "8c7c69b105ba9b65a27033add5b08cd60e663af6"
+                "reference": "e75d4b95264ef8ae9d2133d22259eb77a48e6a4c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/emi-core/zipball/8c7c69b105ba9b65a27033add5b08cd60e663af6",
-                "reference": "8c7c69b105ba9b65a27033add5b08cd60e663af6",
+                "url": "https://api.github.com/repos/3neti/emi-core/zipball/e75d4b95264ef8ae9d2133d22259eb77a48e6a4c",
+                "reference": "e75d4b95264ef8ae9d2133d22259eb77a48e6a4c",
                 "shasum": ""
             },
             "require": {
@@ -176,26 +176,26 @@
             "description": "Provider-agnostic EMI domain: contracts, enums, models, DTOs, events",
             "support": {
                 "issues": "https://github.com/3neti/emi-core/issues",
-                "source": "https://github.com/3neti/emi-core/tree/v2.1.0"
+                "source": "https://github.com/3neti/emi-core/tree/v2.2.0"
             },
-            "time": "2026-11-04T03:51:34+00:00"
+            "time": "2026-11-06T02:26:01+00:00"
         },
         {
             "name": "3neti/emi-netbank",
-            "version": "v2.4.0",
+            "version": "v2.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/emi-netbank.git",
-                "reference": "4975d9fef8a919637431704fa8fbba8319f599da"
+                "reference": "33f963af45b0d3b01e22be8fb5192aade885c609"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/emi-netbank/zipball/4975d9fef8a919637431704fa8fbba8319f599da",
-                "reference": "4975d9fef8a919637431704fa8fbba8319f599da",
+                "url": "https://api.github.com/repos/3neti/emi-netbank/zipball/33f963af45b0d3b01e22be8fb5192aade885c609",
+                "reference": "33f963af45b0d3b01e22be8fb5192aade885c609",
                 "shasum": ""
             },
             "require": {
-                "3neti/emi-core": "^2.1.0",
+                "3neti/emi-core": "^2.2.0",
                 "3neti/laravel-model-channel": "^1.1",
                 "3neti/merchant": "^1.2",
                 "3neti/money-issuer": "^1.1",
@@ -244,9 +244,9 @@
             "description": "NetBank EMI provider adapter for emi-core",
             "support": {
                 "issues": "https://github.com/3neti/emi-netbank/issues",
-                "source": "https://github.com/3neti/emi-netbank/tree/v2.4.0"
+                "source": "https://github.com/3neti/emi-netbank/tree/v2.5.1"
             },
-            "time": "2026-11-04T04:07:31+00:00"
+            "time": "2026-11-06T03:38:08+00:00"
         },
         {
             "name": "3neti/emi-paynamics",
