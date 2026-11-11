@@ -65,6 +65,12 @@ jobs:
         if: steps.frontend.outputs.changed == 'true'
         run: npm ci
 
+      - name: Generate route bindings
+        if: steps.frontend.outputs.changed == 'true'
+        env:
+          APP_ENV: testing
+        run: php artisan wayfinder:generate --with-form --no-interaction
+
       - name: Format Frontend Check
         if: steps.frontend.outputs.changed == 'true'
         env:
