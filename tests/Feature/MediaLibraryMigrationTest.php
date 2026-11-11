@@ -3,10 +3,20 @@
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
+beforeEach(function (): void {
+    $this->originalConnection = DB::getDefaultConnection();
+    config()->set('database.connections.document_migration_test', [
+        'driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '', 'foreign_key_constraints' => true,
+    ]);
+    DB::setDefaultConnection('document_migration_test');
+});
+
+afterEach(function (): void {
+    DB::setDefaultConnection($this->originalConnection);
+    DB::purge('document_migration_test');
+});
+
 it('creates the media table without replacing an existing table', function (): void {
-    config()->set('database.default', 'sqlite');
-    config()->set('database.connections.sqlite.database', ':memory:');
-    DB::purge('sqlite');
 
     $migration = require database_path('migrations/2026_11_11_033258_create_media_table.php');
     $migration->up();
@@ -19,4 +29,13 @@ it('creates the media table without replacing an existing table', function (): v
     ]);
     $migration->up();
     expect(DB::table('media')->count())->toBe(1);
+});
+
+it('refuses to accept an incompatible existing media table', function (): void {
+    Schema::create('media', function ($table): void {
+        $table->id();
+    });
+
+    $migration = require database_path('migrations/2026_11_11_033258_create_media_table.php');
+    expect(fn () => $migration->up())->toThrow(RuntimeException::class, 'missing required columns');
 });
