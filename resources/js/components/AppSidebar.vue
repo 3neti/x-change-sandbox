@@ -15,14 +15,12 @@ import {
     UsersRound,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
+import { openCockpitClaimEntryLauncher } from '@/cockpit/claimEntryLauncher';
+import CockpitWorkspaceNavigationItem from '@/cockpit/components/CockpitWorkspaceNavigationItem.vue';
+import { cockpitWorkspaceGuides } from '@/cockpit/workspaceNavigationGuides';
+import type { CockpitWorkspaceGuide } from '@/cockpit/workspaceNavigationGuides';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import NavUser from '@/components/NavUser.vue';
-import CockpitWorkspaceNavigationItem from '@/cockpit/components/CockpitWorkspaceNavigationItem.vue';
-import { openCockpitClaimEntryLauncher } from '@/cockpit/claimEntryLauncher';
-import {
-    cockpitWorkspaceGuides,
-    type CockpitWorkspaceGuide,
-} from '@/cockpit/workspaceNavigationGuides';
 import {
     Sidebar,
     SidebarContent,
@@ -49,6 +47,7 @@ import funding from '@/routes/x-change/cockpit/funding';
 import payCodes from '@/routes/x-change/cockpit/pay-codes';
 import provisioning from '@/routes/x-change/cockpit/provisioning';
 import treasuryAccountGrants from '@/routes/x-change/cockpit/treasury/account-grants';
+import { show as developerAccess } from '@/routes/x-change/developer-access';
 import type { NavItem } from '@/types';
 
 // X-CHANGE HOST SHELL · package-owned navigation, account controls remain host-owned.
@@ -146,6 +145,12 @@ const accountHelpItems: XChangeNavigationItem[] = [
         description: 'Workflows and terminology',
         href: documentation(),
         icon: BookOpen,
+    },
+    {
+        title: 'Developer Access',
+        description: 'API and MCP integration',
+        href: developerAccess(),
+        icon: PlugZap,
     },
 ];
 
