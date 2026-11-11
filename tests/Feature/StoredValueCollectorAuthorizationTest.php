@@ -18,9 +18,12 @@ it('allows only the commissioned testing collector', function (): void {
 
 it('leaves testing collection unavailable without an allowlist', function (): void {
     config()->set('stored_value_collection.operator_user_ids', []);
+    config()->set('x-change.execution.stored_value.collection.staff.enabled', false);
+
+    $user = User::factory()->make(['id' => 101]);
 
     $method = new ReflectionMethod(AppServiceProvider::class, 'configureStoredValueCollectors');
     $method->invoke(new AppServiceProvider(app()));
 
-    expect(Gate::has('x-change.stored-value.collect'))->toBeFalse();
+    expect(Gate::forUser($user)->allows('x-change.stored-value.collect'))->toBeFalse();
 });
