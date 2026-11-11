@@ -41,6 +41,7 @@ jobs:
             base="${{ github.event.before }}"
           fi
           git fetch origin "$base"
+          echo "base=$base" >> "$GITHUB_OUTPUT"
           if git diff --quiet "$base" HEAD -- \
             resources tests/playwright package.json package-lock.json \
             ':(exclude)resources/js/cockpit/**' \
@@ -64,10 +65,36 @@ jobs:
         if: steps.frontend.outputs.changed == 'true'
         run: npm ci
 
+      - name: Generate route bindings
+        if: steps.frontend.outputs.changed == 'true'
+        env:
+          APP_ENV: testing
+        run: php artisan wayfinder:generate --with-form --no-interaction
+
       - name: Format Frontend Check
         if: steps.frontend.outputs.changed == 'true'
-        run: npm run format:check --if-present
+        env:
+          DIFF_BASE: ${{ steps.frontend.outputs.base }}
+        run: |
+          files=()
+          while IFS= read -r -d '' file; do
+            case "$file" in
+              *.js|*.jsx|*.ts|*.tsx|*.vue|*.css|*.json|*.md|*.yaml|*.yml)
+                [ ! -f "$file" ] || files+=("$file") ;;
+            esac
+          done < <(git diff --name-only --diff-filter=ACMR -z "$DIFF_BASE" HEAD -- resources tests/playwright package.json package-lock.json)
+          if [ ${#files[@]} -gt 0 ]; then npx prettier --check "${files[@]}"; fi
 
       - name: Lint Frontend
         if: steps.frontend.outputs.changed == 'true'
-        run: npm run lint:check --if-present
+        env:
+          DIFF_BASE: ${{ steps.frontend.outputs.base }}
+        run: |
+          files=()
+          while IFS= read -r -d '' file; do
+            case "$file" in
+              *.js|*.jsx|*.ts|*.tsx|*.vue)
+                [ ! -f "$file" ] || files+=("$file") ;;
+            esac
+          done < <(git diff --name-only --diff-filter=ACMR -z "$DIFF_BASE" HEAD -- resources tests/playwright)
+          if [ ${#files[@]} -gt 0 ]; then npx eslint "${files[@]}"; fi

@@ -4,12 +4,10 @@ namespace App\Providers;
 
 use Carbon\CarbonImmutable;
 use Dedoc\Scramble\Scramble;
-use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
@@ -80,25 +78,15 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Configure development-only API documentation.
+     * Disable the obsolete development-only API documentation routes.
      */
     protected function configureApiDocumentation(): void
     {
-        if (! $this->app->isLocal() || ! class_exists(Scramble::class)) {
+        if (! class_exists(Scramble::class)) {
             return;
         }
 
-        Scramble::configure()
-            ->routes(function (Route $route): bool {
-                $action = $route->getActionName();
-
-                if (! is_string($action)) {
-                    return false;
-                }
-
-                return Str::startsWith($route->uri(), 'api/x/v1')
-                    && Str::startsWith($action, 'LBHurtado\\XChange\\Lifecycle\\Http\\Controllers\\');
-            });
+        Scramble::configure()->expose(false);
     }
 
     /**
