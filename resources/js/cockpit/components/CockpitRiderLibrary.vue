@@ -25,6 +25,8 @@ import {
 import { computed, nextTick, ref, watch } from 'vue';
 import type { CockpitRiderLibraryEntry } from '../types';
 
+type RiderJsonValue = string | number | boolean | null | RiderJsonValue[] | { [key: string]: RiderJsonValue };
+
 const props = withDefaults(
     defineProps<{
         kind: 'url' | 'splash';
@@ -122,6 +124,14 @@ function saveCurrent(): void {
         return;
     }
 
+    let payload: Record<string, RiderJsonValue>;
+    try {
+        payload = JSON.parse(JSON.stringify(props.currentPayload)) as Record<string, RiderJsonValue>;
+    } catch {
+        status.value = 'This Rider could not be saved.';
+        return;
+    }
+
     saving.value = true;
     status.value = '';
 
@@ -130,7 +140,7 @@ function saveCurrent(): void {
         {
             kind: props.kind,
             label: label.value.trim() || null,
-            payload: props.currentPayload,
+            payload,
         },
         {
             preserveScroll: true,

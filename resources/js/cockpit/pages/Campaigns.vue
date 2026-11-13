@@ -392,6 +392,7 @@ const paymentMonitoringForm = useForm({
     expected_generation: 0,
     reason: '',
 });
+const paymentMonitoringErrors = computed(() => paymentMonitoringForm.errors as Record<string, string | undefined>);
 const authorizingWorksheet = ref<string | null>(null);
 const intakeForm = useForm<{ file: File | null }>({ file: null });
 const intakeFileInput = ref<HTMLInputElement | null>(null);
@@ -2458,10 +2459,10 @@ const updatedRelativeTime = (value: string | null): string =>
                 </p>
 
                 <p
-                    v-if="paymentMonitoringForm.errors.payment_monitoring"
+                    v-if="paymentMonitoringErrors.payment_monitoring"
                     class="mt-3 text-sm font-medium text-rose-700 dark:text-rose-300"
                 >
-                    {{ paymentMonitoringForm.errors.payment_monitoring }}
+                    {{ paymentMonitoringErrors.payment_monitoring }}
                 </p>
 
                 <div class="mt-5 grid grid-cols-2 gap-2">
@@ -2547,7 +2548,7 @@ const updatedRelativeTime = (value: string | null): string =>
                     </span>
                 </div>
                 <CockpitCampaignPaymentQrStamp
-                    :campaign="selectedPaymentQrStamp"
+                    :campaign="{ ...selectedPaymentQrStamp, payment_qr: selectedPaymentQrStamp.payment_qr }"
                 />
             </section>
         </div>

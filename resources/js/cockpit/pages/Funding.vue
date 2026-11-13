@@ -410,6 +410,8 @@ const reconciliationForm = useForm({
     action: '',
 });
 const approvalForm = useForm({});
+const approvalErrors = computed(() => approvalForm.errors as Record<string, string | undefined>);
+const reconciliationErrors = computed(() => reconciliationForm.errors as Record<string, string | undefined>);
 const verificationForm = useForm({});
 const fundingRequestForm = useForm({
     funding_type: 'unspecified',
@@ -777,7 +779,7 @@ function submitFundingRequest(): void {
     }
 
     fundingRequestForm.requested_value_minor = amountMinor;
-    fundingRequestForm.post(storeFundingRequest(), {
+    fundingRequestForm.post(storeFundingRequest.url(), {
         forceFormData: true,
         preserveScroll: true,
         onSuccess: () => {
@@ -956,7 +958,7 @@ function requestReconciliation(caseReference: string, action: string): void {
 
     activeReconciliationCase.value = caseReference;
     reconciliationForm.action = action;
-    reconciliationForm.post(storeReconciliationRequest(caseReference), {
+    reconciliationForm.post(storeReconciliationRequest.url(caseReference), {
         preserveScroll: true,
         onFinish: () => {
             activeReconciliationCase.value = null;
@@ -966,7 +968,7 @@ function requestReconciliation(caseReference: string, action: string): void {
 
 function approveFundingReconciliation(reference: string): void {
     activeApproval.value = reference;
-    approvalForm.post(approveReconciliation(reference), {
+    approvalForm.post(approveReconciliation.url(reference), {
         preserveScroll: true,
         onFinish: () => {
             activeApproval.value = null;
@@ -981,7 +983,7 @@ function checkNetBank(reference: string): void {
 
     activeVerificationCheck.value = reference;
 
-    verificationForm.post(storeVerificationCheck(reference), {
+    verificationForm.post(storeVerificationCheck.url(reference), {
         preserveScroll: true,
         onFinish: () => {
             activeVerificationCheck.value = null;
@@ -1361,8 +1363,6 @@ function refreshFundingProjections(): void {
             'funding_requests',
             'funding_activity',
         ],
-        preserveScroll: true,
-        preserveState: true,
         onFinish: () => {
             fundingProjectionRefreshInFlight = false;
         },
@@ -3510,10 +3510,10 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                             No reconciliation requests are awaiting approval.
                         </p>
                         <p
-                            v-if="approvalForm.errors.approval"
+                            v-if="approvalErrors.approval"
                             class="border-t border-rose-200 bg-rose-50 px-5 py-3 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950/20 dark:text-rose-300"
                         >
-                            {{ approvalForm.errors.approval }}
+                            {{ approvalErrors.approval }}
                         </p>
                     </section>
 
@@ -3629,16 +3629,16 @@ async function safeJson(response: Response): Promise<Record<string, unknown>> {
                                 No open funding exceptions.
                             </p>
                             <p
-                                v-if="reconciliationForm.errors.reconciliation"
+                                v-if="reconciliationErrors.reconciliation"
                                 class="mt-3 text-xs text-rose-600 dark:text-rose-300"
                             >
-                                {{ reconciliationForm.errors.reconciliation }}
+                                {{ reconciliationErrors.reconciliation }}
                             </p>
                             <p
-                                v-if="approvalForm.errors.approval"
+                                v-if="approvalErrors.approval"
                                 class="mt-3 text-xs text-rose-600 dark:text-rose-300"
                             >
-                                {{ approvalForm.errors.approval }}
+                                {{ approvalErrors.approval }}
                             </p>
                         </article>
 

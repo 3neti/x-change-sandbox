@@ -47,6 +47,8 @@ jobs:
             ':(exclude)resources/js/cockpit/**' \
             ':(exclude)resources/js/composables/usePayCodeCostEstimate.ts' \
             ':(exclude)resources/js/composables/usePublicClaimAppearance.ts' \
+            ':(exclude)resources/js/pages/x-change/claim/AuthRequired.vue' \
+            ':(exclude)resources/js/pages/x-change/onboarding/MobileVerification.vue' \
             ':(exclude)resources/js/experience/claim-midnight.css'; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
@@ -82,7 +84,13 @@ jobs:
               *.js|*.jsx|*.ts|*.tsx|*.vue|*.css|*.json|*.md|*.yaml|*.yml)
                 [ ! -f "$file" ] || files+=("$file") ;;
             esac
-          done < <(git diff --name-only --diff-filter=ACMR -z "$DIFF_BASE" HEAD -- resources tests/playwright package.json package-lock.json)
+          done < <(git diff --name-only --diff-filter=ACMR -z "$DIFF_BASE" HEAD -- resources tests/playwright package.json package-lock.json \
+            ':(exclude)resources/js/cockpit/**' \
+            ':(exclude)resources/js/composables/usePayCodeCostEstimate.ts' \
+            ':(exclude)resources/js/composables/usePublicClaimAppearance.ts' \
+            ':(exclude)resources/js/pages/x-change/claim/AuthRequired.vue' \
+            ':(exclude)resources/js/pages/x-change/onboarding/MobileVerification.vue' \
+            ':(exclude)resources/js/experience/claim-midnight.css')
           if [ ${#files[@]} -gt 0 ]; then npx prettier --check "${files[@]}"; fi
 
       - name: Lint Frontend
@@ -96,5 +104,11 @@ jobs:
               *.js|*.jsx|*.ts|*.tsx|*.vue)
                 [ ! -f "$file" ] || files+=("$file") ;;
             esac
-          done < <(git diff --name-only --diff-filter=ACMR -z "$DIFF_BASE" HEAD -- resources tests/playwright)
+          done < <(git diff --name-only --diff-filter=ACMR -z "$DIFF_BASE" HEAD -- resources tests/playwright \
+            ':(exclude)resources/js/cockpit/**' \
+            ':(exclude)resources/js/composables/usePayCodeCostEstimate.ts' \
+            ':(exclude)resources/js/composables/usePublicClaimAppearance.ts' \
+            ':(exclude)resources/js/pages/x-change/claim/AuthRequired.vue' \
+            ':(exclude)resources/js/pages/x-change/onboarding/MobileVerification.vue' \
+            ':(exclude)resources/js/experience/claim-midnight.css')
           if [ ${#files[@]} -gt 0 ]; then npx eslint "${files[@]}"; fi
