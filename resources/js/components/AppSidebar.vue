@@ -38,12 +38,14 @@ import {
     documentation,
     quickGenerate,
 } from '@/routes/x-change/cockpit';
+import accountLifecycle from '@/routes/x-change/cockpit/account-lifecycle';
 import accounts from '@/routes/x-change/cockpit/accounts';
 import apiPartners from '@/routes/x-change/cockpit/api-partners';
 import campaigns from '@/routes/x-change/cockpit/campaigns';
 import commercial from '@/routes/x-change/cockpit/commercial';
 import diagnostics from '@/routes/x-change/cockpit/diagnostics';
 import funding from '@/routes/x-change/cockpit/funding';
+import ownerApiClients from '@/routes/x-change/cockpit/owner-api-clients';
 import payCodes from '@/routes/x-change/cockpit/pay-codes';
 import provisioning from '@/routes/x-change/cockpit/provisioning';
 import treasuryAccountGrants from '@/routes/x-change/cockpit/treasury/account-grants';
@@ -141,6 +143,12 @@ const accountHelpItems: XChangeNavigationItem[] = [
         icon: UsersRound,
     },
     {
+        title: 'API Clients',
+        description: 'Manage your API credentials',
+        href: ownerApiClients.index(),
+        icon: ShieldCheck,
+    },
+    {
         title: 'Guides',
         description: 'Workflows and terminology',
         href: documentation(),
@@ -161,6 +169,7 @@ type XChangeSharedProps = {
             commercial_controls_visible?: boolean;
             provisioning_controls_visible?: boolean;
             api_partner_controls_visible?: boolean;
+            account_lifecycle_visible?: boolean;
             treasury_operations_visible?: boolean;
         };
     };
@@ -168,6 +177,16 @@ type XChangeSharedProps = {
 
 const page = usePage<XChangeSharedProps>();
 const systemItems = computed<XChangeNavigationItem[]>(() => [
+    ...(page.props.xchange?.navigation?.account_lifecycle_visible
+        ? [
+              {
+                  title: 'Account lifecycle',
+                  description: 'Suspend or reactivate an account',
+                  href: accountLifecycle.index(),
+                  icon: ShieldCheck,
+              },
+          ]
+        : []),
     ...(page.props.xchange?.navigation?.provisioning_controls_visible
         ? [
               {
