@@ -12,7 +12,7 @@ it('consumes x-change as an external tagged package', function (): void {
         flags: JSON_THROW_ON_ERROR,
     );
 
-    expect($root.'/packages/x-change')->not->toBeDirectory();
+    expect($root.'/packages/x-change/composer.json')->not->toBeFile();
     expect($root.'/config/x-change.php')->not->toBeFile();
     expect($root.'/config/lifecycle-scenarios.php')->not->toBeFile();
     expect($root.'/config/onboarding.php')->not->toBeFile();

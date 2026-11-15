@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'pipedream' => [
+        'policy_completion_token' => env('PIPEDREAM_AUI_POLICY_COMPLETION_TOKEN'),
+    ],
+
 ];

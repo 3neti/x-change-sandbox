@@ -461,6 +461,8 @@ function sanitizeRecord(
 
     return {
         code,
+        storedValueActivated: record.stored_value_activated === true,
+        stamp: sanitizeStamp(record.stamp),
         template: stringValue(record.template) ?? 'Template pending',
         purpose:
             stringValue(posReference.purpose) ?? stringValue(record.purpose),
@@ -501,6 +503,16 @@ function sanitizeRecord(
     };
 }
 
+function sanitizeStamp(value: unknown): CockpitPayCodeExplorerRecord['stamp'] {
+    const stamp = objectValue(value);
+
+    return {
+        available: stamp.available === true,
+        thumbnail_url: stringValue(stamp.thumbnail_url) ?? undefined,
+        detail_url: stringValue(stamp.detail_url) ?? undefined,
+    };
+}
+
 function sanitizeClaimSummary(
     summary: CockpitPayCodeExplorerReadModelRecord['claim_summary'],
 ): CockpitPayCodeExplorerRecord['claimSummary'] {
@@ -514,6 +526,10 @@ function sanitizeClaimSummary(
         claimed_mobile_masked: stringValue(value.claimed_mobile_masked),
         amount_minor:
             typeof value.amount_minor === 'number' ? value.amount_minor : null,
+        amount_kind:
+            value.amount_kind === 'requested' || value.amount_kind === 'disbursed'
+                ? value.amount_kind
+                : null,
         currency: stringValue(value.currency),
         location_label: stringValue(value.location_label),
         evidence_count:

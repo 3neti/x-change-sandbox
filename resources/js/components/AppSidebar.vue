@@ -41,7 +41,9 @@ import {
     quickGenerate,
 } from '@/routes/x-change/cockpit';
 import accounts from '@/routes/x-change/cockpit/accounts';
+import { show as developerAccess } from '@/routes/x-change/developer-access';
 import apiPartners from '@/routes/x-change/cockpit/api-partners';
+import ownerApiClients from '@/routes/x-change/cockpit/owner-api-clients';
 import campaigns from '@/routes/x-change/cockpit/campaigns';
 import commercial from '@/routes/x-change/cockpit/commercial';
 import diagnostics from '@/routes/x-change/cockpit/diagnostics';
@@ -142,10 +144,22 @@ const accountHelpItems: XChangeNavigationItem[] = [
         icon: UsersRound,
     },
     {
+        title: 'API Clients',
+        description: 'Manage your API credentials',
+        href: ownerApiClients.index(),
+        icon: ShieldCheck,
+    },
+    {
         title: 'Guides',
         description: 'Workflows and terminology',
         href: documentation(),
         icon: BookOpen,
+    },
+    {
+        title: 'Developer Access',
+        description: 'API and MCP integration',
+        href: developerAccess(),
+        icon: PlugZap,
     },
 ];
 

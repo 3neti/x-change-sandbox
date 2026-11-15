@@ -33,10 +33,12 @@ export type PayCodeCostEstimate = {
 
 type UsePayCodeCostEstimateOptions = {
     debounceMs?: number;
+    retryDelaysMs?: number[];
 };
 
 type UsePayCodeCostEstimate = {
     estimate: Ref<PayCodeCostEstimate | null>;
+    estimatePayload: Ref<string | null>;
     estimating: Ref<boolean>;
     estimateError: Ref<string | null>;
     refreshEstimate: () => Promise<void>;
@@ -51,6 +53,8 @@ export function usePayCodeCostEstimate(
     const estimating = ref(false);
     const estimateError = ref<string | null>(null);
     const debounceMs = options.debounceMs ?? 500;
+    const retryDelaysMs = options.retryDelaysMs ?? [1000, 2000];
+    const estimatePayload = ref<string | null>(null);
     let estimateTimer: ReturnType<typeof setTimeout> | null = null;
     let estimateRequestId = 0;
     let estimateAbortController: AbortController | null = null;
@@ -66,10 +70,14 @@ export function usePayCodeCostEstimate(
 
     function scheduleEstimate(): void {
         clearEstimateTimer();
+        estimateRequestId++;
+        estimateAbortController?.abort();
+        estimateError.value = null;
+        estimating.value = false;
 
         if (typeof window === 'undefined' || !canEstimate.value) {
-            estimateAbortController?.abort();
             estimate.value = null;
+            estimatePayload.value = null;
             estimateError.value = null;
             estimating.value = false;
 
@@ -87,6 +95,7 @@ export function usePayCodeCostEstimate(
         }
 
         const requestId = ++estimateRequestId;
+        const serializedPayload = JSON.stringify(requestPayload.value);
         const route = EstimatePayCodeController();
 
         estimateAbortController?.abort();
@@ -95,28 +104,43 @@ export function usePayCodeCostEstimate(
         estimateError.value = null;
 
         try {
-            const response = await fetch(route.url, {
-                method: route.method.toUpperCase(),
-                credentials: 'same-origin',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                body: JSON.stringify(requestPayload.value),
-                signal: estimateAbortController.signal,
-            });
-            const payload = await safeJson(response);
+            for (let attempt = 0; ; attempt++) {
+                const response = await fetch(route.url, {
+                    method: route.method.toUpperCase(),
+                    credentials: 'same-origin',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: serializedPayload,
+                    signal: estimateAbortController.signal,
+                });
+                const payload = await safeJson(response);
 
-            if (requestId !== estimateRequestId) {
-                return;
+                if (requestId !== estimateRequestId) {
+                    return;
+                }
+
+                if (response.ok && payload.success !== false) {
+                    estimate.value = estimateValue(payload);
+                    estimatePayload.value = serializedPayload;
+
+                    return;
+                }
+
+                if (
+                    !isTransientEstimateFailure(response, payload) ||
+                    attempt >= retryDelaysMs.length
+                ) {
+                    throw new Error(estimateFailureMessage(payload, response));
+                }
+
+                await delay(
+                    retryDelaysMs[attempt] ?? retryDelaysMs.at(-1) ?? 1000,
+                    estimateAbortController.signal,
+                );
             }
-
-            if (!response.ok || payload.success === false) {
-                throw new Error(estimateFailureMessage(payload, response));
-            }
-
-            estimate.value = estimateValue(payload);
         } catch (error) {
             if (
                 (error instanceof DOMException &&
@@ -150,6 +174,7 @@ export function usePayCodeCostEstimate(
 
     return {
         estimate,
+        estimatePayload,
         estimating,
         estimateError,
         refreshEstimate,
@@ -200,6 +225,36 @@ function estimateFailureMessage(
     }
 
     return `Unable to estimate Pay Code cost: ${response.status}`;
+}
+
+function isTransientEstimateFailure(
+    response: Response,
+    payload: Record<string, unknown>,
+): boolean {
+    if ([408, 425, 429, 500, 502, 503, 504].includes(response.status)) {
+        return true;
+    }
+
+    return (
+        response.status === 403 &&
+        (response.headers.get('cf-mitigated') === 'challenge' ||
+            response.headers.get('content-type')?.includes('text/html') === true) &&
+        Object.keys(payload).length === 0
+    );
+}
+
+function delay(milliseconds: number, signal: AbortSignal): Promise<void> {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(resolve, milliseconds);
+        signal.addEventListener(
+            'abort',
+            () => {
+                clearTimeout(timer);
+                reject(new DOMException('Aborted', 'AbortError'));
+            },
+            { once: true },
+        );
+    });
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

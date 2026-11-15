@@ -23,6 +23,12 @@ import {
 } from 'lucide-vue-next';
 import { computed, defineAsyncComponent, type Component } from 'vue';
 import PayCodeLogo from '../../components/x-change/PayCodeLogo.vue';
+import XRayClaimPreview from '../../components/x-change/XRayClaimPreview.vue';
+import ClaimCodeField from '../../components/x-change/ClaimCodeField.vue';
+import ClaimPendingReceipt from '../../components/x-change/ClaimPendingReceipt.vue';
+import ParticipantDocuments from '../../components/x-change/ParticipantDocuments.vue';
+import { isVerifiedClaimCode } from '../../components/x-change/claimCodeVerification';
+import type { XRayClaimPreviewResult } from '../../components/x-change/xrayClaimPreviewViewModel';
 
 type ClaimPreviewField = {
     key: string;
@@ -32,11 +38,13 @@ type ClaimPreviewField = {
 
 type ClaimPreviewScreen = {
     kind: string;
+    xray?: XRayClaimPreviewResult | null;
     code?: string;
     amount?: string;
     title?: string;
     description?: string;
     fields?: ClaimPreviewField[];
+    document_requirements?: { type: string; timing: string; requires_acceptance: boolean }[];
     message?: string | null;
     artwork_url?: string | null;
     handoff?: {
@@ -67,8 +75,8 @@ const handoffTitle = computed(
 const handoffDescription = computed(
     () => props.screen.handoff?.description || props.screen.description,
 );
-const formFlowPages = import.meta.glob(
-    '/resources/js/pages/form-flow/**/*.vue',
+const formFlowPages = import.meta.glob<{ default: Component }>(
+    ['/resources/js/pages/form-flow/**/*.vue', '/resources/js/pages/x-change/claim/Settlement*.vue', '/resources/js/pages/x-change/claim/Payment.vue'],
 );
 const actualScreenComponent = computed<Component | null>(() => {
     if (!props.screen.component) return null;
@@ -82,7 +90,7 @@ const actualScreenComponent = computed<Component | null>(() => {
 
 <template>
     <div
-        class="bg-background text-foreground flex h-full min-h-0 flex-col overflow-hidden"
+        class="bg-background text-foreground relative flex h-full min-h-0 flex-col overflow-hidden"
         :class="
             presentation === 'viewport'
                 ? 'w-full'
@@ -94,6 +102,7 @@ const actualScreenComponent = computed<Component | null>(() => {
     >
         <div
             v-if="actualScreenComponent"
+            :inert="screen.kind === 'payment_preview'"
             class="bg-background h-full min-h-0 w-full overflow-y-auto"
             data-testid="cockpit-claim-actual-screen"
         >
@@ -107,37 +116,39 @@ const actualScreenComponent = computed<Component | null>(() => {
                 class="from-primary/5 via-background to-background min-h-0 flex-1 overflow-y-auto bg-gradient-to-b px-5 py-8"
             >
                 <div
-                    class="mx-auto flex min-h-full w-full max-w-md flex-col justify-center"
+                    class="mx-auto flex w-full max-w-md flex-col gap-6 pb-28"
                 >
-                    <section
-                        class="border-border/60 bg-card/85 grid w-full gap-6 rounded-lg border p-6 shadow-sm backdrop-blur-sm"
-                    >
-                        <div
-                            class="grid justify-items-center gap-2 text-center"
-                        >
-                            <PayCodeLogo
-                                variant="logo"
-                                class-name="!h-24 !max-h-24 !max-w-24"
-                            />
-                            <h3 class="text-xl font-medium">Claim Pay Code</h3>
-                        </div>
-                        <div class="grid gap-2">
-                            <label class="text-sm font-medium">Pay Code</label>
-                            <div
-                                class="bg-background grid min-h-10 place-items-center rounded-md border px-3 text-center text-lg font-medium tracking-wider"
-                            >
-                                {{ screen.code }}
-                            </div>
-                        </div>
-                        <button
-                            type="button"
-                            tabindex="-1"
-                            class="bg-primary text-primary-foreground min-h-10 rounded-full px-4 text-sm font-medium"
-                        >
-                            Continue
-                        </button>
-                    </section>
+                    <div class="grid justify-items-center gap-2 text-center">
+                        <PayCodeLogo
+                            variant="logo"
+                            class-name="!h-24 !max-h-24 !max-w-24"
+                        />
+                        <h3 class="text-xl font-medium">{{ screen.xray?.presentation?.title || screen.title }}</h3>
+                    </div>
+                    <ClaimCodeField
+                        id="preview-claim-code"
+                        label="Pay Code"
+                        :model-value="screen.code ?? ''"
+                        :verified="isVerifiedClaimCode(screen.xray, screen.code ?? '')"
+                        readonly
+                    />
+                    <XRayClaimPreview
+                        v-if="screen.xray"
+                        :result="screen.xray"
+                        compact
+                        data-testid="cockpit-claim-entry-xray"
+                    />
+                    <ParticipantDocuments
+                        v-if="screen.document_requirements?.length"
+                        :requirements="screen.document_requirements"
+                        preview-mode
+                    />
                 </div>
+            </div>
+            <div class="pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-background via-background/95 to-transparent px-4 pb-4 pt-5">
+                <button type="button" tabindex="-1" class="bg-primary text-primary-foreground mx-auto block min-h-14 w-full max-w-md rounded-2xl text-base font-bold shadow-lg shadow-foreground/20">
+                    {{ screen.xray?.presentation?.primary_action_label?.trim() || 'Start Claim' }}
+                </button>
             </div>
         </template>
 
@@ -448,31 +459,16 @@ const actualScreenComponent = computed<Component | null>(() => {
             <div
                 class="via-background to-background flex min-h-0 flex-1 flex-col justify-center gap-5 bg-gradient-to-b from-emerald-500/10 px-5 py-6 text-center"
             >
-                <CheckCircle2 class="mx-auto size-14 text-emerald-500" />
-                <div class="grid gap-2">
-                    <p class="text-2xl font-bold">{{ screen.amount }}</p>
-                    <h3 class="text-lg font-semibold">{{ screen.title }}</h3>
-                    <p class="text-muted-foreground text-[11px] leading-4">
-                        {{ screen.description }}
-                    </p>
-                </div>
-                <div
-                    class="rounded-xl border border-amber-500/25 bg-amber-500/10 p-3 text-left"
-                >
-                    <p class="text-[11px] font-semibold">
-                        Claim accepted · payout pending
-                    </p>
-                    <p class="text-muted-foreground mt-1 text-[10px] leading-4">
-                        Funds are released after the payment provider confirms
-                        the transfer.
-                    </p>
-                </div>
+                <PayCodeLogo variant="mark" size="display" class="mx-auto" />
+                <ClaimPendingReceipt :amount="screen.amount" bank-label="Selected bank or wallet" />
+                <p v-if="screen.message" class="text-left text-xs font-semibold text-muted-foreground">Message from the sender</p>
                 <p
                     v-if="screen.message"
                     class="bg-card rounded-xl border p-3 text-xs font-medium"
                 >
                     {{ screen.message }}
                 </p>
+                <p v-else class="text-sm text-foreground">Thank you.</p>
             </div>
         </template>
 

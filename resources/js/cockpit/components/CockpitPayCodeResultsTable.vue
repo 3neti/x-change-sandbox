@@ -19,6 +19,7 @@ import {
 import { computed, ref, watch } from 'vue';
 import CockpitPayCodeCopyButton from './CockpitPayCodeCopyButton.vue';
 import CockpitPayCodeQuickTerminalAction from './CockpitPayCodeQuickTerminalAction.vue';
+import CockpitPayCodeStampThumbnail from './CockpitPayCodeStampThumbnail.vue';
 import { usePayCodeExplorerClock } from '../composables/usePayCodeExplorerClock';
 import {
     formatAbsoluteTime,
@@ -36,6 +37,10 @@ const props = defineProps<{
     actions: CockpitPayCodeRowAction[];
     visibleLimit?: number;
 }>();
+
+const hasClaimUrls = computed(() =>
+    props.records.some((record) => typeof record.claimUrl === 'string' && record.claimUrl !== ''),
+);
 
 const selectedVisibleLimit = ref(
     props.visibleLimit && props.visibleLimit > 0
@@ -152,6 +157,10 @@ function displayStatus(status: string): string {
 }
 
 function statusLabel(record: CockpitPayCodeExplorerRecord): string {
+    if (record.storedValueActivated) {
+        return 'Stored value activated';
+    }
+
     return record.consumerStatus
         ? displayStatus(record.consumerStatus)
         : record.operationalStatus.label || displayStatus(record.status);
@@ -270,11 +279,14 @@ function formatClaimAmount(record: CockpitPayCodeExplorerRecord): string | null 
         return null;
     }
 
-    return new Intl.NumberFormat('en-PH', {
+    const amount = new Intl.NumberFormat('en-PH', {
         style: 'currency',
         currency: record.claimSummary?.currency ?? 'PHP',
         minimumFractionDigits: 2,
     }).format(record.claimSummary.amount_minor / 100);
+    const kind = record.claimSummary.amount_kind;
+
+    return kind === 'requested' || kind === 'disbursed' ? `${amount} ${kind}` : amount;
 }
 
 function timingFacts(record: CockpitPayCodeExplorerRecord) {
@@ -413,6 +425,10 @@ function timingFacts(record: CockpitPayCodeExplorerRecord) {
                             {{ record.capability.voucherTypeLabel }}
                         </span>
                     </div>
+                    <CockpitPayCodeStampThumbnail
+                        :code="record.code"
+                        :stamp="record.stamp"
+                    />
                     <div class="shrink-0 text-right">
                         <span
                             :class="statusBadgeClass(record.status)"
@@ -551,8 +567,19 @@ function timingFacts(record: CockpitPayCodeExplorerRecord) {
                     </dd>
                 </dl>
 
+                <a
+                    v-if="record.claimUrl"
+                    :href="record.claimUrl"
+                    target="_blank"
+                    rel="noreferrer"
+                    class="block truncate text-xs font-semibold text-emerald-700 underline underline-offset-2 dark:text-emerald-300"
+                    data-testid="cockpit-pay-code-mobile-claim-url"
+                >
+                    Open claim URL
+                </a>
+
                 <div class="flex flex-wrap items-center gap-2">
-                    <CockpitPayCodeCopyButton :code="record.code" />
+                    <CockpitPayCodeCopyButton v-if="record.copyable !== false" :code="record.code" />
                     <CockpitPayCodeQuickTerminalAction
                         :code="record.code"
                         action="expire"
@@ -678,6 +705,7 @@ function timingFacts(record: CockpitPayCodeExplorerRecord) {
                         <th class="w-[13%] px-4 py-2 text-right">Amount</th>
                         <th class="w-[13%] px-4 py-2">Status</th>
                         <th class="w-[20%] px-4 py-2">Target / Claimed by</th>
+                        <th v-if="hasClaimUrls" class="w-[16%] px-4 py-2">Claim URL</th>
                         <th class="px-4 py-2 text-right">Actions</th>
                     </tr>
                 </thead>
@@ -696,6 +724,12 @@ function timingFacts(record: CockpitPayCodeExplorerRecord) {
                             class="min-w-0 px-4 py-2.5"
                             data-testid="cockpit-pay-code-row-identity"
                         >
+                            <div class="flex items-start gap-3">
+                                <CockpitPayCodeStampThumbnail
+                                    :code="record.code"
+                                    :stamp="record.stamp"
+                                />
+                                <div class="min-w-0">
                             <p
                                 v-if="record.posReference?.sale_reference"
                                 class="mt-0.5 truncate font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-300"
@@ -731,6 +765,8 @@ function timingFacts(record: CockpitPayCodeExplorerRecord) {
                                     :key="`${record.code}-${fact.label}`"
                                     :title="fact.absolute"
                                 >{{ fact.label }} {{ fact.relative }}</span>
+                                </div>
+                            </div>
                             </div>
                             <span
                                 :class="
@@ -847,9 +883,22 @@ function timingFacts(record: CockpitPayCodeExplorerRecord) {
                                 </p>
                             </div>
                         </td>
+                        <td v-if="hasClaimUrls" class="px-4 py-2.5 align-top">
+                            <a
+                                v-if="record.claimUrl"
+                                :href="record.claimUrl"
+                                target="_blank"
+                                rel="noreferrer"
+                                class="block max-w-48 truncate text-xs font-semibold text-emerald-700 underline underline-offset-2 dark:text-emerald-300"
+                                data-testid="cockpit-pay-code-claim-url"
+                            >
+                                Open claim URL
+                            </a>
+                            <span v-else class="text-xs text-slate-400">—</span>
+                        </td>
                         <td class="px-4 py-2.5">
                             <div class="flex justify-end gap-1.5">
-                                <CockpitPayCodeCopyButton :code="record.code" compact />
+                                <CockpitPayCodeCopyButton v-if="record.copyable !== false" :code="record.code" compact />
                                 <CockpitPayCodeQuickTerminalAction
                                     :code="record.code"
                                     action="expire"

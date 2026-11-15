@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\PipedreamConnectController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
 use Illuminate\Support\Facades\Route;
@@ -9,6 +10,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    Route::get('settings/integrations/pipedream', [PipedreamConnectController::class, 'edit'])
+        ->name('pipedream.connect.edit');
+    Route::post('settings/integrations/pipedream/connect-link', [PipedreamConnectController::class, 'connectLink'])
+        ->middleware('throttle:6,1')
+        ->name('pipedream.connect.link');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

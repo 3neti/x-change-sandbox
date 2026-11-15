@@ -38,6 +38,7 @@ import {
     watch,
 } from 'vue';
 import { show as showScenarioRunner } from '@/actions/LBHurtado/XChange/Http/Controllers/Web/Cockpit/CockpitLeadCampaignScenarioRunnerController';
+import { show as showCommercialPayCodeScenarioRunner } from '@/actions/LBHurtado/XChange/Http/Controllers/Web/Cockpit/CockpitCommercialPayCodeScenarioRunnerController';
 import showPolicyLifecycle from '@/actions/LBHurtado/XChange/Http/Controllers/Web/Cockpit/CockpitCampaignPolicyLifecyclePageController';
 import { destroy, show, store } from '@/routes/x-change/cockpit/campaigns';
 import authorizations from '@/routes/x-change/cockpit/campaigns/authorizations';
@@ -54,7 +55,7 @@ import type { CockpitHeaderPageProps } from '../types';
 
 type CampaignWorksheet = {
     reference: string;
-    profile: 'payroll' | 'assistance';
+    profile: 'payroll' | 'assistance' | 'gaming';
     name: string;
     currency: string;
     status: string;
@@ -128,6 +129,8 @@ type EndpointCampaign = {
         source: string;
     };
     payment_progress?: {
+        product_key: 'aui_demo_policy' | 'medicard_demo_benefit';
+        summary_label: string;
         payments_received: number;
         received_amounts: { currency: string; amount_minor: number }[];
         details_submitted: number;
@@ -151,11 +154,21 @@ type EndpointCampaign = {
         qr_data_uri: string | null;
         generated_at: string | null;
     } | null;
+    payment_monitoring?: {
+        status: 'live' | 'paused' | 'needs_attention' | 'unavailable';
+        control_mode: 'live' | 'paused';
+        generation: number;
+        last_checked_at: string | null;
+        eligibility_reason: string | null;
+        runtime_mode: string;
+        schedule_enabled: boolean;
+    } | null;
     actions?: {
         template_update_url: string;
         pause_url: string;
         resume_url: string;
         payment_qr_provision_url: string;
+        payment_monitoring_url: string;
     };
     template: {
         id: number;
@@ -168,6 +181,7 @@ type EndpointCampaign = {
 };
 
 type CampaignsPageProps = CockpitHeaderPageProps & {
+    application_journey?: { key: string; label: string } | null;
     worksheets: CampaignWorksheet[];
     active_intake?: Record<string, unknown>;
     campaign_usage_profiles?: CampaignUsageProfile[];
@@ -175,6 +189,7 @@ type CampaignsPageProps = CockpitHeaderPageProps & {
     pay_code_templates?: CampaignPayCodeTemplate[];
     endpoint_campaigns?: EndpointCampaign[];
     workflow_drafts?: CampaignWorkflowDraftCatalog;
+    commercial_pay_code_scenario_runner_enabled?: boolean;
     endpoint_campaign_form?: {
         action_url: string;
         default_timezone: string;
@@ -188,9 +203,40 @@ type CampaignFlavor = CampaignWorksheet['profile'] | 'endpoints';
 const campaignFlavors: CampaignFlavor[] = [
     'payroll',
     'assistance',
+    'gaming',
     'endpoints',
 ];
-const activeFlavor = ref<CampaignFlavor>('payroll');
+function flavorForJourney(journeyKey?: string): CampaignFlavor {
+    if (journeyKey === 'ayuda_payout') {
+        return 'assistance';
+    }
+    if (journeyKey === 'gaming_payout') {
+        return 'gaming';
+    }
+
+    if (
+        ['campaign_distribution', 'campaign_activity', 'lead_capture',
+            'lead_activity', 'product_enrollment', 'enrollment_activity'].includes(journeyKey ?? '')
+    ) {
+        return 'endpoints';
+    }
+
+    return 'payroll';
+}
+
+function usageForJourney(journeyKey?: string): string | null {
+    if (journeyKey === 'campaign_distribution') {
+        return 'promo';
+    }
+
+    if (journeyKey === 'lead_capture') {
+        return 'lead';
+    }
+
+    return null;
+}
+
+const activeFlavor = ref<CampaignFlavor>(flavorForJourney(props.application_journey?.key));
 const flavorCopy: Record<
     CampaignFlavor,
     {
@@ -244,6 +290,21 @@ const flavorCopy: Record<
         emptyBatchTitle: 'Start Empty Distribution',
         namePlaceholder: 'August assistance',
     },
+    gaming: {
+        eyebrow: 'Gaming',
+        title: 'Gaming Payouts',
+        description: 'Prepare beneficiary payouts for a completed game or event.',
+        listTitle: 'Payout Batches',
+        people: 'Recipients',
+        person: 'recipient',
+        total: 'Payout Total',
+        emptyTitle: 'No gaming payouts yet',
+        emptyDescription: 'Upload a recipient list or start an empty gaming payout.',
+        importTitle: 'Upload Payout List',
+        importDescription: 'Add CSV or XLSX payout rows, then review every recipient and amount.',
+        emptyBatchTitle: 'Start Gaming Payout',
+        namePlaceholder: 'October event payouts',
+    },
     endpoints: {
         eyebrow: 'Endpoints',
         title: 'Endpoint Campaigns',
@@ -280,6 +341,7 @@ const visiblePeopleCount = computed(() =>
 
 const form = useForm({
     name: '',
+    event_reference: '',
     profile: 'payroll',
     fulfillment_mode: 'pay_code_distribution',
     delivery_plan: ['csv'],
@@ -296,11 +358,15 @@ const payCodeTemplates = computed<CampaignPayCodeTemplate[]>(
 const endpointCampaigns = computed<EndpointCampaign[]>(
     () => props.endpoint_campaigns ?? [],
 );
+const initialEndpointUsage =
+    usageProfiles.value.find(
+        (profile) => profile.key === usageForJourney(props.application_journey?.key),
+    ) ?? usageProfiles.value[0];
 const endpointForm = useForm({
     title: '',
     description: '',
-    usage_key: usageProfiles.value[0]?.key ?? 'lead',
-    capabilities: usageProfiles.value[0]?.default_capabilities ?? [],
+    usage_key: initialEndpointUsage?.key ?? 'lead',
+    capabilities: initialEndpointUsage?.default_capabilities ?? [],
     pay_code_template_id: payCodeTemplates.value[0]?.id ?? null,
     endpoint_slug: '',
     starts_limit: null as number | null,
@@ -315,12 +381,18 @@ const endpointForm = useForm({
         'UTC',
 });
 const deleteForm = useForm({});
-const authorizationForm = useForm({});
+const authorizationForm = useForm({ approval_mode: 'direct' });
 const endpointStatusForm = useForm({});
 const endpointTemplateForm = useForm({
     pay_code_template_id: null as number | null,
 });
 const endpointPaymentQrForm = useForm({});
+const paymentMonitoringForm = useForm({
+    mode: 'paused' as 'live' | 'paused',
+    expected_generation: 0,
+    reason: '',
+});
+const paymentMonitoringErrors = computed(() => paymentMonitoringForm.errors as Record<string, string | undefined>);
 const authorizingWorksheet = ref<string | null>(null);
 const intakeForm = useForm<{ file: File | null }>({ file: null });
 const intakeFileInput = ref<HTMLInputElement | null>(null);
@@ -329,6 +401,7 @@ const isDraggingIntake = ref(false);
 const intakeFileError = ref<string | null>(null);
 const selectedEndpointStamp = ref<EndpointCampaign | null>(null);
 const selectedPaymentQrStamp = ref<EndpointCampaign | null>(null);
+const selectedMonitoringCampaign = ref<EndpointCampaign | null>(null);
 const endpointTemplateSelections = ref<Record<string, number | null>>({});
 const endpointDialog = ref<HTMLElement | null>(null);
 let endpointReturnFocus: HTMLElement | null = null;
@@ -338,6 +411,17 @@ watch(activeFlavor, (profile) => {
         form.profile = profile;
     }
 });
+
+watch(
+    () => props.application_journey?.key,
+    (journeyKey) => {
+        activeFlavor.value = flavorForJourney(journeyKey);
+        const usage = usageForJourney(journeyKey);
+        if (usage && usageProfiles.value.some((profile) => profile.key === usage)) {
+            endpointForm.usage_key = usage;
+        }
+    },
+);
 
 watch(
     () => endpointForm.usage_key,
@@ -510,7 +594,7 @@ onBeforeUnmount(() => window.removeEventListener('paste', pasteIntakeFromPage));
 function createWorksheet(): void {
     form.post(store().url, {
         preserveScroll: true,
-        onSuccess: () => form.reset('name'),
+        onSuccess: () => form.reset('name', 'event_reference'),
     });
 }
 
@@ -551,7 +635,7 @@ function deleteWorksheet(worksheet: CampaignWorksheet): void {
     });
 }
 
-function createApprovalPayCode(worksheet: CampaignWorksheet): void {
+function authorizeWorksheet(worksheet: CampaignWorksheet): void {
     if (
         worksheet.status !== 'draft' ||
         worksheet.beneficiary_count === 0 ||
@@ -789,6 +873,70 @@ function closePaymentQrStamp(): void {
     selectedPaymentQrStamp.value = null;
 }
 
+function paymentMonitoringLabel(campaign: EndpointCampaign): string {
+    const status = campaign.payment_monitoring?.status;
+
+    if (status === 'live') return 'Live';
+    if (status === 'needs_attention') return 'Needs attention';
+    if (status === 'unavailable') return 'Unavailable';
+
+    return 'Paused';
+}
+
+function paymentMonitoringClasses(campaign: EndpointCampaign): string {
+    const status = campaign.payment_monitoring?.status;
+
+    if (status === 'live') {
+        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200';
+    }
+
+    if (status === 'needs_attention') {
+        return 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200';
+    }
+
+    return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200';
+}
+
+function canStartPaymentMonitoring(campaign: EndpointCampaign): boolean {
+    const monitoring = campaign.payment_monitoring;
+
+    return (
+        monitoring?.control_mode === 'paused' &&
+        monitoring.schedule_enabled &&
+        monitoring.runtime_mode === 'scheduled' &&
+        monitoring.eligibility_reason === null
+    );
+}
+
+function openPaymentMonitoring(campaign: EndpointCampaign): void {
+    selectedMonitoringCampaign.value = campaign;
+    paymentMonitoringForm.clearErrors();
+    paymentMonitoringForm.mode =
+        campaign.payment_monitoring?.control_mode === 'live'
+            ? 'paused'
+            : 'live';
+    paymentMonitoringForm.expected_generation =
+        campaign.payment_monitoring?.generation ?? 0;
+    paymentMonitoringForm.reason = '';
+}
+
+function closePaymentMonitoring(): void {
+    selectedMonitoringCampaign.value = null;
+    paymentMonitoringForm.clearErrors();
+}
+
+function updatePaymentMonitoring(): void {
+    const campaign = selectedMonitoringCampaign.value;
+    const url = campaign?.actions?.payment_monitoring_url;
+
+    if (!campaign || !url || paymentMonitoringForm.processing) return;
+
+    paymentMonitoringForm.patch(url, {
+        preserveScroll: true,
+        onSuccess: closePaymentMonitoring,
+    });
+}
+
 function closeEndpointStamp(): void {
     selectedEndpointStamp.value = null;
     nextTick(() => endpointReturnFocus?.focus());
@@ -857,7 +1005,7 @@ function statusClasses(status: string): string {
 function batchActionLabel(worksheet: CampaignWorksheet): string {
     if (worksheet.status === 'draft') {
         return worksheet.beneficiary_count > 0
-            ? 'Request Approval'
+            ? 'Authorize Batch'
             : 'Continue';
     }
 
@@ -949,7 +1097,7 @@ const updatedRelativeTime = (value: string | null): string =>
                     </dl>
                 </div>
                 <div
-                    class="mt-4 grid grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-950"
+                    class="mt-4 grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1 sm:grid-cols-4 dark:bg-slate-950"
                     role="group"
                     aria-label="Campaign flavor"
                     data-testid="campaign-flavor-switch"
@@ -978,13 +1126,20 @@ const updatedRelativeTime = (value: string | null): string =>
                             class="size-4"
                             aria-hidden="true"
                         />
+                        <PlayCircle
+                            v-else-if="flavor === 'gaming'"
+                            class="size-4"
+                            aria-hidden="true"
+                        />
                         <QrCode v-else class="size-4" aria-hidden="true" />
                         {{
                             flavor === 'payroll'
                                 ? 'Payroll'
                                 : flavor === 'assistance'
                                   ? 'Ayuda'
-                                  : 'Endpoints'
+                                  : flavor === 'gaming'
+                                    ? 'Gaming'
+                                    : 'Endpoints'
                         }}
                     </button>
                 </div>
@@ -1131,10 +1286,10 @@ const updatedRelativeTime = (value: string | null): string =>
                                         type="button"
                                         :data-testid="`campaign-activity-create-approval-${worksheet.reference}`"
                                         :disabled="authorizationForm.processing"
-                                        title="Lock this recipient list and prepare its officer Approval Pay Code."
+                                        title="Freeze this recipient list and authorize its payouts."
                                         class="@xl:flex-none inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg bg-slate-950 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-slate-100 dark:text-slate-950 dark:hover:bg-white"
                                         @click="
-                                            createApprovalPayCode(worksheet)
+                                            authorizeWorksheet(worksheet)
                                         "
                                     >
                                         <LockKeyhole
@@ -1347,6 +1502,22 @@ const updatedRelativeTime = (value: string | null): string =>
                                 </label>
 
                                 <label
+                                    v-if="activeFlavor === 'gaming'"
+                                    class="grid gap-1.5 text-sm font-medium text-slate-700 dark:text-slate-200"
+                                >
+                                    Game or event reference
+                                    <input
+                                        v-model="form.event_reference"
+                                        type="text"
+                                        maxlength="191"
+                                        required
+                                        placeholder="EVENT-2026-001"
+                                        class="rounded-lg border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50"
+                                    />
+                                    <span v-if="form.errors.event_reference" class="text-xs text-rose-600 dark:text-rose-300">{{ form.errors.event_reference }}</span>
+                                </label>
+
+                                <label
                                     class="grid gap-1.5 text-sm font-medium text-slate-700 dark:text-slate-200"
                                 >
                                     Payment Method
@@ -1418,6 +1589,22 @@ const updatedRelativeTime = (value: string | null): string =>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <Link
+                                v-if="
+                                    props.commercial_pay_code_scenario_runner_enabled
+                                "
+                                :href="
+                                    showCommercialPayCodeScenarioRunner.url()
+                                "
+                                class="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 transition hover:border-violet-300 hover:text-violet-700 dark:border-slate-700 dark:text-slate-200 dark:hover:border-violet-700 dark:hover:text-violet-300"
+                                data-testid="commercial-pay-code-scenario-runner-link"
+                            >
+                                <HandCoins
+                                    class="size-3.5"
+                                    aria-hidden="true"
+                                />
+                                Test commercial issuance
+                            </Link>
+                            <Link
                                 :href="showPolicyLifecycle()"
                                 class="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700 dark:border-slate-700 dark:text-slate-200 dark:hover:border-indigo-700 dark:hover:text-indigo-300"
                                 data-testid="campaign-policy-lifecycle-link"
@@ -1481,7 +1668,7 @@ const updatedRelativeTime = (value: string | null): string =>
                     >
                         <div
                             aria-hidden="true"
-                            class="hidden gap-4 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-500 dark:bg-slate-950 dark:text-slate-400 xl:grid xl:grid-cols-[minmax(0,2.2fr)_8rem_minmax(0,1.5fr)_minmax(0,1.4fr)_13rem]"
+                            class="hidden gap-4 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-500 xl:grid xl:grid-cols-[minmax(0,2.2fr)_8rem_minmax(0,1.5fr)_minmax(0,1.4fr)_13rem] dark:bg-slate-950 dark:text-slate-400"
                         >
                             <span>Endpoint</span><span>Availability</span
                             ><span>Activity</span><span>Amount / exposure</span
@@ -1571,7 +1758,10 @@ const updatedRelativeTime = (value: string | null): string =>
                                                 campaign.payment_progress
                                                     .demo_summaries_ready
                                             }}
-                                            demo summaries ready
+                                            {{
+                                                campaign.payment_progress
+                                                    .summary_label
+                                            }}
                                         </p>
                                         <p>
                                             {{
@@ -1646,6 +1836,28 @@ const updatedRelativeTime = (value: string | null): string =>
                                             : campaign.usage_label
                                     }}
                                 </p>
+                                <div
+                                    v-if="campaign.payment_monitoring"
+                                    class="mt-2 flex min-w-0 items-center gap-2"
+                                    :data-testid="`campaign-payment-monitoring-${campaign.reference}`"
+                                >
+                                    <span
+                                        class="inline-flex shrink-0 rounded-full px-2 py-1 font-semibold"
+                                        :class="
+                                            paymentMonitoringClasses(campaign)
+                                        "
+                                    >
+                                        {{ paymentMonitoringLabel(campaign) }}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        class="truncate font-semibold text-cyan-700 underline-offset-2 hover:underline dark:text-cyan-300"
+                                        :data-testid="`campaign-payment-monitoring-manage-${campaign.reference}`"
+                                        @click="openPaymentMonitoring(campaign)"
+                                    >
+                                        Manage
+                                    </button>
+                                </div>
                             </div>
                             <div class="flex flex-wrap gap-2 xl:grid">
                                 <button
@@ -2156,6 +2368,137 @@ const updatedRelativeTime = (value: string | null): string =>
         </div>
 
         <div
+            v-if="selectedMonitoringCampaign?.payment_monitoring"
+            class="fixed inset-0 z-[115] flex items-end justify-center bg-slate-950/70 p-3 backdrop-blur-sm sm:items-center"
+            role="presentation"
+            data-testid="campaign-payment-monitoring-overlay"
+            @click.self="closePaymentMonitoring"
+        >
+            <section
+                role="dialog"
+                aria-modal="true"
+                aria-label="Payment monitoring"
+                class="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl dark:bg-slate-950"
+                @keydown.esc="closePaymentMonitoring"
+            >
+                <div class="flex items-start justify-between gap-4">
+                    <div class="min-w-0">
+                        <p
+                            class="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-300"
+                        >
+                            Payment Monitoring
+                        </p>
+                        <h2
+                            class="mt-1 truncate text-lg font-semibold text-slate-950 dark:text-white"
+                        >
+                            {{ selectedMonitoringCampaign.title }}
+                        </h2>
+                    </div>
+                    <button
+                        type="button"
+                        class="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-slate-200 dark:border-slate-800"
+                        aria-label="Close payment monitoring"
+                        @click="closePaymentMonitoring"
+                    >
+                        <X class="size-4" aria-hidden="true" />
+                    </button>
+                </div>
+
+                <div
+                    class="mt-4 grid grid-cols-2 gap-2 rounded-2xl bg-slate-50 p-3 text-sm dark:bg-slate-900"
+                >
+                    <div>
+                        <p class="text-xs text-slate-500">Status</p>
+                        <p class="font-semibold text-slate-900 dark:text-white">
+                            {{
+                                paymentMonitoringLabel(
+                                    selectedMonitoringCampaign,
+                                )
+                            }}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-500">Last checked</p>
+                        <p class="font-semibold text-slate-900 dark:text-white">
+                            {{
+                                selectedMonitoringCampaign.payment_monitoring
+                                    .last_checked_at
+                                    ? updatedRelativeTime(
+                                          selectedMonitoringCampaign
+                                              .payment_monitoring
+                                              .last_checked_at,
+                                      )
+                                    : 'Not yet'
+                            }}
+                        </p>
+                    </div>
+                </div>
+
+                <p
+                    v-if="
+                        selectedMonitoringCampaign.payment_monitoring
+                            .control_mode === 'paused' &&
+                        !canStartPaymentMonitoring(selectedMonitoringCampaign)
+                    "
+                    class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+                    data-testid="campaign-payment-monitoring-unavailable"
+                >
+                    Background payment checks are not ready. The QR can still be
+                    displayed, but new payments will not appear automatically.
+                </p>
+                <p
+                    v-else
+                    class="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-300"
+                >
+                    {{
+                        selectedMonitoringCampaign.payment_monitoring
+                            .control_mode === 'live'
+                            ? 'Pause automatic checks for this QR. Existing payment evidence remains unchanged.'
+                            : 'Start bounded automatic checks for this QR only.'
+                    }}
+                </p>
+
+                <p
+                    v-if="paymentMonitoringErrors.payment_monitoring"
+                    class="mt-3 text-sm font-medium text-rose-700 dark:text-rose-300"
+                >
+                    {{ paymentMonitoringErrors.payment_monitoring }}
+                </p>
+
+                <div class="mt-5 grid grid-cols-2 gap-2">
+                    <button
+                        type="button"
+                        class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:border-slate-800 dark:text-slate-200"
+                        @click="closePaymentMonitoring"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="button"
+                        class="rounded-xl bg-cyan-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-50"
+                        :disabled="
+                            paymentMonitoringForm.processing ||
+                            (selectedMonitoringCampaign.payment_monitoring
+                                .control_mode === 'paused' &&
+                                !canStartPaymentMonitoring(
+                                    selectedMonitoringCampaign,
+                                ))
+                        "
+                        data-testid="campaign-payment-monitoring-submit"
+                        @click="updatePaymentMonitoring"
+                    >
+                        {{
+                            selectedMonitoringCampaign.payment_monitoring
+                                .control_mode === 'live'
+                                ? 'Pause Monitoring'
+                                : 'Start Monitoring'
+                        }}
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <div
             v-if="selectedPaymentQrStamp?.payment_qr"
             class="fixed inset-0 z-[110] flex items-end justify-center bg-slate-950/70 p-3 backdrop-blur-sm sm:items-center"
             role="presentation"
@@ -2179,8 +2522,33 @@ const updatedRelativeTime = (value: string | null): string =>
                         <X class="size-4" aria-hidden="true" />
                     </button>
                 </div>
+                <div
+                    v-if="selectedPaymentQrStamp.payment_monitoring"
+                    class="mb-3 rounded-2xl border p-3 text-sm"
+                    :class="
+                        selectedPaymentQrStamp.payment_monitoring.status ===
+                        'live'
+                            ? 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200'
+                            : 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200'
+                    "
+                    data-testid="campaign-payment-qr-monitoring-readiness"
+                >
+                    <strong>
+                        Payment monitoring:
+                        {{ paymentMonitoringLabel(selectedPaymentQrStamp) }}
+                    </strong>
+                    <span
+                        v-if="
+                            selectedPaymentQrStamp.payment_monitoring.status !==
+                            'live'
+                        "
+                    >
+                        · This QR is displayable, but new payments will not
+                        appear automatically.
+                    </span>
+                </div>
                 <CockpitCampaignPaymentQrStamp
-                    :campaign="selectedPaymentQrStamp"
+                    :campaign="{ ...selectedPaymentQrStamp, payment_qr: selectedPaymentQrStamp.payment_qr }"
                 />
             </section>
         </div>

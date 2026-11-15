@@ -32,7 +32,7 @@ type CampaignIntake = {
     mapping: Record<string, string>;
     suggestion: {
         name: string;
-        profile: 'payroll' | 'assistance';
+        profile: 'payroll' | 'assistance' | 'gaming';
         profile_reason: string;
         fulfillment_mode: 'pay_code_distribution' | 'direct_bank_transfer';
         fulfillment_reason: string;
@@ -70,6 +70,7 @@ const reviewForm = useForm({
 const selectedRows = [...props.intake.valid_source_rows];
 const conversionForm = useForm({
     name: props.intake.suggestion.name,
+    event_reference: '',
     profile: props.intake.suggestion.profile,
     fulfillment_mode: props.intake.suggestion.fulfillment_mode,
     included_source_rows: selectedRows,
@@ -144,9 +145,15 @@ function selectedRowLabel(): string {
                         <input v-model="conversionForm.name" maxlength="160" class="rounded-lg border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50" />
                     </label>
 
+                    <label v-if="conversionForm.profile === 'gaming'" class="grid gap-1.5 text-sm font-medium text-slate-700 dark:text-slate-200">
+                        Game or event reference
+                        <input v-model="conversionForm.event_reference" maxlength="191" required class="rounded-lg border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50" />
+                        <span v-if="conversionForm.errors.event_reference" class="text-xs text-rose-600 dark:text-rose-300">{{ conversionForm.errors.event_reference }}</span>
+                    </label>
+
                     <fieldset class="grid gap-2">
                         <legend class="text-sm font-medium text-slate-700 dark:text-slate-200">Purpose</legend>
-                        <label v-for="option in ['payroll', 'assistance']" :key="option" class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm capitalize" :class="conversionForm.profile === option ? 'border-slate-950 bg-slate-50 dark:border-slate-100 dark:bg-slate-800' : 'border-slate-200 dark:border-slate-700'">
+                        <label v-for="option in ['payroll', 'assistance', 'gaming']" :key="option" class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm capitalize" :class="conversionForm.profile === option ? 'border-slate-950 bg-slate-50 dark:border-slate-100 dark:bg-slate-800' : 'border-slate-200 dark:border-slate-700'">
                             <input v-model="conversionForm.profile" type="radio" :value="option" class="size-4" />
                             {{ option }}
                         </label>
@@ -227,7 +234,7 @@ function selectedRowLabel(): string {
                         <input v-model="conversionForm.exclude_invalid_rows" type="checkbox" class="mt-0.5 size-4 rounded" />
                         <span>Leave {{ intake.invalid_count }} invalid {{ intake.invalid_count === 1 ? 'row' : 'rows' }} out of this Campaign. The review remains auditable.</span>
                     </label>
-                    <p v-if="conversionForm.errors.exclude_invalid_rows || conversionForm.errors.intake" class="mt-2 text-sm text-rose-600">{{ conversionForm.errors.exclude_invalid_rows || conversionForm.errors.intake }}</p>
+                    <p v-if="conversionForm.errors.exclude_invalid_rows || (conversionForm.errors as Record<string, string | undefined>).intake" class="mt-2 text-sm text-rose-600">{{ conversionForm.errors.exclude_invalid_rows || (conversionForm.errors as Record<string, string | undefined>).intake }}</p>
 
                     <div class="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                         <button type="button" class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-600 dark:border-rose-900 dark:text-rose-300" @click="discardReview">
