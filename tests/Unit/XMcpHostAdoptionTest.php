@@ -15,13 +15,13 @@ it('consumes x-mcp as an external tagged package with deployment guidance', func
 
     expect($root.'/packages/x-mcp')->not->toBeDirectory();
     expect($composer['require']['3neti/x-mcp'])
-        ->toBe('^0.2.0')
+        ->toBe('^0.3.2')
         ->not->toContain('dev-');
-    expect(InstalledVersions::getPrettyVersion('3neti/x-mcp'))->toBe('v0.2.0');
+    expect(InstalledVersions::getPrettyVersion('3neti/x-mcp'))->toBe('v0.3.2');
     expect($environmentExample)
         ->toContain('XMCP_ENABLED=false')
         ->toContain('XMCP_API_BASE_URL=https://example.test/api/partner/v1')
-        ->toContain('XMCP_EXPECTED_PARTNER_CONTRACT_VERSION=1.0.0')
+        ->toContain('XMCP_EXPECTED_PARTNER_CONTRACT_VERSION=1.5.0')
         ->toContain('XCHANGE_PARTNER_API_ENABLED=false');
 });
 

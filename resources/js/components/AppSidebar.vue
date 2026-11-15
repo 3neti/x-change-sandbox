@@ -15,14 +15,12 @@ import {
     UsersRound,
 } from 'lucide-vue-next';
 import { computed } from 'vue';
+import { openCockpitClaimEntryLauncher } from '@/cockpit/claimEntryLauncher';
+import CockpitWorkspaceNavigationItem from '@/cockpit/components/CockpitWorkspaceNavigationItem.vue';
+import { cockpitWorkspaceGuides } from '@/cockpit/workspaceNavigationGuides';
+import type { CockpitWorkspaceGuide } from '@/cockpit/workspaceNavigationGuides';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import NavUser from '@/components/NavUser.vue';
-import CockpitWorkspaceNavigationItem from '@/cockpit/components/CockpitWorkspaceNavigationItem.vue';
-import { openCockpitClaimEntryLauncher } from '@/cockpit/claimEntryLauncher';
-import {
-    cockpitWorkspaceGuides,
-    type CockpitWorkspaceGuide,
-} from '@/cockpit/workspaceNavigationGuides';
 import {
     Sidebar,
     SidebarContent,
@@ -40,17 +38,18 @@ import {
     documentation,
     quickGenerate,
 } from '@/routes/x-change/cockpit';
+import accountLifecycle from '@/routes/x-change/cockpit/account-lifecycle';
 import accounts from '@/routes/x-change/cockpit/accounts';
-import { show as developerAccess } from '@/routes/x-change/developer-access';
 import apiPartners from '@/routes/x-change/cockpit/api-partners';
-import ownerApiClients from '@/routes/x-change/cockpit/owner-api-clients';
 import campaigns from '@/routes/x-change/cockpit/campaigns';
 import commercial from '@/routes/x-change/cockpit/commercial';
 import diagnostics from '@/routes/x-change/cockpit/diagnostics';
 import funding from '@/routes/x-change/cockpit/funding';
+import ownerApiClients from '@/routes/x-change/cockpit/owner-api-clients';
 import payCodes from '@/routes/x-change/cockpit/pay-codes';
 import provisioning from '@/routes/x-change/cockpit/provisioning';
 import treasuryAccountGrants from '@/routes/x-change/cockpit/treasury/account-grants';
+import { show as developerAccess } from '@/routes/x-change/developer-access';
 import type { NavItem } from '@/types';
 
 // X-CHANGE HOST SHELL · package-owned navigation, account controls remain host-owned.
@@ -170,6 +169,7 @@ type XChangeSharedProps = {
             commercial_controls_visible?: boolean;
             provisioning_controls_visible?: boolean;
             api_partner_controls_visible?: boolean;
+            account_lifecycle_visible?: boolean;
             treasury_operations_visible?: boolean;
         };
     };
@@ -177,6 +177,16 @@ type XChangeSharedProps = {
 
 const page = usePage<XChangeSharedProps>();
 const systemItems = computed<XChangeNavigationItem[]>(() => [
+    ...(page.props.xchange?.navigation?.account_lifecycle_visible
+        ? [
+              {
+                  title: 'Account lifecycle',
+                  description: 'Suspend or reactivate an account',
+                  href: accountLifecycle.index(),
+                  icon: ShieldCheck,
+              },
+          ]
+        : []),
     ...(page.props.xchange?.navigation?.provisioning_controls_visible
         ? [
               {
