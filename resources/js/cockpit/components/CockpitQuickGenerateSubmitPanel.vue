@@ -7,6 +7,8 @@ Do not edit this published host copy directly.
 Changes will be overwritten by php artisan x-change:publish --scope=build --force.
 -->
 <script setup lang="ts">
+import CockpitIssuanceDiagnosticController from '@/actions/LBHurtado/XChange/Http/Controllers/Web/Cockpit/CockpitIssuanceDiagnosticController';
+import { issuanceFailure, riderUrlError, urlEvidence, type IssuanceFieldError, type RiderUrlPolicy } from '../issuanceErrors';
 import type { PayCodeStampPreviewState } from "../payCodeStampPreview";
 import CockpitStampDesigner from './CockpitStampDesigner.vue';
 import CockpitDocumentEditor from './CockpitDocumentEditor.vue';
@@ -831,6 +833,9 @@ const timeLimitMinutes = ref("10");
 const timeTrackDuration = ref(false);
 const riderUrl = ref("");
 const riderEditorOpen = ref(false);
+const riderEditorElement = ref<InstanceType<typeof CockpitRiderEditor> | null>(null);
+const riderEditorObservedUrl = ref<string | null>(null);
+watch(riderEditorOpen, (open) => { if (open) riderEditorObservedUrl.value = riderUrl.value; });
 const riderUrlPreset = ref("");
 const riderRedirectTimeout = ref("");
 const riderSplashHeadline = ref("");
@@ -1171,14 +1176,183 @@ const templateSaveError = ref("");
 const saveTemplateMode = ref<"create" | "update">("create");
 const activeSavedTemplate = ref<CockpitSavedPayCodeTemplate | null>(null);
 const applyingStartingPoint = ref(false);
-const submissionErrors = ref<Array<{ field: string; message: string }>>([]);
+const submissionErrors = ref<IssuanceFieldError[]>([]);
+const submissionReference = ref("");
+const diagnosticReportState = ref<"idle" | "saving" | "saved" | "unavailable">(
+  "idle",
+);
+const diagnosticCopied = ref(false);
+const riderLinkError = computed(
+  () =>
+    riderUrlError(
+      riderUrl.value,
+      stampPage.props.rider_url_policy as RiderUrlPolicy | undefined,
+    ) ??
+    submissionErrors.value.find((error) => error.path === "rider.url")
+      ?.message ??
+    null,
+);
+function fieldError(path: string): string | null {
+  return (
+    submissionErrors.value.find((error) => error.path === path)?.message ?? null
+  );
+}
+watch(
+  [amount, purpose, feedbackMobile, feedbackEmail, feedbackWebhook],
+  (current, previous) => {
+    const paths = [
+      "cash.amount",
+      "rider.message",
+      "feedback.mobile",
+      "feedback.email",
+      "feedback.webhook",
+    ];
+    const changed = paths.filter(
+      (_, index) => current[index] !== previous[index],
+    );
+    submissionErrors.value = submissionErrors.value.filter(
+      (error) => !changed.includes(error.path ?? ""),
+    );
+  },
+);
+watch(riderUrl, () => {
+  submissionErrors.value = submissionErrors.value.filter(
+    (error) => error.path !== "rider.url",
+  );
+});
+async function focusIssuanceField(path?: string): Promise<void> {
+  if (path === "rider.url") {
+    riderEditorOpen.value = true;
+    await nextTick();
+    await riderEditorElement.value?.focusUrl();
+    return;
+  }
+  if (path?.startsWith("feedback.")) {
+    orderOptionsOpen.value = true;
+    await nextTick();
+    document
+      .querySelector<HTMLElement>(
+        '[data-testid="cockpit-quick-generate-primary-feedback"] input',
+      )
+      ?.focus();
+    return;
+  }
+  const selectors: Record<string, string> = {
+    "cash.amount": '[data-testid="cockpit-quick-generate-primary-amount"]',
+    "rider.message": "#cockpit-primary-purpose",
+    "feedback.mobile":
+      '[data-testid="cockpit-quick-generate-primary-feedback"] input',
+    "feedback.email": '[data-testid="cockpit-quick-generate-feedback-email"]',
+  };
+  const target = path ? selectors[path] : null;
+  if (target) document.querySelector<HTMLElement>(target)?.focus();
+}
+async function copyDiagnosticReference(): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(submissionReference.value);
+    diagnosticCopied.value = true;
+  } catch {
+    diagnosticCopied.value = false;
+  }
+}
+function newSubmissionReference(): string {
+  const uuid = globalThis.crypto?.randomUUID?.();
+  return uuid && /^[a-f0-9-]{36}$/i.test(uuid)
+    ? uuid
+    : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
+        const value = Math.floor(Math.random() * 16);
+        return (char === "x" ? value : (value & 3) | 8).toString(16);
+      });
+}
+async function reportIssuanceFailure(
+  reference: string,
+  payload: Record<string, unknown>,
+  response?: Response,
+  clientValidation = false,
+): Promise<void> {
+  if (props.publicMode) {
+    diagnosticReportState.value = "unavailable";
+    return;
+  }
+  diagnosticReportState.value = "saving";
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 3000);
+  try {
+    const route = CockpitIssuanceDiagnosticController();
+    const rawType =
+      response?.headers?.get("content-type")?.split(";")[0].trim() ?? null;
+    const rawId =
+      response?.headers?.get("cf-ray") ??
+      response?.headers?.get("x-request-id") ??
+      null;
+    const requestId =
+      rawId && /^[a-zA-Z0-9_.:-]{1,128}$/.test(rawId) ? rawId : null;
+    const observed = riderEditorObservedUrl.value ?? riderUrl.value;
+    const preview = String(riderSummary.value.url ?? "");
+    const submitted = String(
+      (payload.rider as Record<string, unknown> | undefined)?.url ?? "",
+    );
+    const errorFields = submissionErrors.value
+      .map((error) => error.path)
+      .filter((path): path is string => Boolean(path))
+      .slice(0, 20);
+    const [editorEvidence, previewEvidence, submittedEvidence] =
+      await Promise.all([
+        urlEvidence(observed),
+        urlEvidence(preview),
+        urlEvidence(submitted),
+      ]);
+    const evidence = {
+      editor: editorEvidence,
+      preview: previewEvidence,
+      submitted: submittedEvidence,
+    };
+    const result = await fetch(route.url, {
+      method: route.method.toUpperCase(),
+      credentials: "same-origin",
+      signal: controller.signal,
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        ...csrfHeader(),
+      },
+      body: JSON.stringify({
+        reference,
+        failure_kind: clientValidation
+          ? "client_validation"
+          : response
+            ? "http"
+            : "network",
+        error_fields: errorFields,
+        http_status: response?.status ?? 0,
+        content_type:
+          rawType === null
+            ? null
+            : ["application/json", "text/html", "text/plain"].includes(rawType)
+              ? rawType
+              : "other",
+        request_id: requestId,
+        url_evidence: evidence,
+      }),
+    });
+    const body = await safeJson(result);
+    if (submissionReference.value === reference)
+      diagnosticReportState.value =
+        result.ok && body.recorded === true ? "saved" : "unavailable";
+  } catch {
+    if (submissionReference.value === reference)
+      diagnosticReportState.value = "unavailable";
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 const submissionErrorHeading = ref("Fix these fields before issuing");
 const publicIssuancePaused = ref(false);
 
 const collectionDestinationError = computed<string | null>(() => {
   return (
     submissionErrors.value.find(
-      (error) => error.field === "metadata.collection_wallet_id",
+      (error) => error.path === "metadata.collection_wallet_id",
     )?.message ?? null
   );
 });
@@ -1635,7 +1809,7 @@ function applySavedTemplate(template: CockpitSavedPayCodeTemplate): void {
   applyingStartingPoint.value = false;
   amount.value = "";
   purpose.value = "";
-  applyInstructionBlueprint(template.instructions, true);
+  applyInstructionBlueprint(template.instructions, true, true);
   startingPoint.value = "template";
   activeSavedTemplate.value = template;
   templatePickerOpen.value = false;
@@ -1651,7 +1825,6 @@ function reusableTemplateInstructions(): Record<string, unknown> {
   >;
   const cash = instructionRecord(instructions, ["cash"]);
   const cashValidation = instructionRecord(cash, ["validation"]);
-  const feedback = instructionRecord(instructions, ["feedback"]);
   const metadata = instructionRecord(instructions, ["metadata"]);
   const cockpit = instructionRecord(instructionRecord(metadata, ["custom"]), [
     "cockpit",
@@ -1659,9 +1832,6 @@ function reusableTemplateInstructions(): Record<string, unknown> {
 
   delete cashValidation.secret;
   delete cashValidation.mobile;
-  delete feedback.email;
-  delete feedback.mobile;
-  delete feedback.webhook;
   delete cockpit.recipient_reference;
   delete cockpit.campaign_context;
   delete cockpit.saved_template;
@@ -1841,6 +2011,7 @@ async function issueReviewedOrder(): Promise<void> {
 function applyInstructionBlueprint(
   instructions: Record<string, unknown>,
   clearRecipient: boolean,
+  preserveFeedback = false,
 ): void {
   interpretedPrompt.value = instructionString(instructions, [
     "metadata",
@@ -2310,12 +2481,14 @@ function applyInstructionBlueprint(
   if (clearRecipient) {
     recipientReference.value = "";
     validationSecret.value = "";
-    feedbackEmail.value = "";
-    feedbackMobile.value = "";
-    feedbackWebhook.value = "";
-    feedbackEmailEnabled.value = false;
-    feedbackMobileEnabled.value = false;
-    feedbackWebhookEnabled.value = false;
+    if (!preserveFeedback) {
+      feedbackEmail.value = "";
+      feedbackMobile.value = "";
+      feedbackWebhook.value = "";
+      feedbackEmailEnabled.value = false;
+      feedbackMobileEnabled.value = false;
+      feedbackWebhookEnabled.value = false;
+    }
     startsAt.value = "";
     expiresAt.value = "";
   }
@@ -2504,6 +2677,7 @@ const normalizedFeedbackMobile = computed<string>(() =>
 );
 
 const feedbackMobileError = computed<string | null>(() => {
+  if (fieldError("feedback.mobile")) return fieldError("feedback.mobile");
   const mobile = feedbackMobile.value.trim();
 
   if (mobile === "") {
@@ -3364,6 +3538,7 @@ const amountFieldHelp = computed<string>(() =>
     : "Value the recipient can claim. Select the field to open the calculator.",
 );
 const amountFieldError = computed<string | null>(() => {
+  if (fieldError("cash.amount")) return fieldError("cash.amount");
   if (!isPayableVoucher.value) {
     return null;
   }
@@ -5420,6 +5595,17 @@ async function submit(): Promise<void> {
     return;
   }
 
+  if (riderLinkError.value !== null) {
+    submissionErrors.value = [{ path: 'rider.url', field: 'Rider → Link', message: riderLinkError.value }];
+    submissionErrorHeading.value = 'Fix these fields before issuing';
+    submissionReference.value = newSubmissionReference();
+    void reportIssuanceFailure(submissionReference.value, buildIssuancePayload(), undefined, true);
+    await focusIssuanceField('rider.url');
+    return;
+  }
+  submissionReference.value = newSubmissionReference();
+  diagnosticReportState.value = 'idle';
+  diagnosticCopied.value = false;
   processing.value = true;
   lastStatus.value = "submitting";
   lastMessage.value =
@@ -5444,6 +5630,7 @@ async function submit(): Promise<void> {
         Accept: "application/json",
         "Content-Type": "application/json",
         "Idempotency-Key": idempotencyKey,
+        "X-XChange-Submission-Reference": submissionReference.value,
         "X-Requested-With": "XMLHttpRequest",
         ...(props.publicMode && props.turnstile?.enabled
           ? { "X-Turnstile-Token": props.turnstileToken ?? "" }
@@ -5455,8 +5642,9 @@ async function submit(): Promise<void> {
 
     const body = await safeJson(response);
 
-    if (!response.ok) {
-      const normalizedErrors = normalizeSubmissionErrors(body);
+    if (!response.ok || (response.redirected && response.url?.includes('/login')) || (response.ok && !body.schema && !body.result && !body.status)) {
+      const failure = issuanceFailure(response.redirected && response.url?.includes('/login') ? 401 : response.status ?? 422, body);
+      const normalizedErrors = failure.errors;
       const issuanceIsBusy =
         stringValue(body.code) === "PAY_CODE_ISSUANCE_BUSY";
       const issuanceIsPaused =
@@ -5478,19 +5666,15 @@ async function submit(): Promise<void> {
             : (stringValue(body.message) ?? "The Pay Code could not be issued.");
         submissionErrorHeading.value = issuanceIsBusy
           ? "Issuance is temporarily busy"
-          : "Fix these fields before issuing";
+          : failure.heading;
       }
-      submissionErrors.value =
-        normalizedErrors.length > 0
-          ? normalizedErrors
-          : [
-              {
-                field: "Submission",
-                message:
-                  stringValue(body.message) ??
-                  "The Pay Code could not be issued.",
-              },
-            ];
+      submissionErrors.value = issuanceIsPaused || issuanceIsBusy
+        ? [{ field: "Submission", message: lastMessage.value }]
+        : normalizedErrors;
+      if (!issuanceIsPaused && !issuanceIsBusy && !normalizedErrors.some(error => error.path)) {
+        lastMessage.value = failure.errors[0]?.message ?? lastMessage.value;
+      }
+      void reportIssuanceFailure(submissionReference.value, payload, response);
       emit("submitError", body);
 
       return;
@@ -5524,24 +5708,14 @@ async function submit(): Promise<void> {
     lastResponse.value = body;
     issuedPayCodeDialogOpen.value = resultCode.value !== null;
     emit("submitSuccess", body);
-  } catch (error) {
-    const body = {
-      message:
-        error instanceof Error
-          ? error.message
-          : "The Pay Code could not be issued.",
-    };
-
-    lastStatus.value = "failed";
-    lastMessage.value = body.message;
-    submissionErrorHeading.value = "Connection issue";
-    submissionErrors.value = [
-      {
-        field: "Network",
-        message: body.message,
-      },
-    ];
-    emit("submitError", body);
+  } catch {
+    const failure = issuanceFailure(0, {});
+    lastStatus.value = 'failed';
+    lastMessage.value = failure.errors[0].message;
+    submissionErrorHeading.value = failure.heading;
+    submissionErrors.value = failure.errors;
+    void reportIssuanceFailure(submissionReference.value, payload);
+    emit('submitError', { message: lastMessage.value });
   } finally {
     processing.value = false;
     if (props.publicMode && props.turnstile?.enabled) {
@@ -5749,59 +5923,6 @@ function selectClaimPreviewSimulationState(state: string): void {
 
   previewSimulationState.value = state;
   void generateClaimPreview(true);
-}
-
-function normalizeSubmissionErrors(
-  body: Record<string, unknown>,
-): Array<{ field: string; message: string }> {
-  const errors = dataGet(body, ["errors"]);
-
-  if (typeof errors !== "object" || errors === null) {
-    const message = stringValue(body.message);
-
-    return message === null
-      ? []
-      : [
-          {
-            field: "Submission",
-            message,
-          },
-        ];
-  }
-
-  return Object.entries(errors as Record<string, unknown>).flatMap(
-    ([field, messages]) => {
-      if (Array.isArray(messages)) {
-        return messages
-          .map((message) => stringValue(message))
-          .filter((message): message is string => message !== null)
-          .map((message) => ({
-            field: humanizeFieldPath(field),
-            message,
-          }));
-      }
-
-      const message = stringValue(messages);
-
-      return message === null
-        ? []
-        : [
-            {
-              field: humanizeFieldPath(field),
-              message,
-            },
-          ];
-    },
-  );
-}
-
-function humanizeFieldPath(field: string): string {
-  return field
-    .replace(/\.\d+\./g, ".")
-    .replace(/[_\.]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function refreshReadModel(): void {
@@ -7027,6 +7148,7 @@ watch(stampPreviewProjection, (value) => emit("stampPreview", value), { immediat
 
 <template>
   <form
+    novalidate
     class="-mx-4 border-y border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-sky-50 p-4 shadow-none md:mx-0 md:rounded-3xl md:border md:shadow-sm dark:border-emerald-900/70 dark:from-emerald-950/40 dark:via-slate-950 dark:to-sky-950/30"
     data-testid="cockpit-quick-generate-submit-panel"
     @submit.prevent="submit"
@@ -7555,10 +7677,13 @@ watch(stampPreviewProjection, (value) => emit("stampPreview", value), { immediat
                 type="text"
                 class="h-12 w-full rounded-xl border border-slate-200 bg-white pl-3 pr-12 text-sm text-slate-950 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50"
                 data-testid="cockpit-quick-generate-primary-purpose"
+                :aria-invalid="Boolean(fieldError('rider.message'))"
                 :disabled="processing"
               />
               <button type="button" class="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-xl text-sky-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 disabled:opacity-50 dark:text-sky-300" aria-label="Edit rider" :disabled="processing" data-testid="open-rider-editor" @click="riderEditorOpen = true"><Pencil class="size-4" aria-hidden="true" /></button>
             </div>
+            <p v-if="fieldError('rider.message')" role="alert" class="text-xs text-rose-700">{{ fieldError('rider.message') }}</p>
+            <button v-if="riderLinkError" type="button" class="text-left text-xs text-rose-700 underline" @click="focusIssuanceField('rider.url')" data-testid="rider-link-correction">Rider → Link: {{ riderLinkError }}</button>
           </div>
           <section
             v-if="metadataFlowType.trim() === 'collectible' && !isPayableVoucher && !isSettlementVoucher"
@@ -7783,6 +7908,9 @@ watch(stampPreviewProjection, (value) => emit("stampPreview", value), { immediat
                 :disabled="processing"
                 @validation="feedbackTokenErrors = $event"
               />
+              <p v-for="error in submissionErrors.filter(item => item.path?.startsWith('feedback.'))" :key="error.path" class="text-xs text-rose-600 dark:text-rose-300" role="alert" data-testid="feedback-server-error">
+                {{ error.field }}: {{ error.message }}
+              </p>
             </div>
 
             <fieldset v-if="!publicMode && (availableNotificationEvents.length > 0 || eventSubscriptions.length > 0)" class="grid gap-2 rounded-xl border border-slate-200 p-3 dark:border-slate-700" data-testid="v2-event-subscriptions">
@@ -11530,6 +11658,13 @@ watch(stampPreviewProjection, (value) => emit("stampPreview", value), { immediat
       data-testid="cockpit-quick-generate-submission-errors"
     >
       <p class="font-semibold">{{ submissionErrorHeading }}</p>
+      <div v-if="submissionReference" class="mt-2" data-testid="issuance-diagnostic-reference">
+        <span>Reference: {{ submissionReference }}</span>
+        <button type="button" class="ml-2 underline" @click="copyDiagnosticReference">{{ diagnosticCopied ? 'Copied' : 'Copy reference' }}</button>
+        <p v-if="diagnosticReportState === 'saved'">Diagnostic report saved.</p>
+        <p v-else-if="diagnosticReportState === 'saving'">Saving diagnostic report…</p>
+        <p v-else-if="diagnosticReportState === 'unavailable'">The diagnostic report could not be saved. Keep this reference for support.</p>
+      </div>
       <ul class="mt-2 space-y-1">
         <li
           v-for="error in submissionErrors"
@@ -11537,7 +11672,8 @@ watch(stampPreviewProjection, (value) => emit("stampPreview", value), { immediat
           class="leading-5"
           data-testid="cockpit-quick-generate-submission-error"
         >
-          <span class="font-semibold">{{ error.field }}:</span>
+          <button v-if="error.path" type="button" class="font-semibold underline" @click="focusIssuanceField(error.path)">{{ error.field }}:</button>
+          <span v-else class="font-semibold">{{ error.field }}:</span>
           {{ error.message }}
         </li>
       </ul>
@@ -12299,7 +12435,7 @@ watch(stampPreviewProjection, (value) => emit("stampPreview", value), { immediat
         <DialogTitle>Rider</DialogTitle>
         <DialogDescription>Customize the message, destination and introduction for this Pay Code.</DialogDescription>
         <div class="min-h-0 flex-1 overflow-y-auto">
-          <CockpitRiderEditor v-model:message="purpose" v-model:message-format="riderMessageFormat" v-model:url="riderUrl" v-model:redirect-timeout="riderRedirectTimeout" v-model:splash="riderSplash" v-model:splash-format="riderSplashFormat" v-model:splash-timeout="riderSplashTimeout" v-model:splash-headline="riderSplashHeadline" v-model:splash-cta-text="riderSplashCtaText" :disabled="processing" :url-preview-document="riderUrlPreviewDocument" :splash-preview-document="riderSplashPreviewDocument" :url-preview-message="riderUrlArtworkMessage ?? undefined" :url-preview-loading="riderUrlArtworkResolving" />
+          <CockpitRiderEditor ref="riderEditorElement" :url-error="riderLinkError" @url-observed="riderEditorObservedUrl = $event" v-model:message="purpose" v-model:message-format="riderMessageFormat" v-model:url="riderUrl" v-model:redirect-timeout="riderRedirectTimeout" v-model:splash="riderSplash" v-model:splash-format="riderSplashFormat" v-model:splash-timeout="riderSplashTimeout" v-model:splash-headline="riderSplashHeadline" v-model:splash-cta-text="riderSplashCtaText" :disabled="processing" :url-preview-document="riderUrlPreviewDocument" :splash-preview-document="riderSplashPreviewDocument" :url-preview-message="riderUrlArtworkMessage ?? undefined" :url-preview-loading="riderUrlArtworkResolving" />
         </div>
         <button type="button" class="shrink-0 rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white dark:bg-slate-100 dark:text-slate-900" @click="riderEditorOpen = false">Done</button>
       </DialogContent>
