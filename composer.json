@@ -48,14 +48,14 @@
     ],
     "require": {
         "php": "^8.3",
-        "3neti/emi-core": "2.3.0",
-        "3neti/emi-netbank": "2.6.0",
+        "3neti/emi-core": "2.4.0",
+        "3neti/emi-netbank": "2.7.0",
         "3neti/emi-paynamics": "2.2.0",
         "3neti/hyperverge": "2.0.0-beta.2",
         "3neti/onboarding": "^1.0",
         "3neti/report-registry": "v1.1.3",
         "3neti/wallet": "^2.0@beta",
-        "3neti/x-change": "v1.12.1",
+        "3neti/x-change": "v1.12.5",
         "3neti/x-deploy": "^1.0",
         "3neti/x-mcp": "^0.3.2",
         "inertiajs/inertia-laravel": "^3.0",
@@ -131,8 +131,7 @@
             "@php artisan x-change:publish --scope=build --force --verify --no-interaction"
         ],
         "post-update-cmd": [
-            "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
-            "@php artisan boost:update --ansi"
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""

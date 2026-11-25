@@ -5,7 +5,7 @@ application:
   environment: testing
 package:
   name: 3neti/x-change
-  locked_version: v1.0.0-beta.31
+  locked_version: v1.12.5
 deployment:
   target: laravel-cloud
   profile: netbank
