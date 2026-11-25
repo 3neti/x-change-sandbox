@@ -8,7 +8,8 @@ Changes will be overwritten by php artisan x-change:publish --scope=build --forc
 -->
 <script setup lang="ts">
 import { Eye, EyeOff } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { inject, ref } from 'vue';
+import { balanceVisibilityKey } from '../balanceVisibility';
 import CockpitBalanceHud from './CockpitBalanceHud.vue';
 import ExperienceThemePicker from '../../components/x-change/ExperienceThemePicker.vue';
 import type { CockpitBalanceMetric } from '../types';
@@ -47,7 +48,7 @@ withDefaults(
     },
 );
 
-const valuesVisible = ref(false);
+const valuesVisible = inject(balanceVisibilityKey, ref(false));
 
 function toggleValueVisibility(): void {
     valuesVisible.value = !valuesVisible.value;

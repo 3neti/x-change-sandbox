@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8d3d89b2dbf1ffbd059f91fbfa1cc1d0",
+    "content-hash": "46fff23218e29f7ee89584d434a129b7",
     "packages": [
         {
             "name": "3neti/cash",
@@ -127,16 +127,16 @@
         },
         {
             "name": "3neti/emi-core",
-            "version": "v2.3.0",
+            "version": "v2.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/emi-core.git",
-                "reference": "97c7d3837b01406e2e9eaaa462da34a646afba63"
+                "reference": "ff7572d169496df6dcffd8e61375fb0fa6b924fc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/emi-core/zipball/97c7d3837b01406e2e9eaaa462da34a646afba63",
-                "reference": "97c7d3837b01406e2e9eaaa462da34a646afba63",
+                "url": "https://api.github.com/repos/3neti/emi-core/zipball/ff7572d169496df6dcffd8e61375fb0fa6b924fc",
+                "reference": "ff7572d169496df6dcffd8e61375fb0fa6b924fc",
                 "shasum": ""
             },
             "require": {
@@ -176,26 +176,26 @@
             "description": "Provider-agnostic EMI domain: contracts, enums, models, DTOs, events",
             "support": {
                 "issues": "https://github.com/3neti/emi-core/issues",
-                "source": "https://github.com/3neti/emi-core/tree/v2.3.0"
+                "source": "https://github.com/3neti/emi-core/tree/v2.4.0"
             },
-            "time": "2026-11-07T05:17:52+00:00"
+            "time": "2026-11-24T07:51:32+00:00"
         },
         {
             "name": "3neti/emi-netbank",
-            "version": "v2.6.0",
+            "version": "v2.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/emi-netbank.git",
-                "reference": "d72bfa7dd1652dc80ba94f25628072ec77656534"
+                "reference": "959d058f1bda915bde7cb492fdb802d82a28750a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/3neti/emi-netbank/zipball/d72bfa7dd1652dc80ba94f25628072ec77656534",
-                "reference": "d72bfa7dd1652dc80ba94f25628072ec77656534",
+                "url": "https://api.github.com/repos/3neti/emi-netbank/zipball/959d058f1bda915bde7cb492fdb802d82a28750a",
+                "reference": "959d058f1bda915bde7cb492fdb802d82a28750a",
                 "shasum": ""
             },
             "require": {
-                "3neti/emi-core": "^2.3.0",
+                "3neti/emi-core": "^2.4.0",
                 "3neti/laravel-model-channel": "^1.1",
                 "3neti/merchant": "^1.2",
                 "3neti/money-issuer": "^1.1",
@@ -244,9 +244,9 @@
             "description": "NetBank EMI provider adapter for emi-core",
             "support": {
                 "issues": "https://github.com/3neti/emi-netbank/issues",
-                "source": "https://github.com/3neti/emi-netbank/tree/v2.6.0"
+                "source": "https://github.com/3neti/emi-netbank/tree/v2.7.0"
             },
-            "time": "2026-11-07T05:23:59+00:00"
+            "time": "2026-11-24T09:04:44+00:00"
         },
         {
             "name": "3neti/emi-paynamics",
@@ -1735,17 +1735,17 @@
         },
         {
             "name": "3neti/x-change",
-            "version": "v1.12.4",
+            "version": "v1.12.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/3neti/x-change.git",
-                "reference": "1cd440dca040f3a49ce9ec9fdca57d51cfaa72db"
+                "reference": "a4fa0f154ad9e83aaca718e437616c130675d66f"
             },
             "require": {
                 "3neti/cash": "^1.3",
                 "3neti/contact": "^1.1",
-                "3neti/emi-core": "^2.3.0",
-                "3neti/emi-netbank": "^2.6.0",
+                "3neti/emi-core": "^2.4.0",
+                "3neti/emi-netbank": "^2.7.0",
                 "3neti/emi-paynamics": "^2.2.0",
                 "3neti/form-flow": "^1.11.0",
                 "3neti/form-handler-document": "^1.0.1",
@@ -1856,7 +1856,7 @@
                 }
             ],
             "description": "X-Change API-first financial product platform for onboarding, wallet, pricing, Pay Code issuance, and redemption workflows.",
-            "time": "2026-11-23T05:17:15+00:00"
+            "time": "2026-11-25T23:17:20+00:00"
         },
         {
             "name": "3neti/x-commerce",
@@ -5028,16 +5028,16 @@
         },
         {
             "name": "laravel/framework",
-            "version": "v13.38.0",
+            "version": "v13.44.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/framework.git",
-                "reference": "c42f9abd4a3d2f9a3cd6be109255ddce8092ceb8"
+                "reference": "8a8c4a84852869e13190d89f9da873cd9a70f14c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/framework/zipball/c42f9abd4a3d2f9a3cd6be109255ddce8092ceb8",
-                "reference": "c42f9abd4a3d2f9a3cd6be109255ddce8092ceb8",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/8a8c4a84852869e13190d89f9da873cd9a70f14c",
+                "reference": "8a8c4a84852869e13190d89f9da873cd9a70f14c",
                 "shasum": ""
             },
             "require": {
@@ -5063,7 +5063,7 @@
                 "league/commonmark": "^2.8.1",
                 "league/flysystem": "^3.25.1",
                 "league/flysystem-local": "^3.25.1",
-                "league/uri": "^7.5.1",
+                "league/uri": "^7.6",
                 "monolog/monolog": "^3.10",
                 "nesbot/carbon": "^3.8.4",
                 "nunomaduro/termwind": "^2.0",
@@ -5092,6 +5092,7 @@
                 "voku/portable-ascii": "^2.0.2"
             },
             "conflict": {
+                "laravel/horizon": "<5.47.0",
                 "tightenco/collect": "<5.5.33"
             },
             "provide": {
@@ -5140,11 +5141,12 @@
                 "spatie/once": "*"
             },
             "require-dev": {
-                "ably/ably-php": "^1.0",
+                "ably/pubsub-server": "^1.0|^2.0",
                 "aws/aws-sdk-php": "^3.322.9",
                 "ext-gmp": "*",
                 "fakerphp/faker": "^1.24",
                 "intervention/image": "^4.2",
+                "jasonmccreary/double": "^1.2.1",
                 "laravel/pint": "^1.18",
                 "league/flysystem-aws-s3-v3": "^3.25.1",
                 "league/flysystem-ftp": "^3.25.1",
@@ -5156,7 +5158,7 @@
                 "orchestra/testbench-core": "^11.6.0",
                 "pda/pheanstalk": "^7.0.0 || ^8.0.0",
                 "php-http/discovery": "^1.15",
-                "phpstan/phpstan": "2.3.1",
+                "phpstan/phpstan": "2.3.5",
                 "phpunit/phpunit": "^11.5.50 || ^12.5.8 || ^13.0.3",
                 "predis/predis": "^2.3 || ^3.0",
                 "rector/rector": "2.6.3",
@@ -5169,7 +5171,7 @@
                 "web-token/jwt-library": "^4.1"
             },
             "suggest": {
-                "ably/ably-php": "Required to use the Ably broadcast driver (^1.0).",
+                "ably/pubsub-server": "Required to use the Ably broadcast driver (^1.0|^2.0).",
                 "aws/aws-sdk-php": "Required to use the SQS queue driver, DynamoDb failed job storage, and SES mail driver (^3.322.9).",
                 "brianium/paratest": "Required to run tests in parallel (^7.0 || ^8.0).",
                 "ext-apcu": "Required to use the APC cache driver.",
@@ -5255,7 +5257,7 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-            "time": "2026-10-20T10:45:58+00:00"
+            "time": "2026-11-24T16:10:06+00:00"
         },
         {
             "name": "laravel/horizon",

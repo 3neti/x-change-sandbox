@@ -1,5 +1,6 @@
+import type { ComputedRef, Ref } from 'vue';
+import { onUnmounted, ref, watch } from 'vue';
 import CockpitQuickGenerateFundingPreflightController from '@/actions/LBHurtado/XChange/Http/Controllers/Web/Cockpit/CockpitQuickGenerateFundingPreflightController';
-import { onUnmounted, ref, watch, type ComputedRef, type Ref } from 'vue';
 
 export type IssuanceFundingPreflight = {
     schema?: string;
@@ -25,6 +26,7 @@ export type IssuanceFundingPreflight = {
         required_amount_minor?: number;
         reserved_client_funds_minor?: number;
         external_amount_minor?: number;
+        account_shortfall_minor?: number | null;
         execution?: 'direct' | 'payment_required' | string;
         reason?: string;
         [key: string]: unknown;
